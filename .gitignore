@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+**/node_modules/
+vendor/
+
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Private keys, certificates, and credential files
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+secrets.json
+
+# Local databases and database backups
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.bak
+*.dump
+
+# Build output, caches, and test coverage
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+.next/
+.nuxt/
+.vite/
+.cache/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+
+# Python virtual environments and caches (if added later)
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Nested Git repositories and Git worktrees
+**/.git/

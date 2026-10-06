@@ -1,0 +1,2 @@
+import { NavLink,Outlet } from 'react-router-dom';
+export default function Layout(){return <div className="app-shell"><header className="topbar"><div className="container nav-wrap"><NavLink to="/services" className="brand">🔧 Fixly</NavLink><nav className="nav-links"><NavLink to="/services">Servicios</NavLink><NavLink to="/services/new" className="button button-small">+ Nuevo</NavLink></nav></div></header><main className="container main-content"><Outlet/></main></div>}
