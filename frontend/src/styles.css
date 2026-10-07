@@ -96,42 +96,125 @@ h2 {
    NAVIGATION
    ========================================================= */
 
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+/*
+ * Barra superior de Fixly.
+ * Usamos las variables de shadcn en vez de colores fijos para que
+ * esta parte ya funcione correctamente en modo claro y oscuro.
+ */
 .topbar {
-  background: #fff;
-  border-bottom: 1px solid #e8e8e5;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+
+  /* La barra se queda visible cuando hacemos scroll. */
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-.nav-wrap {
-  height: 72px;
+/*
+ * A diferencia del contenido de las páginas, la cabecera aprovecha
+ * todo el ancho. Así el logo queda más cerca del borde izquierdo.
+ */
+.topbar-content {
+  width: 100%;
+  min-height: 64px;
+  padding: 0 24px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
 }
 
+/*
+ * Separamos la cabecera en dos grupos:
+ *
+ * izquierda → Fixly + navegación
+ * derecha   → Nuevo + tema + menú
+ */
+.topbar-left,
+.topbar-actions {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-left {
+  gap: 36px;
+}
+
+.topbar-actions {
+  gap: 8px;
+}
+
+/*
+ * Marca de Fixly.
+ * El icono y el nombre funcionan juntos como enlace al catálogo.
+ */
 .brand {
-  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  color: var(--foreground);
   font-size: 1.08rem;
-  color: #222;
+  font-weight: 800;
   text-decoration: none;
   letter-spacing: -0.03em;
 }
 
+/*
+ * Pequeño contenedor para el icono de Fixly.
+ * Usa los colores principales de shadcn, por lo que también
+ * cambia automáticamente con el tema.
+ */
+.brand-icon {
+  width: 30px;
+  height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.brand-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/*
+ * Navegación principal.
+ * Ahora solo contiene "Servicios", pero está preparada para que
+ * añadamos Clientes, Reservas, etc. sin rehacer la cabecera.
+ */
 .nav-links {
   display: flex;
   align-items: center;
   gap: 22px;
 }
 
-.nav-links a:not(.button) {
-  color: #666;
+.nav-links a {
+  color: var(--muted-foreground);
   text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  transition: color 0.15s ease;
 }
 
-.nav-links a.active:not(.button) {
-  color: #222;
+.nav-links a:hover {
+  color: var(--foreground);
+}
+
+/* React Router añade "active" al enlace de la sección actual. */
+.nav-links a.active {
+  color: var(--foreground);
   font-weight: 700;
 }
 
@@ -564,18 +647,6 @@ textarea {
 
   .metadata {
     grid-template-columns: 1fr;
-  }
-
-  .nav-wrap {
-    height: 64px;
-  }
-
-  .nav-links {
-    gap: 10px;
-  }
-
-  .nav-links a:not(.button) {
-    display: none;
   }
 
   .detail-hero,
