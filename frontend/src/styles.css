@@ -316,6 +316,14 @@ h2 {
 
 .experience-list {
   display: grid;
+
+  /*
+   * Cada tarjeta necesita al menos 320px.
+   * CSS decide automáticamente cuántas caben en cada fila y reparte
+   * el espacio sobrante entre ellas.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+
   gap: 16px;
 }
 
