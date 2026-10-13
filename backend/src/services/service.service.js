@@ -1,12 +1,119 @@
 import mongoose from "mongoose";
+import slugify from "slugify";
 import { serviceRepository } from "../repositories/service.repository.js";
 import { AppError } from "../utils/app-error.js";
-function validateId(id) { if (!mongoose.isValidObjectId(id)) throw new AppError("Invalid service id", 400); }
-function sanitizeInput(data) { const allowed=["name","category","price","duration","description","active"]; return Object.fromEntries(Object.entries(data).filter(([key])=>allowed.includes(key))); }
+
+const allowedStatuses = ["draft", "published", "paused", "discontinued"];
+
+function validateId(id) {
+  if (!mongoose.isValidObjectId(id)) throw new AppError("Invalid service id", 400);
+}
+
+function sanitizeInput(data) {
+  const allowed = ["name", "category", "price", "duration", "description", "active"];
+  return Object.fromEntries(Object.entries(data).filter(([key]) => allowed.includes(key)));
+}
+
+function isSlugDuplicate(error) {
+  return error?.code === 11000 && (
+    error.keyPattern?.slug === 1 ||
+    error.message?.includes("slug_1")
+  );
+}
+
+async function createWithUniqueSlug(data) {
+  const base = slugify(data.name, { lower: true, strict: true, replacement: "_" }) || "service";
+  let suffix = 1;
+
+  while (true) {
+    const slug = suffix === 1 ? base : `${base}_${suffix}`;
+    if (await serviceRepository.existsBySlug(slug)) {
+      suffix += 1;
+      continue;
+    }
+
+    try {
+      return await serviceRepository.create({ ...data, slug });
+    } catch (error) {
+      if (!isSlugDuplicate(error)) throw error;
+      suffix += 1;
+    }
+  }
+}
+
+async function getExistingOrThrow(id) {
+  const item = await serviceRepository.findById(id);
+  if (!item) throw new AppError("Service not found", 404);
+  return item;
+}
+
 export const serviceService = {
-  list: () => serviceRepository.findAll(),
-  async getById(id) { validateId(id); const item=await serviceRepository.findById(id); if(!item) throw new AppError("Service not found",404); return item; },
-  create: (data) => serviceRepository.create(sanitizeInput(data)),
-  async update(id,data) { validateId(id); const item=await serviceRepository.updateById(id,sanitizeInput(data)); if(!item) throw new AppError("Service not found",404); return item; },
-  async remove(id) { validateId(id); const item=await serviceRepository.deleteById(id); if(!item) throw new AppError("Service not found",404); }
+  list: (filters) => serviceRepository.findAll(filters),
+  async listPublic() {
+    return serviceRepository.findPublic();
+  },
+  async getById(id) {
+    validateId(id);
+    return getExistingOrThrow(id);
+  },
+  async getPublicBySlug(slug) {
+    const item = await serviceRepository.findPublicBySlug(slug);
+    if (!item) throw new AppError("Service not found", 404);
+    return item;
+  },
+  create: (data) => createWithUniqueSlug(sanitizeInput(data)),
+  async update(id, data) {
+    validateId(id);
+    const updates = sanitizeInput(data);
+    const item = await serviceRepository.updateById(id, updates, {
+      notDeleted: updates.active === true
+    });
+    if (!item) {
+      const existing = await getExistingOrThrow(id);
+      if (updates.active === true && existing.deletedAt != null) {
+        throw new AppError("Cannot activate a deleted service", 409);
+      }
+      throw new AppError("Service not found", 404);
+    }
+    return item;
+  },
+  async remove(id) {
+    validateId(id);
+    const item = await serviceRepository.softDeleteById(id, new Date());
+    if (item) return;
+    const existing = await getExistingOrThrow(id);
+    if (existing.deletedAt != null) {
+      throw new AppError("Service is already deleted", 409);
+    }
+    throw new AppError("Service could not be deleted", 409);
+  },
+  async restore(id) {
+    validateId(id);
+    const item = await serviceRepository.restoreById(id);
+    if (item) return item;
+    const existing = await getExistingOrThrow(id);
+    if (existing.deletedAt == null) {
+      throw new AppError("Service is not deleted", 409);
+    }
+    throw new AppError("Service could not be restored", 409);
+  },
+  async setActive(id, active) {
+    validateId(id);
+    const item = await serviceRepository.setActiveById(id, active);
+    if (item) return item;
+    const existing = await getExistingOrThrow(id);
+    if (active && existing.deletedAt != null) {
+      throw new AppError("Cannot activate a deleted service", 409);
+    }
+    throw new AppError("Service not found", 404);
+  },
+  async setStatus(id, status) {
+    validateId(id);
+    if (!allowedStatuses.includes(status)) {
+      throw new AppError("Invalid service status", 400);
+    }
+    const item = await serviceRepository.setStatusById(id, status);
+    if (!item) throw new AppError("Service not found", 404);
+    return item;
+  }
 };
