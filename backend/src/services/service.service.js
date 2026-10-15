@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import slugify from "slugify";
 import { serviceRepository } from "../repositories/service.repository.js";
 import { AppError } from "../utils/app-error.js";
+import { generateSlug } from "../utils/slug.util.js";
 
 const allowedStatuses = ["draft", "published", "paused", "discontinued"];
 
@@ -22,7 +22,7 @@ function isSlugDuplicate(error) {
 }
 
 async function createWithUniqueSlug(data) {
-  const base = slugify(data.name, { lower: true, strict: true, replacement: "_" }) || "service";
+  const base = generateSlug(data.name) || "service";
   let suffix = 1;
 
   while (true) {
