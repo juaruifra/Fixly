@@ -1,16 +1,11 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import slugify from "slugify";
 import { connectDB } from "./config/db.js";
 import { Service } from "./models/service.model.js";
+import { generateSlug } from "./utils/slug.util.js";
 
 async function assignMissingSlug(service) {
-  const base =
-    slugify(service.name || "", {
-      lower: true,
-      strict: true,
-      replacement: "_",
-    }) || "service";
+  const base = generateSlug(service.name || "") || "service";
   let suffix = 1;
 
   while (true) {
