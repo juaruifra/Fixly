@@ -1,7 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { AppRouter } from "@/routes/routes";
+import { AppRouter } from "@/routes/AppRouter";
 
 function App() {
   return (
