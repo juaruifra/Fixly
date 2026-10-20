@@ -1,21 +1,16 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter } from "react-router-dom";
 
-import Layout from './components/Layout';
-import ServiceList from './pages/ServiceList';
-import ServiceDetails from './pages/ServiceDetails';
-import ServiceCreate from './pages/ServiceCreate';
-import ServiceEdit from './pages/ServiceEdit';
-export default function App() {
+import { ThemeProvider } from "@/providers/ThemeProvider";
+import { AppRouter } from "@/routes/routes";
+
+function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route index element={<Navigate to="/services" replace />} />
-        <Route path="/services" element={<ServiceList />} />
-        <Route path="/services/new" element={<ServiceCreate />} />
-        <Route path="/services/:id" element={<ServiceDetails />} />
-        <Route path="/services/:id/edit" element={<ServiceEdit />} />
-        <Route path="*" element={<Navigate to="/services" replace />} />
-      </Route>
-    </Routes>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="system">
+        <AppRouter />
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
+
+export default App;
