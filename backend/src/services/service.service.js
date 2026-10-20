@@ -6,18 +6,28 @@ import { generateSlug } from "../utils/slug.util.js";
 const allowedStatuses = ["draft", "published", "paused", "discontinued"];
 
 function validateId(id) {
-  if (!mongoose.isValidObjectId(id)) throw new AppError("Invalid service id", 400);
+  if (!mongoose.isValidObjectId(id))
+    throw new AppError("Invalid service id", 400);
 }
 
 function sanitizeInput(data) {
-  const allowed = ["name", "category", "price", "duration", "description", "active"];
-  return Object.fromEntries(Object.entries(data).filter(([key]) => allowed.includes(key)));
+  const allowed = [
+    "name",
+    "category",
+    "price",
+    "duration",
+    "description",
+    "active",
+  ];
+  return Object.fromEntries(
+    Object.entries(data).filter(([key]) => allowed.includes(key)),
+  );
 }
 
 function isSlugDuplicate(error) {
-  return error?.code === 11000 && (
-    error.keyPattern?.slug === 1 ||
-    error.message?.includes("slug_1")
+  return (
+    error?.code === 11000 &&
+    (error.keyPattern?.slug === 1 || error.message?.includes("slug_1"))
   );
 }
 
@@ -66,7 +76,7 @@ export const serviceService = {
     validateId(id);
     const updates = sanitizeInput(data);
     const item = await serviceRepository.updateById(id, updates, {
-      notDeleted: updates.active === true
+      notDeleted: updates.active === true,
     });
     if (!item) {
       const existing = await getExistingOrThrow(id);
@@ -115,5 +125,5 @@ export const serviceService = {
     const item = await serviceRepository.setStatusById(id, status);
     if (!item) throw new AppError("Service not found", 404);
     return item;
-  }
+  },
 };

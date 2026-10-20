@@ -38,7 +38,7 @@ export default function ServiceList() {
       await servicesApi.remove(service._id);
 
       setServices((currentServices) =>
-        currentServices.filter((item) => item._id !== service._id)
+        currentServices.filter((item) => item._id !== service._id),
       );
     } catch (e) {
       setError(e.message);
@@ -67,9 +67,7 @@ export default function ServiceList() {
         <div className="alert error">
           {error}
 
-          <button onClick={load}>
-            Reintentar
-          </button>
+          <button onClick={load}>Reintentar</button>
         </div>
       )}
 
@@ -79,9 +77,7 @@ export default function ServiceList() {
         <div className="empty card">
           <h2>No hay servicios todavía</h2>
 
-          <p>
-            Crea el primer servicio para empezar.
-          </p>
+          <p>Crea el primer servicio para empezar.</p>
 
           <Link className="button" to="/services/new">
             Crear servicio

@@ -4,9 +4,11 @@ export const serviceController = {
   async list(req, res, next) {
     try {
       const filters = {};
-      if (req.query.active !== undefined) filters.active = req.query.active === "true";
+      if (req.query.active !== undefined)
+        filters.active = req.query.active === "true";
       if (req.query.status !== undefined) filters.status = req.query.status;
-      if (req.query.deleted !== undefined) filters.deleted = req.query.deleted === "true";
+      if (req.query.deleted !== undefined)
+        filters.deleted = req.query.deleted === "true";
       res.json(await serviceService.list(filters));
     } catch (error) {
       next(error);
@@ -75,5 +77,5 @@ export const serviceController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
 };

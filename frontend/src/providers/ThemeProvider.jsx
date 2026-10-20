@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 // Este contexto permitirá consultar y cambiar el tema desde cualquier componente.
 const ThemeProviderContext = createContext(undefined);
@@ -26,9 +21,8 @@ export function ThemeProvider({
 
     // Si está en "system", usamos el tema claro u oscuro del dispositivo.
     if (theme === "system") {
-      const systemTheme = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
         ? "dark"
         : "light";
 
@@ -63,9 +57,7 @@ export function useTheme() {
 
   // Nos avisa si usamos useTheme() fuera del ThemeProvider por error.
   if (context === undefined) {
-    throw new Error(
-      "useTheme debe utilizarse dentro de un ThemeProvider"
-    );
+    throw new Error("useTheme debe utilizarse dentro de un ThemeProvider");
   }
 
   return context;

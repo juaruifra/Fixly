@@ -1,21 +1,23 @@
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
+const API_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:3000/api"
+).replace(/\/$/, "");
 
 function buildQueryString(params = {}) {
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') return;
+    if (value === undefined || value === null || value === "") return;
     searchParams.set(key, String(value));
   });
 
   const query = searchParams.toString();
-  return query ? `?${query}` : '';
+  return query ? `?${query}` : "";
 }
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(options.headers || {}),
     },
     ...options,
@@ -39,8 +41,8 @@ async function request(path, options = {}) {
 
   if (response.status === 204) return null;
 
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
     return response.text();
   }
 
@@ -49,29 +51,35 @@ async function request(path, options = {}) {
 
 export const servicesApi = {
   list: (params = {}) => request(`/services${buildQueryString(params)}`),
-  listPublic: () => request('/services/public'),
+  listPublic: () => request("/services/public"),
   getBySlug: (slug) => request(`/services/slug/${encodeURIComponent(slug)}`),
   get: (id) => request(`/services/${id}`),
-  create: (data) => request('/services', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  update: (id, data) => request(`/services/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  }),
-  remove: (id) => request(`/services/${id}`, {
-    method: 'DELETE',
-  }),
-  restore: (id) => request(`/services/${id}/restore`, {
-    method: 'PATCH',
-  }),
-  setActive: (id, active) => request(`/services/${id}/active`, {
-    method: 'PATCH',
-    body: JSON.stringify({ active }),
-  }),
-  setStatus: (id, status) => request(`/services/${id}/status`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  }),
+  create: (data) =>
+    request("/services", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id, data) =>
+    request(`/services/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  remove: (id) =>
+    request(`/services/${id}`, {
+      method: "DELETE",
+    }),
+  restore: (id) =>
+    request(`/services/${id}/restore`, {
+      method: "PATCH",
+    }),
+  setActive: (id, active) =>
+    request(`/services/${id}/active`, {
+      method: "PATCH",
+      body: JSON.stringify({ active }),
+    }),
+  setStatus: (id, status) =>
+    request(`/services/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
 };

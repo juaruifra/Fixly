@@ -5,9 +5,14 @@ import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 import serviceRoutes from "./routes/service.routes.js";
-import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middlewares/error.middleware.js";
+
 const app = express();
 const corsOrigin = process.env.CORS_ORIGIN?.trim();
+
 app.use(cors(corsOrigin ? { origin: corsOrigin } : undefined));
 app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
@@ -17,4 +22,5 @@ app.get("/health", (_req, res) => res.json({ ok: true, app: "Fixly API" }));
 app.use("/api/services", serviceRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
+
 export default app;

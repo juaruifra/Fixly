@@ -19,11 +19,7 @@ export default function ThemeSelector() {
   const [open, setOpen] = useState(false);
 
   const ThemeIcon =
-    theme === "dark"
-      ? MoonIcon
-      : theme === "light"
-        ? SunIcon
-        : MonitorIcon;
+    theme === "dark" ? MoonIcon : theme === "light" ? SunIcon : MonitorIcon;
 
   function changeTheme(newTheme) {
     setTheme(newTheme);
@@ -36,21 +32,14 @@ export default function ThemeSelector() {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         render={
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Cambiar tema"
-          />
+          <Button variant="outline" size="icon" aria-label="Cambiar tema" />
         }
       >
         <ThemeIcon />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">
-        <DropdownMenuRadioGroup
-          value={theme}
-          onValueChange={changeTheme}
-        >
+        <DropdownMenuRadioGroup value={theme} onValueChange={changeTheme}>
           <DropdownMenuRadioItem value="light">
             <SunIcon />
             Claro

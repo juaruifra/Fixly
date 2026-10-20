@@ -22,9 +22,7 @@ export default function Layout() {
 
             {/* Navegación principal. Aquí añadiremos futuras secciones. */}
             <nav className="nav-links">
-              <NavLink to="/services">
-                Servicios
-              </NavLink>
+              <NavLink to="/services">Servicios</NavLink>
             </nav>
           </div>
 
@@ -38,11 +36,7 @@ export default function Layout() {
             <ThemeSelector />
 
             {/* Reservado para futuras opciones de usuario/configuración. */}
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Abrir menú"
-            >
+            <Button variant="ghost" size="icon" aria-label="Abrir menú">
               <MenuIcon />
             </Button>
           </div>

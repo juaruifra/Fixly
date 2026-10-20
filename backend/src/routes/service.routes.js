@@ -7,46 +7,148 @@ const router = Router();
 const statuses = ["draft", "published", "paused", "discontinued"];
 const idValidation = [
   param("id").isMongoId().withMessage("Invalid service id"),
-  validateRequest
+  validateRequest,
 ];
 const slugValidation = [
   param("slug").isString().trim().notEmpty().withMessage("slug is required"),
-  validateRequest
+  validateRequest,
 ];
 const listValidation = [
-  query("active").optional().isIn(["true", "false"]).withMessage("active must be true or false"),
-  query("status").optional().isIn(statuses).withMessage("Invalid service status"),
-  query("deleted").optional().isIn(["true", "false"]).withMessage("deleted must be true or false"),
-  validateRequest
+  query("active")
+    .optional()
+    .isIn(["true", "false"])
+    .withMessage("active must be true or false"),
+  query("status")
+    .optional()
+    .isIn(statuses)
+    .withMessage("Invalid service status"),
+  query("deleted")
+    .optional()
+    .isIn(["true", "false"])
+    .withMessage("deleted must be true or false"),
+  validateRequest,
 ];
 const createValidation = [
-  body("name").exists({ values: "falsy" }).withMessage("name is required").bail().isString().withMessage("name must be a string").bail().trim().notEmpty().withMessage("name cannot be empty").isLength({ max: 120 }).withMessage("name must be at most 120 characters"),
-  body("category").exists({ values: "falsy" }).withMessage("category is required").bail().isString().withMessage("category must be a string").bail().trim().notEmpty().withMessage("category cannot be empty").isLength({ max: 80 }).withMessage("category must be at most 80 characters"),
-  body("price").exists({ values: "null" }).withMessage("price is required").bail().isFloat({ min: 0 }).withMessage("price must be a number greater than or equal to 0").toFloat(),
-  body("duration").exists({ values: "null" }).withMessage("duration is required").bail().isInt({ min: 15 }).withMessage("duration must be an integer greater than or equal to 15").toInt(),
-  body("description").optional().isString().withMessage("description must be a string").bail().trim().isLength({ max: 500 }).withMessage("description must be at most 500 characters"),
-  body("active").optional().isBoolean().withMessage("active must be a boolean").toBoolean(),
-  validateRequest
+  body("name")
+    .exists({ values: "falsy" })
+    .withMessage("name is required")
+    .bail()
+    .isString()
+    .withMessage("name must be a string")
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage("name cannot be empty")
+    .isLength({ max: 120 })
+    .withMessage("name must be at most 120 characters"),
+  body("category")
+    .exists({ values: "falsy" })
+    .withMessage("category is required")
+    .bail()
+    .isString()
+    .withMessage("category must be a string")
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage("category cannot be empty")
+    .isLength({ max: 80 })
+    .withMessage("category must be at most 80 characters"),
+  body("price")
+    .exists({ values: "null" })
+    .withMessage("price is required")
+    .bail()
+    .isFloat({ min: 0 })
+    .withMessage("price must be a number greater than or equal to 0")
+    .toFloat(),
+  body("duration")
+    .exists({ values: "null" })
+    .withMessage("duration is required")
+    .bail()
+    .isInt({ min: 15 })
+    .withMessage("duration must be an integer greater than or equal to 15")
+    .toInt(),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("description must be a string")
+    .bail()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("description must be at most 500 characters"),
+  body("active")
+    .optional()
+    .isBoolean()
+    .withMessage("active must be a boolean")
+    .toBoolean(),
+  validateRequest,
 ];
 const updateValidation = [
   ...idValidation.slice(0, 1),
-  body("name").optional().isString().withMessage("name must be a string").bail().trim().notEmpty().withMessage("name cannot be empty").isLength({ max: 120 }).withMessage("name must be at most 120 characters"),
-  body("category").optional().isString().withMessage("category must be a string").bail().trim().notEmpty().withMessage("category cannot be empty").isLength({ max: 80 }).withMessage("category must be at most 80 characters"),
-  body("price").optional().isFloat({ min: 0 }).withMessage("price must be a number greater than or equal to 0").toFloat(),
-  body("duration").optional().isInt({ min: 15 }).withMessage("duration must be an integer greater than or equal to 15").toInt(),
-  body("description").optional().isString().withMessage("description must be a string").bail().trim().isLength({ max: 500 }).withMessage("description must be at most 500 characters"),
-  body("active").optional().isBoolean().withMessage("active must be a boolean").toBoolean(),
-  validateRequest
+  body("name")
+    .optional()
+    .isString()
+    .withMessage("name must be a string")
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage("name cannot be empty")
+    .isLength({ max: 120 })
+    .withMessage("name must be at most 120 characters"),
+  body("category")
+    .optional()
+    .isString()
+    .withMessage("category must be a string")
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage("category cannot be empty")
+    .isLength({ max: 80 })
+    .withMessage("category must be at most 80 characters"),
+  body("price")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("price must be a number greater than or equal to 0")
+    .toFloat(),
+  body("duration")
+    .optional()
+    .isInt({ min: 15 })
+    .withMessage("duration must be an integer greater than or equal to 15")
+    .toInt(),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("description must be a string")
+    .bail()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("description must be at most 500 characters"),
+  body("active")
+    .optional()
+    .isBoolean()
+    .withMessage("active must be a boolean")
+    .toBoolean(),
+  validateRequest,
 ];
 const activeValidation = [
   ...idValidation.slice(0, 1),
-  body("active").exists().withMessage("active is required").bail().isBoolean().withMessage("active must be a boolean").toBoolean(),
-  validateRequest
+  body("active")
+    .exists()
+    .withMessage("active is required")
+    .bail()
+    .isBoolean()
+    .withMessage("active must be a boolean")
+    .toBoolean(),
+  validateRequest,
 ];
 const statusValidation = [
   ...idValidation.slice(0, 1),
-  body("status").exists().withMessage("status is required").bail().isIn(statuses).withMessage("Invalid service status"),
-  validateRequest
+  body("status")
+    .exists()
+    .withMessage("status is required")
+    .bail()
+    .isIn(statuses)
+    .withMessage("Invalid service status"),
+  validateRequest,
 ];
 
 /**

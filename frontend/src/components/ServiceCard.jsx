@@ -41,9 +41,7 @@ export default function ServiceCard({ service, onDelete }) {
 
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2">
-            <Badge variant="secondary">
-              {service.category}
-            </Badge>
+            <Badge variant="secondary">{service.category}</Badge>
 
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <ClockIcon className="size-3.5" />
@@ -51,9 +49,7 @@ export default function ServiceCard({ service, onDelete }) {
             </span>
           </div>
 
-          <CardTitle className="text-lg">
-            {service.name}
-          </CardTitle>
+          <CardTitle className="text-lg">{service.name}</CardTitle>
         </div>
 
         {/* Las acciones secundarias quedan agrupadas para no recargar la tarjeta. */}
@@ -71,9 +67,7 @@ export default function ServiceCard({ service, onDelete }) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              render={<Link to={`/services/${service._id}`} />}
-            >
+            <DropdownMenuItem render={<Link to={`/services/${service._id}`} />}>
               <EyeIcon />
               Ver detalle
             </DropdownMenuItem>
@@ -103,9 +97,7 @@ export default function ServiceCard({ service, onDelete }) {
       </CardContent>
 
       <CardFooter className="flex justify-between border-t px-5 py-4">
-        <strong className="text-lg">
-          {formattedPrice}
-        </strong>
+        <strong className="text-lg">{formattedPrice}</strong>
 
         {/* Mantenemos visible la acción más habitual. */}
         <Button

@@ -5,11 +5,12 @@ import { connectDB } from "./config/db.js";
 import { Service } from "./models/service.model.js";
 
 async function assignMissingSlug(service) {
-  const base = slugify(service.name || "", {
-    lower: true,
-    strict: true,
-    replacement: "_"
-  }) || "service";
+  const base =
+    slugify(service.name || "", {
+      lower: true,
+      strict: true,
+      replacement: "_",
+    }) || "service";
   let suffix = 1;
 
   while (true) {
@@ -22,14 +23,14 @@ async function assignMissingSlug(service) {
     try {
       const result = await Service.updateOne(
         { _id: service._id, slug: { $exists: false } },
-        { $set: { slug } }
+        { $set: { slug } },
       );
       return result.modifiedCount === 1;
     } catch (error) {
-      if (error?.code !== 11000 || (
-        error.keyPattern?.slug !== 1 &&
-        !error.message?.includes("slug_1")
-      )) {
+      if (
+        error?.code !== 11000 ||
+        (error.keyPattern?.slug !== 1 && !error.message?.includes("slug_1"))
+      ) {
         throw error;
       }
       suffix += 1;
@@ -44,21 +45,24 @@ async function migrateServices() {
     $or: [
       { status: { $exists: false } },
       { slug: { $exists: false } },
-      { deletedAt: { $exists: false } }
-    ]
-  }).select("_id name").lean().cursor();
+      { deletedAt: { $exists: false } },
+    ],
+  })
+    .select("_id name")
+    .lean()
+    .cursor();
 
   for await (const service of cursor) {
     let changed = false;
     const statusUpdate = await Service.updateOne(
       { _id: service._id, status: { $exists: false } },
-      { $set: { status: "published" } }
+      { $set: { status: "published" } },
     );
     changed ||= statusUpdate.modifiedCount === 1;
 
     const deletedAtUpdate = await Service.updateOne(
       { _id: service._id, deletedAt: { $exists: false } },
-      { $set: { deletedAt: null } }
+      { $set: { deletedAt: null } },
     );
     changed ||= deletedAtUpdate.modifiedCount === 1;
 
