@@ -1,25 +1,19 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import ServiceForm from "../components/ServiceForm";
-import { servicesApi } from "../services/api";
+import ServiceForm from "@/features/services/components/ServiceForm";
+import { useServices } from "@/hooks/useServices";
 
 export default function ServiceCreate() {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const {
+    createService,
+    submitting,
+  } = useServices();
 
   async function create(data) {
-    setSubmitting(true);
-    setError("");
-
-    try {
-      const created = await servicesApi.create(data);
+    const created = await createService(data);
+    if (created) {
       navigate(`/services/${created._id}`);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -36,8 +30,6 @@ export default function ServiceCreate() {
           <p className="muted">Añade un servicio al catálogo de Fixly.</p>
         </div>
       </div>
-
-      {error && <div className="alert error">{error}</div>}
 
       <ServiceForm
         onSubmit={create}

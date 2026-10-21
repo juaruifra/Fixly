@@ -5,6 +5,11 @@ import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
 const statuses = ["draft", "published", "paused", "discontinued"];
+const optionalStatusValidation = () =>
+  body("status")
+    .optional()
+    .isIn(statuses)
+    .withMessage("Invalid service status");
 const idValidation = [
   param("id").isMongoId().withMessage("Invalid service id"),
   validateRequest,
@@ -80,6 +85,7 @@ const createValidation = [
     .isBoolean()
     .withMessage("active must be a boolean")
     .toBoolean(),
+  optionalStatusValidation(),
   validateRequest,
 ];
 const updateValidation = [
@@ -127,6 +133,7 @@ const updateValidation = [
     .isBoolean()
     .withMessage("active must be a boolean")
     .toBoolean(),
+  optionalStatusValidation(),
   validateRequest,
 ];
 const activeValidation = [
@@ -221,7 +228,7 @@ router.get("/", listValidation, serviceController.list);
  * /api/services:
  *   post:
  *     summary: Crear un servicio
- *     description: Genera un slug único a partir del nombre. Esta ruta administrativa deberá protegerse al incorporar autenticación.
+ *     description: Genera un slug único a partir del nombre y permite establecer el estado inicial. Esta ruta administrativa deberá protegerse al incorporar autenticación.
  *     tags: [Services]
  *     requestBody:
  *       required: true
@@ -330,7 +337,7 @@ router.get("/:id", idValidation, serviceController.getById);
  * /api/services/{id}:
  *   patch:
  *     summary: Actualizar los datos editables de un servicio
- *     description: Permite modificar active; no recalcula el slug al cambiar el nombre. Ruta administrativa pendiente de proteger con autenticación.
+ *     description: Permite modificar los campos editables, incluido status; no recalcula el slug al cambiar el nombre. Ruta administrativa pendiente de proteger con autenticación.
  *     tags: [Services]
  *     parameters:
  *       - in: path

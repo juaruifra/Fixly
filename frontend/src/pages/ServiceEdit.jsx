@@ -1,37 +1,29 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import ServiceForm from "../components/ServiceForm";
+import ServiceForm from "@/features/services/components/ServiceForm";
 import Loading from "../components/Loading";
-import { servicesApi } from "../services/api";
+import { useServices } from "@/hooks/useServices";
 
 export default function ServiceEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const {
+    getServiceById,
+    updateService,
+    loading,
+    submitting,
+  } = useServices();
 
   useEffect(() => {
-    servicesApi
-      .get(id)
-      .then(setService)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id]);
+    getServiceById(id).then(setService);
+  }, [getServiceById, id]);
 
   async function update(data) {
-    setSubmitting(true);
-    setError("");
-
-    try {
-      await servicesApi.update(id, data);
+    const updated = await updateService(id, data);
+    if (updated) {
       navigate(`/services/${id}`);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -39,8 +31,8 @@ export default function ServiceEdit() {
 
   if (!service) {
     return (
-      <div className="alert error">
-        {error || "Servicio no encontrado."}
+      <div className="service-missing-state">
+        <p>El servicio no está disponible.</p>
         <Link to="/services">Volver</Link>
       </div>
     );
@@ -59,8 +51,6 @@ export default function ServiceEdit() {
           <p className="muted">Actualiza los datos y guarda los cambios.</p>
         </div>
       </div>
-
-      {error && <div className="alert error">{error}</div>}
 
       <ServiceForm
         initialValues={service}

@@ -51,7 +51,7 @@ const options = {
         ServiceInput: {
           type: "object",
           description:
-            "Campos editables del servicio. El slug se genera desde name; status se cambia mediante PATCH /api/services/{id}/status y deletedAt lo gestiona la API.",
+            "Campos editables del servicio, incluido status. El slug se genera desde name y deletedAt lo gestiona la API. Para actualizar únicamente status puede usarse PATCH /api/services/{id}/status.",
           required: ["name", "category", "price", "duration"],
           properties: {
             name: { type: "string", example: "Instalación de lámparas" },
@@ -70,7 +70,6 @@ const options = {
             },
             status: {
               type: "string",
-              readOnly: true,
               enum: ["draft", "published", "paused", "discontinued"],
               example: "published",
             },

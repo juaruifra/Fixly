@@ -11,17 +11,23 @@
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@fontsource-variable/geist": "^5.3.0",
+    "@hookform/resolvers": "^5.9.2",
     "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-table": "^8.21.3",
     "@vitejs/plugin-react": "latest",
+    "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "lucide-react": "^1.52.0",
     "react": "latest",
     "react-dom": "latest",
+    "react-hook-form": "^7.90.0",
     "react-router-dom": "latest",
     "shadcn": "^4.21.3",
+    "sweetalert2": "^11.26.25",
     "tailwindcss": "^4.3.3",
     "tw-animate-css": "^1.4.0",
-    "vite": "latest"
+    "vite": "latest",
+    "zod": "^3.25.76"
   }
 }

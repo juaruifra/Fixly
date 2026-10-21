@@ -1,8 +1,8 @@
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import Layout from "@/components/Layout";
-import Loading from "@/components/Loading";
+import MainLayout from "@/layouts/MainLayout";
+import PageLoader from "@/components/common/PageLoader";
 
 const ServiceList = lazy(() => import("@/pages/ServiceList"));
 const ServiceCreate = lazy(() => import("@/pages/ServiceCreate"));
@@ -11,9 +11,9 @@ const ServiceEdit = lazy(() => import("@/pages/ServiceEdit"));
 
 export function AppRouter() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route element={<Layout />}>
+        <Route element={<MainLayout />}>
           <Route index element={<Navigate to="/services" replace />} />
           <Route path="/services" element={<ServiceList />} />
           <Route path="/services/new" element={<ServiceCreate />} />

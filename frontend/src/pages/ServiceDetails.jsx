@@ -1,47 +1,51 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+import ErrorState from "@/components/common/ErrorState";
 import Loading from "../components/Loading";
-import { servicesApi } from "../services/api";
+import { useServices } from "@/hooks/useServices";
+import { confirmServiceAction } from "@/utils/confirmAction";
 
 export default function ServiceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { getServiceById, deleteService, loading } = useServices();
 
   useEffect(() => {
-    servicesApi
-      .get(id)
-      .then(setService)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id]);
+    getServiceById(id).then(setService);
+  }, [getServiceById, id]);
 
   async function remove() {
-    if (!window.confirm("¿Eliminar este servicio?")) return;
+    const confirmed = await confirmServiceAction({
+      title: "Eliminar servicio",
+      message: `¿Quieres eliminar “${service.name}”? Podrás restaurarlo después.`,
+      confirmText: "Eliminar",
+      danger: true,
+    });
+    if (!confirmed) return;
 
-    try {
-      await servicesApi.remove(id);
+    const deletedId = await deleteService(id);
+    if (deletedId) {
       navigate("/services");
-    } catch (e) {
-      setError(e.message);
     }
   }
 
   if (loading) return <Loading />;
 
-  if (error) {
+  if (!service) {
     return (
-      <div className="alert error">
-        {error}
-        <Link to="/services">Volver al listado</Link>
-      </div>
+      <section className="detail-page">
+        <ErrorState
+          title="Servicio no disponible"
+          message="No se encontró el servicio solicitado."
+        />
+        <Link className="back-link" to="/services">
+          Volver al listado
+        </Link>
+      </section>
     );
   }
-
-  if (!service) return null;
 
   return (
     <section className="detail-page">

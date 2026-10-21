@@ -18,6 +18,7 @@ function sanitizeInput(data) {
     "duration",
     "description",
     "active",
+    "status",
   ];
   return Object.fromEntries(
     Object.entries(data).filter(([key]) => allowed.includes(key)),
