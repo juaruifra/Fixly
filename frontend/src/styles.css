@@ -1168,6 +1168,18 @@ textarea {
   --chip-ink: #b34c28;
 }
 
+.service-chip--availability-active {
+  --chip-ink: #18734d;
+}
+
+.service-chip--availability-inactive {
+  --chip-ink: #626a73;
+}
+
+.service-chip--availability-deleted {
+  --chip-ink: #b34c28;
+}
+
 .dark .service-chip--category-0 {
   --chip-ink: #70cbc1;
 }
@@ -1210,6 +1222,26 @@ textarea {
 
 .dark .service-chip--status-deleted {
   --chip-ink: #f0a084;
+}
+
+.dark .service-chip--availability-active {
+  --chip-ink: #78d6a8;
+}
+
+.dark .service-chip--availability-inactive {
+  --chip-ink: #b4bdc7;
+}
+
+.dark .service-chip--availability-deleted {
+  --chip-ink: #f0a084;
+}
+
+.detail-statuses {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .service-status-select {

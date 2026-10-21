@@ -87,13 +87,26 @@ export default function ServiceDetails() {
               currency: "EUR",
             })}
           </div>
+          <div className="detail-statuses" aria-label="Estado del servicio">
+            <ServiceChip value={service.status} kind="status" />
+            <ServiceChip
+              value={service.deletedAt ? "deleted" : service.active ? "active" : "inactive"}
+              kind="availability"
+              label={
+                service.deletedAt
+                  ? "Eliminado"
+                  : service.active
+                    ? "Activo"
+                    : "Inactivo"
+              }
+            />
+          </div>
         </div>
       </div>
 
       {service.deletedAt && (
         <div className="service-deleted-notice" role="status">
           <div>
-            <ServiceChip value="deleted" kind="status" label="Eliminado" />
             <p>
               Registro eliminado el{" "}
               {new Date(service.deletedAt).toLocaleString("es-ES")}. Está en
@@ -110,9 +123,6 @@ export default function ServiceDetails() {
       <div className="card detail-body">
         <h2>Descripción</h2>
         <p>{service.description || "Este servicio no tiene descripción."}</p>
-        <p>
-          <strong>Estado:</strong> {service.active ? "Activo" : "Inactivo"}
-        </p>
 
         <dl className="metadata">
           <div>

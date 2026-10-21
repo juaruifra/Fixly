@@ -13,6 +13,8 @@ export default function ServiceChip({ value, kind = "category", label }) {
   const className =
     kind === "status"
       ? `service-chip service-chip--status-${value}`
+      : kind === "availability"
+        ? `service-chip service-chip--availability-${value}`
       : `service-chip service-chip--category-${getCategoryColor(value)}`;
 
   return (
