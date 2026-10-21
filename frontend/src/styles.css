@@ -1255,6 +1255,40 @@ textarea {
   font-weight: 600;
 }
 
+.service-deleted-notice {
+  --deleted-ink: #956000;
+  margin: 18px 0;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid color-mix(in srgb, var(--deleted-ink) 28%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--deleted-ink) 8%, var(--background));
+}
+
+.service-deleted-notice p {
+  margin: 7px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.84rem;
+}
+
+.service-deleted-notice button {
+  flex: 0 0 auto;
+}
+
+.dark .service-deleted-notice {
+  --deleted-ink: #edc76f;
+}
+
+@media (max-width: 600px) {
+  .service-deleted-notice {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .swal2-container {
   z-index: 10000 !important;
 }

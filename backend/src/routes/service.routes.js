@@ -283,7 +283,7 @@ router.patch("/:id/restore", idValidation, serviceController.restore);
  *               active: { type: boolean }
  *     responses:
  *       200: { description: Estado de activación actualizado }
- *       409: { description: No se puede activar un servicio eliminado }
+ *       409: { description: No se puede editar un servicio eliminado; primero debe restaurarse }
  */
 router.patch("/:id/active", activeValidation, serviceController.setActive);
 
@@ -311,6 +311,7 @@ router.patch("/:id/active", activeValidation, serviceController.setActive);
  *     responses:
  *       200: { description: Estado actualizado }
  *       400: { description: Estado no válido }
+ *       409: { description: No se puede editar un servicio eliminado; primero debe restaurarse }
  */
 router.patch("/:id/status", statusValidation, serviceController.setStatus);
 

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import ServiceForm from "@/features/services/components/ServiceForm";
 import Loading from "../components/Loading";
+import ErrorState from "@/components/common/ErrorState";
 import { useServices } from "@/hooks/useServices";
 
 export default function ServiceEdit() {
@@ -35,6 +36,20 @@ export default function ServiceEdit() {
         <p>El servicio no está disponible.</p>
         <Link to="/services">Volver</Link>
       </div>
+    );
+  }
+
+  if (service.deletedAt) {
+    return (
+      <section>
+        <ErrorState
+          title="Servicio eliminado"
+          message="Restaura el servicio antes de editarlo."
+        />
+        <Link className="back-link" to={`/services/${id}`}>
+          Ver detalle y restaurar
+        </Link>
+      </section>
     );
   }
 

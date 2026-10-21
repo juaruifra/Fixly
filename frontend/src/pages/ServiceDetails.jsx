@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { RotateCcwIcon } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import ErrorState from "@/components/common/ErrorState";
 import Loading from "../components/Loading";
+import ServiceChip from "@/features/services/components/ServiceChip";
 import { useServices } from "@/hooks/useServices";
 import { confirmServiceAction } from "@/utils/confirmAction";
 
@@ -10,7 +13,13 @@ export default function ServiceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
-  const { getServiceById, deleteService, loading } = useServices();
+  const {
+    getServiceById,
+    deleteService,
+    restoreService,
+    loading,
+    submitting,
+  } = useServices();
 
   useEffect(() => {
     getServiceById(id).then(setService);
@@ -29,6 +38,18 @@ export default function ServiceDetails() {
     if (deletedId) {
       navigate("/services");
     }
+  }
+
+  async function restore() {
+    const confirmed = await confirmServiceAction({
+      title: "Restaurar servicio",
+      message: `¿Quieres restaurar “${service.name}”? Luego podrás editarlo de nuevo.`,
+      confirmText: "Restaurar",
+    });
+    if (!confirmed) return;
+
+    const restored = await restoreService(id);
+    if (restored) setService(restored);
   }
 
   if (loading) return <Loading />;
@@ -69,6 +90,23 @@ export default function ServiceDetails() {
         </div>
       </div>
 
+      {service.deletedAt && (
+        <div className="service-deleted-notice" role="status">
+          <div>
+            <ServiceChip value="deleted" kind="status" label="Eliminado" />
+            <p>
+              Registro eliminado el{" "}
+              {new Date(service.deletedAt).toLocaleString("es-ES")}. Está en
+              modo de solo lectura hasta que lo restaures.
+            </p>
+          </div>
+          <Button disabled={submitting} onClick={restore}>
+            <RotateCcwIcon aria-hidden="true" />
+            Restaurar servicio
+          </Button>
+        </div>
+      )}
+
       <div className="card detail-body">
         <h2>Descripción</h2>
         <p>{service.description || "Este servicio no tiene descripción."}</p>
@@ -92,12 +130,16 @@ export default function ServiceDetails() {
         </dl>
 
         <div className="form-actions">
-          <Link className="button" to={`/services/${id}/edit`}>
-            Editar
-          </Link>
-          <button className="button button-danger" onClick={remove}>
-            Eliminar
-          </button>
+          {!service.deletedAt && (
+            <>
+              <Link className="button" to={`/services/${id}/edit`}>
+                Editar
+              </Link>
+              <button className="button button-danger" onClick={remove}>
+                Eliminar
+              </button>
+            </>
+          )}
         </div>
       </div>
     </section>

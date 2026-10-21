@@ -49,13 +49,13 @@ export const serviceRepository = {
     ).lean(),
   setActiveById: (id, active) =>
     Service.findOneAndUpdate(
-      active ? { _id: id, deletedAt: null } : { _id: id },
+      { _id: id, deletedAt: null },
       { $set: { active } },
       { new: true, runValidators: true },
     ).lean(),
   setStatusById: (id, status) =>
-    Service.findByIdAndUpdate(
-      id,
+    Service.findOneAndUpdate(
+      { _id: id, deletedAt: null },
       { $set: { status } },
       { new: true, runValidators: true },
     ).lean(),

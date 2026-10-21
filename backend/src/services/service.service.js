@@ -77,12 +77,15 @@ export const serviceService = {
     validateId(id);
     const updates = sanitizeInput(data);
     const item = await serviceRepository.updateById(id, updates, {
-      notDeleted: updates.active === true,
+      notDeleted: true,
     });
     if (!item) {
       const existing = await getExistingOrThrow(id);
-      if (updates.active === true && existing.deletedAt != null) {
-        throw new AppError("Cannot activate a deleted service", 409);
+      if (existing.deletedAt != null) {
+        throw new AppError(
+          "Cannot edit a deleted service. Restore it before editing.",
+          409,
+        );
       }
       throw new AppError("Service not found", 404);
     }
@@ -113,8 +116,11 @@ export const serviceService = {
     const item = await serviceRepository.setActiveById(id, active);
     if (item) return item;
     const existing = await getExistingOrThrow(id);
-    if (active && existing.deletedAt != null) {
-      throw new AppError("Cannot activate a deleted service", 409);
+    if (existing.deletedAt != null) {
+      throw new AppError(
+        "Cannot edit a deleted service. Restore it before editing.",
+        409,
+      );
     }
     throw new AppError("Service not found", 404);
   },
@@ -124,7 +130,16 @@ export const serviceService = {
       throw new AppError("Invalid service status", 400);
     }
     const item = await serviceRepository.setStatusById(id, status);
-    if (!item) throw new AppError("Service not found", 404);
+    if (!item) {
+      const existing = await getExistingOrThrow(id);
+      if (existing.deletedAt != null) {
+        throw new AppError(
+          "Cannot edit a deleted service. Restore it before editing.",
+          409,
+        );
+      }
+      throw new AppError("Service not found", 404);
+    }
     return item;
   },
 };
