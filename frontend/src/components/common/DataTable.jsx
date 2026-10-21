@@ -21,6 +21,7 @@ export default function DataTable({
   data,
   loading = false,
   emptyMessage = "No hay datos para mostrar.",
+  getRowClassName,
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -122,7 +123,10 @@ export default function DataTable({
               </tr>
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id}>
+                <tr
+                  key={row.id}
+                  className={getRowClassName?.(row.original) || undefined}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id}>
                       {flexRender(

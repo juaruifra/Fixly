@@ -966,6 +966,22 @@ textarea {
   white-space: nowrap;
 }
 
+.data-table tbody tr.data-row-inactive td {
+  background: color-mix(in oklch, var(--background) 93%, var(--foreground));
+}
+
+.data-table tbody tr.data-row-deleted td {
+  background: color-mix(in oklch, var(--background) 88%, var(--foreground));
+}
+
+.dark .data-table tbody tr.data-row-inactive td {
+  background: color-mix(in oklch, var(--card) 90%, var(--foreground));
+}
+
+.dark .data-table tbody tr.data-row-deleted td {
+  background: color-mix(in oklch, var(--card) 84%, var(--foreground));
+}
+
 .data-table-sort {
   display: inline-flex;
   align-items: center;

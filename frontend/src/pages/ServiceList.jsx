@@ -36,6 +36,12 @@ const RECORD_FILTERS = [
   { value: "deleted", label: "Eliminados" },
 ];
 
+function getServiceRowClassName(service) {
+  if (service.deletedAt) return "data-row-deleted";
+  if (!service.active) return "data-row-inactive";
+  return undefined;
+}
+
 function ServiceStatusSelect({ service, onChange, disabled }) {
   return (
     <Select
@@ -345,6 +351,7 @@ export default function ServiceList() {
         data={visibleServices}
         loading={loading}
         emptyMessage="No hay servicios que coincidan."
+        getRowClassName={getServiceRowClassName}
       />
 
     </section>
