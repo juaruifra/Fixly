@@ -5,10 +5,11 @@ import {
   PencilIcon,
   PlusIcon,
   RotateCcwIcon,
-  RotateCwIcon,
   Trash2Icon,
 } from "lucide-react";
+import { TableSkeleton } from "@/components/common/TableSkeleton";
 import DataTable from "@/components/common/DataTable";
+import ErrorState from "@/components/common/ErrorState";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -117,8 +118,13 @@ export default function ServiceList() {
   );
 
   useEffect(() => {
-    loadServices(filters);
+    loadServices(filters, { notifyOnError: false });
   }, [filters, loadServices]);
+
+  const retryServices = useCallback(
+    () => loadServices(filters, { notifyOnError: false }),
+    [filters, loadServices],
+  );
 
   const updateStatus = useCallback(
     (service, status) => changeServiceStatus(service._id, status),
@@ -285,6 +291,19 @@ export default function ServiceList() {
     [restore, submitting, updateActive, updateStatus],
   );
 
+  const tableContent = loading ? (
+    <TableSkeleton rows={6} columns={8} />
+  ) : error ? (
+    <ErrorState message={error} onRetry={retryServices} />
+  ) : (
+    <DataTable
+      columns={columns}
+      data={visibleServices}
+      emptyMessage="No hay servicios que coincidan."
+      getRowClassName={getServiceRowClassName}
+    />
+  );
+
   return (
     <section>
       <div className="page-header">
@@ -334,25 +353,7 @@ export default function ServiceList() {
         </Select>
       </div>
 
-      {error && (
-        <Button
-          className="service-list-retry"
-          variant="outline"
-          size="sm"
-          onClick={loadServices}
-        >
-          <RotateCwIcon aria-hidden="true" />
-          Reintentar carga
-        </Button>
-      )}
-
-      <DataTable
-        columns={columns}
-        data={visibleServices}
-        loading={loading}
-        emptyMessage="No hay servicios que coincidan."
-        getRowClassName={getServiceRowClassName}
-      />
+      {tableContent}
 
     </section>
   );

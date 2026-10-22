@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import ServiceForm from "@/features/services/components/ServiceForm";
-import Loading from "../components/Loading";
+import { Skeleton } from "@/components/ui/skeleton";
 import ErrorState from "@/components/common/ErrorState";
 import { useServices } from "@/hooks/useServices";
 
@@ -28,7 +28,38 @@ export default function ServiceEdit() {
     }
   }
 
-  if (loading) return <Loading />;
+  if (loading) {
+    return (
+      <section role="status" aria-label="Cargando formulario de edición">
+        <Skeleton className="mb-6 h-4 w-36" />
+        <div className="page-header compact">
+          <div className="w-full space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+        </div>
+        <div className="card form-card">
+          <div className="form-grid">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div className="space-y-2" key={index}>
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+            ))}
+            <div className="full-width space-y-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <Skeleton className="h-5 w-36" />
+          </div>
+          <div className="form-actions">
+            <Skeleton className="h-9 w-32" />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!service) {
     return (

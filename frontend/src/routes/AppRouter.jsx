@@ -2,7 +2,7 @@ import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import MainLayout from "@/layouts/MainLayout";
-import PageLoader from "@/components/common/PageLoader";
+import { PageLoader } from "@/components/common/PageLoader";
 
 const ServiceList = lazy(() => import("@/pages/ServiceList"));
 const ServiceCreate = lazy(() => import("@/pages/ServiceCreate"));

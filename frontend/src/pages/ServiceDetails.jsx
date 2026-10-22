@@ -4,7 +4,7 @@ import { RotateCcwIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import ErrorState from "@/components/common/ErrorState";
-import Loading from "../components/Loading";
+import { Skeleton } from "@/components/ui/skeleton";
 import ServiceChip from "@/features/services/components/ServiceChip";
 import { useServices } from "@/hooks/useServices";
 import { confirmServiceAction } from "@/utils/confirmAction";
@@ -52,7 +52,35 @@ export default function ServiceDetails() {
     if (restored) setService(restored);
   }
 
-  if (loading) return <Loading />;
+  if (loading) {
+    return (
+      <section className="detail-page" role="status" aria-label="Cargando servicio">
+        <Skeleton className="mb-4 h-4 w-32" />
+        <div className="detail-hero card">
+          <Skeleton className="size-12 rounded-lg" />
+          <div className="w-full space-y-3">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-7 w-28" />
+          </div>
+        </div>
+        <div className="card detail-body space-y-5">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-4/5" />
+          <div className="metadata">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="form-actions">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!service) {
     return (

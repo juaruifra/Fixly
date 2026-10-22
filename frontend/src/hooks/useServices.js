@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import * as serviceService from "@/services/serviceService";
 import { showApiErrorAlert } from "@/utils/errorHandler";
@@ -12,25 +12,49 @@ export function useServices() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const latestListRequest = useRef(0);
 
-  const loadServices = useCallback(async (params = {}) => {
-    setLoading(true);
-    setError("");
+  const loadServices = useCallback(
+    async (params = {}, { notifyOnError = true } = {}) => {
+      const requestId = latestListRequest.current + 1;
+      latestListRequest.current = requestId;
+      setLoading(true);
+      setError("");
 
-    try {
-      const result = await serviceService.getServices(params);
-      setServices(result);
-      return result;
-    } catch (requestError) {
-      const normalizedError = await showApiErrorAlert(requestError);
-      setError(
-        getErrorMessage(normalizedError, "No se pudieron cargar los servicios."),
-      );
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      try {
+        const result = await serviceService.getServices(params);
+        if (requestId !== latestListRequest.current) return null;
+
+        setServices(result);
+        return result;
+      } catch (requestError) {
+        if (requestId !== latestListRequest.current) return null;
+
+        if (notifyOnError) {
+          const normalizedError = await showApiErrorAlert(requestError);
+          if (requestId !== latestListRequest.current) return null;
+          setError(
+            getErrorMessage(
+              normalizedError,
+              "No se pudieron cargar los servicios.",
+            ),
+          );
+        } else {
+          setError(
+            getErrorMessage(
+              requestError,
+              "No se pudieron cargar los servicios.",
+            ),
+          );
+        }
+
+        return null;
+      } finally {
+        if (requestId === latestListRequest.current) setLoading(false);
+      }
+    },
+    [],
+  );
 
   const getServiceById = useCallback(async (id) => {
     setLoading(true);
@@ -56,10 +80,7 @@ export function useServices() {
       onSuccess?.(result);
       return result;
     } catch (requestError) {
-      const normalizedError = await showApiErrorAlert(requestError);
-      setError(
-        getErrorMessage(normalizedError, "No se pudo completar la operación."),
-      );
+      await showApiErrorAlert(requestError);
       return null;
     } finally {
       setSubmitting(false);

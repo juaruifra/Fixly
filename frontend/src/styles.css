@@ -1043,27 +1043,6 @@ textarea {
   gap: 8px;
 }
 
-.data-table-skeleton {
-  display: grid;
-}
-
-.data-table-skeleton-row {
-  min-height: 58px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  align-items: center;
-  gap: 18px;
-  padding: 0 14px;
-  border-top: 1px solid var(--border);
-}
-
-.data-table-skeleton-cell {
-  height: 12px;
-  border-radius: 4px;
-  background: var(--muted);
-  animation: table-pulse 1.2s ease-in-out infinite alternate;
-}
-
 .error-state {
   margin-bottom: 18px;
   padding: 14px 16px;
@@ -1390,12 +1369,6 @@ textarea {
   border-color: var(--border);
   background: var(--background);
   color: var(--foreground);
-}
-
-@keyframes table-pulse {
-  to {
-    opacity: 0.45;
-  }
 }
 
 @media (max-width: 760px) {

@@ -13,13 +13,11 @@ import {
   ArrowUpIcon,
 } from "lucide-react";
 
-import TableSkeleton from "@/components/common/TableSkeleton";
 import { Button } from "@/components/ui/button";
 
 export default function DataTable({
   columns,
   data,
-  loading = false,
   emptyMessage = "No hay datos para mostrar.",
   getRowClassName,
 }) {
@@ -115,13 +113,7 @@ export default function DataTable({
             ))}
           </thead>
           <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={columns.length}>
-                  <TableSkeleton columns={columns.length} />
-                </td>
-              </tr>
-            ) : table.getRowModel().rows.length ? (
+            {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
