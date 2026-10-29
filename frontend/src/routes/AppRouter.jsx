@@ -5,14 +5,14 @@ import MainLayout from "@/layouts/MainLayout";
 import { PageLoader } from "@/components/common/PageLoader";
 
 // Las pantallas se cargan cuando se visitan para no enviar todo al inicio.
-const ServiceList = lazy(() => import("@/pages/ServiceList"));
-const ServiceCreate = lazy(() => import("@/pages/ServiceCreate"));
-const ServiceDetails = lazy(() => import("@/pages/ServiceDetails"));
-const ServiceEdit = lazy(() => import("@/pages/ServiceEdit"));
-const CategoryList = lazy(() => import("@/pages/CategoryList"));
-const CategoryCreate = lazy(() => import("@/pages/CategoryCreate"));
-const CategoryDetails = lazy(() => import("@/pages/CategoryDetails"));
-const CategoryEdit = lazy(() => import("@/pages/CategoryEdit"));
+const ServiceList = lazy(() => import("@/pages/services/ServiceList"));
+const ServiceCreate = lazy(() => import("@/pages/services/ServiceCreate"));
+const ServiceDetails = lazy(() => import("@/pages/services/ServiceDetails"));
+const ServiceEdit = lazy(() => import("@/pages/services/ServiceEdit"));
+const CategoryList = lazy(() => import("@/pages/categories/CategoryList"));
+const CategoryCreate = lazy(() => import("@/pages/categories/CategoryCreate"));
+const CategoryDetails = lazy(() => import("@/pages/categories/CategoryDetails"));
+const CategoryEdit = lazy(() => import("@/pages/categories/CategoryEdit"));
 
 export function AppRouter() {
   return (
