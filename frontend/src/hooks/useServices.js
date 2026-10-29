@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
+import { useAppData } from "@/providers/AppProvider";
 import * as serviceService from "@/services/serviceService";
 import { showApiErrorAlert } from "@/utils/errorHandler";
 
@@ -7,77 +8,47 @@ function getErrorMessage(error, fallback) {
   return error?.message || fallback;
 }
 
+function getCategoryId(category) {
+  return String(category?._id ?? category ?? "");
+}
+
 export function useServices() {
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // El listado vive en AppProvider para que todas las pantallas compartan los cambios.
+  const {
+    services,
+    setServices,
+    servicesLoading,
+    servicesError,
+    loadServices,
+    loadCategories,
+  } = useAppData();
+  const [itemLoading, setItemLoading] = useState(false);
+  const [itemError, setItemError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const latestListRequest = useRef(0);
-
-  const loadServices = useCallback(
-    async (params = {}, { notifyOnError = true } = {}) => {
-      const requestId = latestListRequest.current + 1;
-      latestListRequest.current = requestId;
-      setLoading(true);
-      setError("");
-
-      try {
-        const result = await serviceService.getServices(params);
-        if (requestId !== latestListRequest.current) return null;
-
-        setServices(result);
-        return result;
-      } catch (requestError) {
-        if (requestId !== latestListRequest.current) return null;
-
-        if (notifyOnError) {
-          const normalizedError = await showApiErrorAlert(requestError);
-          if (requestId !== latestListRequest.current) return null;
-          setError(
-            getErrorMessage(
-              normalizedError,
-              "No se pudieron cargar los servicios.",
-            ),
-          );
-        } else {
-          setError(
-            getErrorMessage(
-              requestError,
-              "No se pudieron cargar los servicios.",
-            ),
-          );
-        }
-
-        return null;
-      } finally {
-        if (requestId === latestListRequest.current) setLoading(false);
-      }
-    },
-    [],
-  );
 
   const getServiceById = useCallback(async (id) => {
-    setLoading(true);
-    setError("");
+    setItemLoading(true);
+    setItemError("");
 
     try {
       return await serviceService.getServiceById(id);
     } catch (requestError) {
       const normalizedError = await showApiErrorAlert(requestError);
-      setError(getErrorMessage(normalizedError, "No se pudo cargar el servicio."));
+      setItemError(
+        getErrorMessage(normalizedError, "No se pudo cargar el servicio."),
+      );
       return null;
     } finally {
-      setLoading(false);
+      setItemLoading(false);
     }
   }, []);
 
   const runMutation = useCallback(async (operation, onSuccess) => {
     setSubmitting(true);
-    setError("");
 
     try {
       const result = await operation();
-      onSuccess?.(result);
+      await onSuccess?.(result);
       return result;
     } catch (requestError) {
       await showApiErrorAlert(requestError);
@@ -89,22 +60,41 @@ export function useServices() {
 
   const createService = useCallback(
     (data) =>
-      runMutation(() => serviceService.createService(data), (created) => {
-        setServices((currentServices) => [...currentServices, created]);
-      }),
-    [runMutation],
+      runMutation(
+        () => serviceService.createService(data),
+        async (created) => {
+          setServices((currentServices) => [...currentServices, created]);
+          // La nueva relación puede cambiar los contadores de categorías.
+          await loadCategories();
+        },
+      ),
+    [loadCategories, runMutation, setServices],
   );
 
   const updateService = useCallback(
-    (id, data) =>
-      runMutation(() => serviceService.updateService(id, data), (updated) => {
-        setServices((currentServices) =>
-          currentServices.map((service) =>
-            service._id === id ? updated : service,
-          ),
-        );
-      }),
-    [runMutation],
+    (id, data) => {
+      const currentService = services.find((service) => service._id === id);
+      const currentCategoryId = getCategoryId(currentService?.category);
+      const nextCategoryId =
+        data.category === undefined
+          ? currentCategoryId
+          : getCategoryId(data.category);
+      const categoryChanged = currentCategoryId !== nextCategoryId;
+
+      return runMutation(
+        () => serviceService.updateService(id, data),
+        async (updated) => {
+          setServices((currentServices) =>
+            currentServices.map((service) =>
+              service._id === id ? updated : service,
+            ),
+          );
+          // Solo recargamos los contadores cuando cambió la categoría asignada.
+          if (categoryChanged) await loadCategories();
+        },
+      );
+    },
+    [loadCategories, runMutation, services, setServices],
   );
 
   const deleteService = useCallback(
@@ -121,7 +111,7 @@ export function useServices() {
           ),
         );
       }),
-    [runMutation],
+    [runMutation, setServices],
   );
 
   const restoreService = useCallback(
@@ -133,7 +123,7 @@ export function useServices() {
           ),
         );
       }),
-    [runMutation],
+    [runMutation, setServices],
   );
 
   const changeServiceActive = useCallback(
@@ -148,7 +138,7 @@ export function useServices() {
           );
         },
       ),
-    [runMutation],
+    [runMutation, setServices],
   );
 
   const changeServiceStatus = useCallback(
@@ -163,13 +153,13 @@ export function useServices() {
           );
         },
       ),
-    [runMutation],
+    [runMutation, setServices],
   );
 
   return {
     services,
-    loading,
-    error,
+    loading: servicesLoading || itemLoading,
+    error: itemError || servicesError,
     submitting,
     loadServices,
     getServiceById,

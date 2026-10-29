@@ -14,11 +14,10 @@ export const serviceSchema = z
       .trim()
       .min(1, "El nombre es obligatorio.")
       .max(120, "El nombre admite un máximo de 120 caracteres."),
+    // La relación se guarda por ID, no por el nombre visible de la categoría.
     category: z
       .string()
-      .trim()
-      .min(1, "La categoría es obligatoria.")
-      .max(80, "La categoría admite un máximo de 80 caracteres."),
+      .regex(/^[a-f\d]{24}$/i, "Selecciona una categoría válida."),
     price: z
       .number({ invalid_type_error: "Indica un precio válido." })
       .finite("Indica un precio válido.")

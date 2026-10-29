@@ -96,6 +96,12 @@ export default function ServiceDetails() {
     );
   }
 
+  // Acepta la categoría poblada y también respuestas antiguas en texto.
+  const categoryName =
+    typeof service.category === "object"
+      ? service.category?.name
+      : service.category;
+
   return (
     <section className="detail-page">
       <Link className="back-link" to="/services">
@@ -106,7 +112,7 @@ export default function ServiceDetails() {
         <div className="detail-icon">🔧</div>
         <div>
           <span className="city">
-            {service.category} · {service.duration} min
+            {categoryName || "Categoría no disponible"} · {service.duration} min
           </span>
           <h1>{service.name}</h1>
           <div className="price">

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { PlusIcon, WrenchIcon } from "lucide-react";
+import { PlusIcon, TagIcon, WrenchIcon } from "lucide-react";
 
 import ThemeSelector from "@/components/ThemeSelector";
 import {
@@ -28,15 +28,22 @@ export default function AdminSidebar() {
           <SidebarMenuLink
             end
             icon={<WrenchIcon aria-hidden="true" />}
-          to="/services"
-        >
+            to="/services"
+          >
             Servicios
           </SidebarMenuLink>
           <SidebarMenuLink
             icon={<PlusIcon aria-hidden="true" />}
-          to="/services/new"
-        >
+            to="/services/new"
+          >
             Crear servicio
+          </SidebarMenuLink>
+          {/* Desde aquí se accede a la administración de categorías. */}
+          <SidebarMenuLink
+            icon={<TagIcon aria-hidden="true" />}
+            to="/categories"
+          >
+            Categorías
           </SidebarMenuLink>
         </SidebarMenu>
       </SidebarContent>

@@ -39,7 +39,10 @@ export default function ServiceCard({ service, onDelete }) {
 
 				<div className="min-w-0 flex-1">
 					<div className="mb-2 flex items-center gap-2">
-						<Badge variant="secondary">{service.category}</Badge>
+						{/* La API devuelve el objeto; el fallback cubre datos antiguos. */}
+						<Badge variant="secondary">
+							{service.category?.name ?? service.category ?? "Categoría"}
+						</Badge>
 						<span className="flex items-center gap-1 text-xs text-muted-foreground">
 							<ClockIcon className="size-3.5" />
 							{service.duration} min
@@ -94,6 +97,7 @@ export default function ServiceCard({ service, onDelete }) {
 				<Button
 					variant="outline"
 					size="sm"
+					nativeButton={false}
 					render={<Link to={`/services/${service._id}`} />}
 				>
 					Ver servicio

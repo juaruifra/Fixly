@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   EyeIcon,
@@ -82,24 +82,6 @@ export default function ServiceList() {
     changeServiceStatus,
   } = useServices();
 
-  const filters = useMemo(() => {
-    const params = {};
-
-    if (recordFilter === "active") {
-      params.active = true;
-      params.deleted = false;
-    } else if (recordFilter === "inactive") {
-      params.active = false;
-      params.deleted = false;
-    } else if (recordFilter === "deleted") {
-      params.deleted = true;
-    }
-
-    if (statusFilter !== "all") params.status = statusFilter;
-
-    return params;
-  }, [recordFilter, statusFilter]);
-
   const visibleServices = useMemo(
     () =>
       services.filter((service) => {
@@ -117,14 +99,7 @@ export default function ServiceList() {
     [recordFilter, services, statusFilter],
   );
 
-  useEffect(() => {
-    loadServices(filters, { notifyOnError: false });
-  }, [filters, loadServices]);
-
-  const retryServices = useCallback(
-    () => loadServices(filters, { notifyOnError: false }),
-    [filters, loadServices],
-  );
+  const retryServices = useCallback(() => loadServices(), [loadServices]);
 
   const updateStatus = useCallback(
     (service, status) => changeServiceStatus(service._id, status),
@@ -176,7 +151,9 @@ export default function ServiceList() {
         ),
       },
       {
-        accessorKey: "category",
+        id: "category",
+        // El backend devuelve la categoría poblada; la tabla ordena y busca por nombre.
+        accessorFn: (service) => service.category?.name ?? "",
         header: "Categoría",
         cell: ({ getValue }) => (
           <ServiceChip value={getValue()} kind="category" />
@@ -243,6 +220,7 @@ export default function ServiceList() {
             <Button
               variant="ghost"
               size="icon"
+              nativeButton={false}
               render={<Link to={`/services/${row.original._id}`} />}
               aria-label={`Ver ${row.original.name}`}
               title="Ver detalle"
@@ -266,6 +244,7 @@ export default function ServiceList() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  nativeButton={false}
                   render={<Link to={`/services/${row.original._id}/edit`} />}
                   aria-label={`Editar ${row.original.name}`}
                   title="Editar"
@@ -314,7 +293,7 @@ export default function ServiceList() {
           </p>
         </div>
 
-        <Button render={<Link to="/services/new" />}>
+        <Button nativeButton={false} render={<Link to="/services/new" />}>
           <PlusIcon aria-hidden="true" />
           Crear servicio
         </Button>
