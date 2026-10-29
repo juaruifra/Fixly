@@ -19,12 +19,56 @@ const options = {
     ],
     components: {
       schemas: {
+        // Forma completa de una categoría tal como la devuelve la API.
+        Category: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            name: { type: "string", example: "Fontanería" },
+            serviceCount: {
+              type: "integer",
+              description:
+                "Número de servicios asociados, incluidos los eliminados.",
+            },
+            description: {
+              type: "string",
+              example: "Reparaciones e instalaciones de fontanería.",
+            },
+            slug: { type: "string", example: "fontaneria" },
+            active: { type: "boolean", example: true },
+            deletedAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+              example: null,
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        // Campos que el cliente puede enviar al crear o editar una categoría.
+        CategoryInput: {
+          type: "object",
+          description:
+            "Campos editables de la categoría. El slug se genera desde name; deletedAt lo gestiona la API.",
+          required: ["name"],
+          properties: {
+            name: { type: "string", example: "Fontanería" },
+            description: {
+              type: "string",
+              example: "Reparaciones e instalaciones de fontanería.",
+            },
+            active: { type: "boolean", example: true },
+            slug: { type: "string", readOnly: true, example: "fontaneria" },
+            deletedAt: { type: "string", readOnly: true, nullable: true },
+          },
+        },
         Service: {
           type: "object",
           properties: {
             _id: { type: "string" },
             name: { type: "string", example: "Montaje de muebles" },
-            category: { type: "string", example: "Montaje" },
+            category: { $ref: "#/components/schemas/Category" },
             price: { type: "number", example: 35 },
             duration: { type: "integer", example: 60 },
             description: {
@@ -51,11 +95,15 @@ const options = {
         ServiceInput: {
           type: "object",
           description:
-            "Campos editables del servicio, incluido status. El slug se genera desde name y deletedAt lo gestiona la API. Para actualizar únicamente status puede usarse PATCH /api/services/{id}/status.",
+            "Campos editables del servicio, incluido status. category recibe el ObjectId de una categoría. El slug se genera desde name y deletedAt lo gestiona la API. Para actualizar únicamente status puede usarse PATCH /api/services/{id}/status.",
           required: ["name", "category", "price", "duration"],
           properties: {
             name: { type: "string", example: "Instalación de lámparas" },
-            category: { type: "string", example: "Electricidad" },
+            category: {
+              type: "string",
+              format: "objectid",
+              example: "65a1b2c3d4e5f67890123456",
+            },
             price: { type: "number", minimum: 0, example: 30 },
             duration: { type: "integer", minimum: 15, example: 45 },
             description: {

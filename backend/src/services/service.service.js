@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { serviceRepository } from "../repositories/service.repository.js";
+import { categoryRepository } from "../repositories/category.repository.js";
 import { AppError } from "../utils/app-error.js";
 import { generateSlug } from "../utils/slug.util.js";
 
@@ -23,6 +24,30 @@ function sanitizeInput(data) {
   return Object.fromEntries(
     Object.entries(data).filter(([key]) => allowed.includes(key)),
   );
+}
+
+function getCategoryId(category) {
+  return category?._id ?? category;
+}
+
+async function validateCategoryAssignment(categoryId, currentCategory) {
+  if (!mongoose.isValidObjectId(categoryId)) {
+    throw new AppError("Invalid category id", 400);
+  }
+
+  // Mantener la categoría que ya tenía el servicio no bloquea otras ediciones.
+  if (
+    currentCategory != null &&
+    String(getCategoryId(currentCategory)) === String(categoryId)
+  ) {
+    return;
+  }
+
+  const category = await categoryRepository.findById(categoryId);
+  if (!category) throw new AppError("Category not found", 404);
+  if (!category.active || category.deletedAt != null) {
+    throw new AppError("Category is not available", 409);
+  }
 }
 
 function isSlugDuplicate(error) {
@@ -72,16 +97,31 @@ export const serviceService = {
     if (!item) throw new AppError("Service not found", 404);
     return item;
   },
-  create: (data) => createWithUniqueSlug(sanitizeInput(data)),
+  async create(data) {
+    const serviceData = sanitizeInput(data);
+    await validateCategoryAssignment(serviceData.category);
+    return createWithUniqueSlug(serviceData);
+  },
   async update(id, data) {
     validateId(id);
     const updates = sanitizeInput(data);
+    const existing = await getExistingOrThrow(id);
+    if (existing.deletedAt != null) {
+      throw new AppError(
+        "Cannot edit a deleted service. Restore it before editing.",
+        409,
+      );
+    }
+    if (updates.category !== undefined) {
+      await validateCategoryAssignment(updates.category, existing.category);
+    }
+
     const item = await serviceRepository.updateById(id, updates, {
       notDeleted: true,
     });
     if (!item) {
-      const existing = await getExistingOrThrow(id);
-      if (existing.deletedAt != null) {
+      const current = await getExistingOrThrow(id);
+      if (current.deletedAt != null) {
         throw new AppError(
           "Cannot edit a deleted service. Restore it before editing.",
           409,

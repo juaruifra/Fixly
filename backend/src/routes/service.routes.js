@@ -50,14 +50,8 @@ const createValidation = [
     .exists({ values: "falsy" })
     .withMessage("category is required")
     .bail()
-    .isString()
-    .withMessage("category must be a string")
-    .bail()
-    .trim()
-    .notEmpty()
-    .withMessage("category cannot be empty")
-    .isLength({ max: 80 })
-    .withMessage("category must be at most 80 characters"),
+    .isMongoId()
+    .withMessage("category must be a valid category id"),
   body("price")
     .exists({ values: "null" })
     .withMessage("price is required")
@@ -102,14 +96,8 @@ const updateValidation = [
     .withMessage("name must be at most 120 characters"),
   body("category")
     .optional()
-    .isString()
-    .withMessage("category must be a string")
-    .bail()
-    .trim()
-    .notEmpty()
-    .withMessage("category cannot be empty")
-    .isLength({ max: 80 })
-    .withMessage("category must be at most 80 characters"),
+    .isMongoId()
+    .withMessage("category must be a valid category id"),
   body("price")
     .optional()
     .isFloat({ min: 0 })
