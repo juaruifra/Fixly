@@ -5,17 +5,54 @@ import { generateSlug } from "../utils/slug.util.js";
 
 // Rechaza identificadores mal formados antes de consultar MongoDB.
 function validateId(id) {
-  if (!mongoose.isValidObjectId(id)) {
+  if (!mongoose.isObjectIdOrHexString(id)) {
     throw new AppError("Invalid category id", 400);
   }
 }
 
 // Solo aceptamos campos editables; slug y deletedAt los controla el servidor.
-function sanitizeInput(data) {
+function sanitizeInput(data, { requireName = false } = {}) {
+  // El servicio valida también las llamadas que no vienen de una ruta HTTP.
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    throw new AppError("Category data must be an object", 400);
+  }
+
   const allowed = ["name", "description", "active"];
-  return Object.fromEntries(
+  const categoryData = Object.fromEntries(
     Object.entries(data).filter(([key]) => allowed.includes(key)),
   );
+
+  // Crear exige nombre; al editar permitimos enviar solo los campos que cambian.
+  if (requireName && !Object.hasOwn(categoryData, "name")) {
+    throw new AppError("name is required", 400);
+  }
+
+  if (Object.hasOwn(categoryData, "name")) {
+    // Quitamos espacios sobrantes y rechazamos nombres vacíos.
+    if (typeof categoryData.name !== "string") {
+      throw new AppError("name must be a string", 400);
+    }
+    categoryData.name = categoryData.name.trim();
+    if (!categoryData.name) throw new AppError("name cannot be empty", 400);
+  }
+
+  if (Object.hasOwn(categoryData, "description")) {
+    // La descripción puede faltar, pero no puede tener un tipo inesperado.
+    if (typeof categoryData.description !== "string") {
+      throw new AppError("description must be a string", 400);
+    }
+    categoryData.description = categoryData.description.trim();
+  }
+
+  // Solo aceptamos true o false para activar o desactivar la categoría.
+  if (
+    Object.hasOwn(categoryData, "active") &&
+    typeof categoryData.active !== "boolean"
+  ) {
+    throw new AppError("active must be a boolean", 400);
+  }
+
+  return categoryData;
 }
 
 // Detecta la colisión del índice único de slug, incluso si dos altas coinciden.
@@ -69,7 +106,8 @@ export const categoryService = {
     validateId(id);
     return getExistingOrThrow(id);
   },
-  create: (data) => createWithUniqueSlug(sanitizeInput(data)),
+  create: (data) =>
+    createWithUniqueSlug(sanitizeInput(data, { requireName: true })),
   async update(id, data) {
     validateId(id);
     const updates = sanitizeInput(data);
@@ -122,6 +160,10 @@ export const categoryService = {
   },
   async setActive(id, active) {
     validateId(id);
+    // El servicio mantiene esta comprobación aunque la ruta ya la realice.
+    if (typeof active !== "boolean") {
+      throw new AppError("active must be a boolean", 400);
+    }
     const category = await categoryRepository.setActiveById(id, active);
     if (category) return category;
 

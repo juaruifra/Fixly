@@ -6,12 +6,20 @@ import { generateSlug } from "../utils/slug.util.js";
 
 const allowedStatuses = ["draft", "published", "paused", "discontinued"];
 
+// Solo aceptamos IDs de MongoDB completos, no valores que puedan convertirse a uno.
 function validateId(id) {
-  if (!mongoose.isValidObjectId(id))
+  if (!mongoose.isObjectIdOrHexString(id)) {
     throw new AppError("Invalid service id", 400);
+  }
 }
 
-function sanitizeInput(data) {
+function sanitizeInput(data, { creating = false } = {}) {
+  // El servicio también valida su entrada por si se llama sin pasar por HTTP.
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    throw new AppError("Service data must be an object", 400);
+  }
+
+  // Solo guardamos campos editables; el slug se genera dentro del servicio.
   const allowed = [
     "name",
     "category",
@@ -21,9 +29,82 @@ function sanitizeInput(data) {
     "active",
     "status",
   ];
-  return Object.fromEntries(
+  const serviceData = Object.fromEntries(
     Object.entries(data).filter(([key]) => allowed.includes(key)),
   );
+
+  if (creating) {
+    // Un servicio nuevo necesita estos cuatro datos para quedar completo.
+    for (const field of ["name", "category", "price", "duration"]) {
+      if (!Object.hasOwn(serviceData, field)) {
+        throw new AppError(`${field} is required`, 400);
+      }
+    }
+  }
+
+  if (Object.hasOwn(serviceData, "name")) {
+    // Limpiamos el nombre y aplicamos el mismo máximo que acepta la API.
+    if (typeof serviceData.name !== "string") {
+      throw new AppError("name must be a string", 400);
+    }
+    serviceData.name = serviceData.name.trim();
+    if (!serviceData.name) throw new AppError("name cannot be empty", 400);
+    if (serviceData.name.length > 120) {
+      throw new AppError("name must be at most 120 characters", 400);
+    }
+  }
+
+  // El precio debe ser un número real y no puede ser negativo.
+  if (Object.hasOwn(serviceData, "price")) {
+    if (
+      typeof serviceData.price !== "number" ||
+      !Number.isFinite(serviceData.price) ||
+      serviceData.price < 0
+    ) {
+      throw new AppError(
+        "price must be a number greater than or equal to 0",
+        400,
+      );
+    }
+  }
+
+  // La duración se expresa en minutos enteros y no puede ser menor de 15.
+  if (Object.hasOwn(serviceData, "duration")) {
+    if (!Number.isInteger(serviceData.duration) || serviceData.duration < 15) {
+      throw new AppError(
+        "duration must be an integer greater than or equal to 15",
+        400,
+      );
+    }
+  }
+
+  if (Object.hasOwn(serviceData, "description")) {
+    // La descripción es opcional, pero si llega debe ser texto de hasta 500 caracteres.
+    if (typeof serviceData.description !== "string") {
+      throw new AppError("description must be a string", 400);
+    }
+    serviceData.description = serviceData.description.trim();
+    if (serviceData.description.length > 500) {
+      throw new AppError("description must be at most 500 characters", 400);
+    }
+  }
+
+  // Estos valores también se comprueban aquí, aunque la ruta ya los valide.
+  if (
+    Object.hasOwn(serviceData, "active") &&
+    typeof serviceData.active !== "boolean"
+  ) {
+    throw new AppError("active must be a boolean", 400);
+  }
+
+  if (
+    Object.hasOwn(serviceData, "status") &&
+    !allowedStatuses.includes(serviceData.status)
+  ) {
+    throw new AppError("Invalid service status", 400);
+  }
+
+  return serviceData;
 }
 
 function getCategoryId(category) {
@@ -31,7 +112,8 @@ function getCategoryId(category) {
 }
 
 async function validateCategoryAssignment(categoryId, currentCategory) {
-  if (!mongoose.isValidObjectId(categoryId)) {
+  // La relación debe apuntar a una categoría existente y disponible.
+  if (!mongoose.isObjectIdOrHexString(categoryId)) {
     throw new AppError("Invalid category id", 400);
   }
 
@@ -98,7 +180,7 @@ export const serviceService = {
     return item;
   },
   async create(data) {
-    const serviceData = sanitizeInput(data);
+    const serviceData = sanitizeInput(data, { creating: true });
     await validateCategoryAssignment(serviceData.category);
     return createWithUniqueSlug(serviceData);
   },
@@ -153,6 +235,9 @@ export const serviceService = {
   },
   async setActive(id, active) {
     validateId(id);
+    if (typeof active !== "boolean") {
+      throw new AppError("active must be a boolean", 400);
+    }
     const item = await serviceRepository.setActiveById(id, active);
     if (item) return item;
     const existing = await getExistingOrThrow(id);
