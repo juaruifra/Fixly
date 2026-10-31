@@ -7,6 +7,10 @@ import { swaggerSpec } from "./config/swagger.js";
 import serviceRoutes from "./routes/service.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import variantRoutes from "./routes/variant.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+import roleRoutes from "./routes/role.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import workerRoutes from "./routes/worker.routes.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -25,6 +29,10 @@ app.use("/api/services", serviceRoutes);
 // Todas las rutas de categorías comparten el prefijo /api/categories.
 app.use("/api/categories", categoryRoutes);
 app.use("/api/variants", variantRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/roles", roleRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/workers", workerRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

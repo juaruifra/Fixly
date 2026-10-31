@@ -1,6 +1,9 @@
 import { Category } from "./models/category.model.js";
+import { Role } from "./models/role.model.js";
 import { Service } from "./models/service.model.js";
 import { Variant } from "./models/variant.model.js";
+import { User } from "./models/user.model.js";
+import { userService } from "./services/user.service.js";
 import { variantService } from "./services/variant.service.js";
 import { generateSlug } from "./utils/slug.util.js";
 
@@ -44,6 +47,11 @@ const sampleCategories = [
   active: true,
   deletedAt: null,
 }));
+
+const sampleRoles = [
+  { name: "ADMIN", description: "Administración de Fixly." },
+  { name: "CLIENT", description: "Cliente de Fixly." },
+];
 
 // Guardamos el slug de categoría como referencia temporal del seed;
 // antes de insertar, lo resolvemos al ObjectId real de MongoDB.
@@ -170,9 +178,28 @@ async function createIfMissing(Model, data) {
   }
 }
 
+async function createIfMissingBy(Model, query, data) {
+  const existing = await Model.findOne(query);
+  if (existing) return { record: existing, created: false };
+
+  try {
+    const record = await Model.create(data);
+    return { record, created: true };
+  } catch (error) {
+    if (error?.code !== 11000) throw error;
+    const record = await Model.findOne(query);
+    if (!record) throw error;
+    return { record, created: false };
+  }
+}
+
 export async function seedFixlyData() {
   // El resumen permite saber qué se creó y qué se dejó como estaba.
   const summary = {
+    rolesCreated: 0,
+    rolesKept: 0,
+    adminUsersCreated: 0,
+    adminUsersKept: 0,
     categoriesCreated: 0,
     categoriesKept: 0,
     servicesCreated: 0,
@@ -182,7 +209,42 @@ export async function seedFixlyData() {
     variantsKept: 0,
     variantsSkippedUnavailableService: 0,
   };
+  const rolesByName = new Map();
   const categoriesBySlug = new Map();
+
+  // Los usuarios dependen de los roles, así que los aseguramos primero.
+  for (const roleData of sampleRoles) {
+    const { record, created } = await createIfMissingBy(
+      Role,
+      { name: roleData.name },
+      { ...roleData, active: true, deletedAt: null },
+    );
+    rolesByName.set(roleData.name, record);
+    summary[created ? "rolesCreated" : "rolesKept"] += 1;
+  }
+
+  const adminEmail = process.env.FIXLY_ADMIN_EMAIL?.trim().toLowerCase();
+  const adminPassword = process.env.FIXLY_ADMIN_PASSWORD;
+  if (Boolean(adminEmail) !== Boolean(adminPassword)) {
+    throw new Error("FIXLY_ADMIN_EMAIL and FIXLY_ADMIN_PASSWORD must be configured together.");
+  }
+  if (adminEmail && adminPassword) {
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (existingAdmin) {
+      summary.adminUsersKept += 1;
+    } else {
+      const adminRole = rolesByName.get("ADMIN");
+      if (adminRole.active && adminRole.deletedAt == null) {
+        await userService.createByAdmin({
+          name: process.env.FIXLY_ADMIN_NAME || "Administrador",
+          email: adminEmail,
+          password: adminPassword,
+          role: String(adminRole._id),
+        });
+        summary.adminUsersCreated += 1;
+      }
+    }
+  }
 
   // Primero aseguramos las categorías; después los servicios pueden usar sus ObjectId.
   for (const categoryData of sampleCategories) {

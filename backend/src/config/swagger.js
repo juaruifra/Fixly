@@ -7,7 +7,7 @@ const options = {
       title: "Fixly API",
       version: "1.0.0",
       description:
-        "API REST para gestión de servicios de reparación y mantenimiento a domicilio. Las rutas administrativas aún no tienen autenticación y deberán protegerse cuando se incorpore.",
+        "API REST de Fixly. Las rutas nuevas de administración requieren Bearer JWT; las rutas administrativas existentes de Category, Service y Variant siguen pendientes de protección.",
     },
     servers: [
       {
@@ -18,6 +18,13 @@ const options = {
       },
     ],
     components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
       schemas: {
         // Forma completa de una categoría tal como la devuelve la API.
         Category: {
@@ -175,6 +182,80 @@ const options = {
               default: "published",
             },
             requiresBooking: { type: "boolean", default: false },
+          },
+        },
+        Role: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            name: { type: "string", example: "CLIENT" },
+            description: { type: "string" },
+            active: { type: "boolean" },
+            deletedAt: { type: "string", format: "date-time", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        RoleInput: {
+          type: "object",
+          required: ["name"],
+          properties: {
+            name: { type: "string", example: "CLIENT" },
+            description: { type: "string" },
+            active: { type: "boolean", default: true },
+          },
+        },
+        User: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            name: { type: "string", example: "Ana García" },
+            email: { type: "string", format: "email" },
+            role: { $ref: "#/components/schemas/Role" },
+            active: { type: "boolean" },
+            deletedAt: { type: "string", format: "date-time", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        UserAdminInput: {
+          type: "object",
+          required: ["name", "email", "password", "role"],
+          properties: {
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            password: { type: "string", writeOnly: true, minLength: 8, maxLength: 128 },
+            role: { type: "string", format: "objectid" },
+          },
+        },
+        AuthResponse: {
+          type: "object",
+          properties: {
+            user: { $ref: "#/components/schemas/User" },
+            token: { type: "string" },
+          },
+        },
+        Worker: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            phone: { type: "string" },
+            active: { type: "boolean" },
+            deletedAt: { type: "string", format: "date-time", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        WorkerInput: {
+          type: "object",
+          required: ["name"],
+          properties: {
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            phone: { type: "string" },
+            active: { type: "boolean", default: true },
           },
         },
         ErrorResponse: {
