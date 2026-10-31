@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { serviceRepository } from "../repositories/service.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
+import { variantRepository } from "../repositories/variant.repository.js";
 import { AppError } from "../utils/app-error.js";
 import { generateSlug } from "../utils/slug.util.js";
 
@@ -215,10 +216,24 @@ export const serviceService = {
   },
   async remove(id) {
     validateId(id);
-    const item = await serviceRepository.softDeleteById(id, new Date());
-    if (item) return;
     const existing = await getExistingOrThrow(id);
     if (existing.deletedAt != null) {
+      throw new AppError("Service is already deleted", 409);
+    }
+
+    // También cuentan variantes eliminadas: sus SKU y pedidos siguen referenciándolas.
+    const variantCount = await variantRepository.countByService(id);
+    if (variantCount > 0) {
+      throw new AppError(
+        "Cannot delete service while variants are associated with it.",
+        409,
+      );
+    }
+
+    const item = await serviceRepository.softDeleteById(id, new Date());
+    if (item) return;
+    const current = await getExistingOrThrow(id);
+    if (current.deletedAt != null) {
       throw new AppError("Service is already deleted", 409);
     }
     throw new AppError("Service could not be deleted", 409);

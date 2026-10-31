@@ -129,6 +129,54 @@ const options = {
             },
           },
         },
+        Variant: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            service: { $ref: "#/components/schemas/Service" },
+            name: { type: "string", example: "Limpieza de 2 horas" },
+            sku: { type: "string", example: "LIM-VIV-2H-001" },
+            auto: { type: "boolean", example: true },
+            price: { type: "number", minimum: 0, example: 80 },
+            duration: { type: "integer", minimum: 1, example: 120 },
+            active: { type: "boolean", example: true },
+            status: {
+              type: "string",
+              enum: ["draft", "published", "paused", "discontinued"],
+            },
+            requiresBooking: { type: "boolean", example: false },
+            deletedAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        VariantInput: {
+          type: "object",
+          required: ["service", "name", "price", "duration"],
+          properties: {
+            service: { type: "string", format: "objectid" },
+            name: { type: "string", example: "Limpieza de 2 horas" },
+            sku: {
+              type: "string",
+              description: "Se ignora cuando auto es true.",
+              example: "LIM-VIV-2H-001",
+            },
+            auto: { type: "boolean", default: true },
+            price: { type: "number", minimum: 0, example: 80 },
+            duration: { type: "integer", minimum: 1, example: 120 },
+            active: { type: "boolean", default: true },
+            status: {
+              type: "string",
+              enum: ["draft", "published", "paused", "discontinued"],
+              default: "published",
+            },
+            requiresBooking: { type: "boolean", default: false },
+          },
+        },
         ErrorResponse: {
           type: "object",
           properties: {

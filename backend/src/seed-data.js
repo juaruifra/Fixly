@@ -1,5 +1,7 @@
 import { Category } from "./models/category.model.js";
 import { Service } from "./models/service.model.js";
+import { Variant } from "./models/variant.model.js";
+import { variantService } from "./services/variant.service.js";
 import { generateSlug } from "./utils/slug.util.js";
 
 // Datos de ejemplo. El slug se deriva del nombre con la utilidad compartida.
@@ -106,6 +108,42 @@ const sampleServices = [
   },
 ];
 
+const sampleVariants = [
+  {
+    serviceSlug: "montaje_de_muebles",
+    name: "Montaje estándar",
+    price: 35,
+    duration: 60,
+  },
+  {
+    serviceSlug: "instalacion_de_lamparas",
+    name: "Instalación estándar",
+    price: 30,
+    duration: 45,
+    requiresBooking: true,
+  },
+  {
+    serviceSlug: "reparacion_de_grifos",
+    name: "Reparación estándar",
+    price: 40,
+    duration: 60,
+    requiresBooking: true,
+  },
+  {
+    serviceSlug: "colgar_tv_en_pared",
+    name: "Montaje con instalación",
+    price: 55,
+    duration: 75,
+    requiresBooking: true,
+  },
+  {
+    serviceSlug: "pequenos_trabajos_de_pintura",
+    name: "Retoque estándar",
+    price: 65,
+    duration: 120,
+  },
+];
+
 function isDuplicateSlug(error) {
   return (
     error?.code === 11000 &&
@@ -140,6 +178,9 @@ export async function seedFixlyData() {
     servicesCreated: 0,
     servicesKept: 0,
     servicesSkippedUnavailableCategory: 0,
+    variantsCreated: 0,
+    variantsKept: 0,
+    variantsSkippedUnavailableService: 0,
   };
   const categoriesBySlug = new Map();
 
@@ -170,6 +211,32 @@ export async function seedFixlyData() {
       category: category._id,
     });
     summary[created ? "servicesCreated" : "servicesKept"] += 1;
+  }
+
+  // Las variantes se cargan al final para que sus servicios ya existan.
+  for (const { serviceSlug, ...variantData } of sampleVariants) {
+    const service = await Service.findOne({ slug: serviceSlug });
+    if (!service || service.deletedAt != null) {
+      summary.variantsSkippedUnavailableService += 1;
+      continue;
+    }
+
+    // Si alguien ya la creó o la eliminó, el seed respeta ese registro.
+    const existing = await Variant.findOne({
+      service: service._id,
+      name: variantData.name,
+    });
+    if (existing) {
+      summary.variantsKept += 1;
+      continue;
+    }
+
+    await variantService.create({
+      ...variantData,
+      service: service._id,
+      auto: true,
+    });
+    summary.variantsCreated += 1;
   }
 
   return summary;

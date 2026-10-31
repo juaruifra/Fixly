@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
 import { Category } from "./models/category.model.js";
 import { Service } from "./models/service.model.js";
+import { Variant } from "./models/variant.model.js";
 import { seedFixlyData } from "./seed-data.js";
 
 const LOCAL_MONGO_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -55,7 +56,8 @@ try {
     throw new Error("Reset bloqueado: la conexión no coincide con el destino local esperado.");
   }
 
-  // El orden respeta la relación: se borran servicios antes que categorías.
+  // El orden respeta las relaciones: primero variantes, después servicios y categorías.
+  await Variant.deleteMany({});
   await Service.deleteMany({});
   await Category.deleteMany({});
 

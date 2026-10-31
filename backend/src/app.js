@@ -6,6 +6,7 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 import serviceRoutes from "./routes/service.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
+import variantRoutes from "./routes/variant.routes.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -23,6 +24,7 @@ app.get("/health", (_req, res) => res.json({ ok: true, app: "Fixly API" }));
 app.use("/api/services", serviceRoutes);
 // Todas las rutas de categorías comparten el prefijo /api/categories.
 app.use("/api/categories", categoryRoutes);
+app.use("/api/variants", variantRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
