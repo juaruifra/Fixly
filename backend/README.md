@@ -34,7 +34,7 @@ Se mantienen el modelo, CRUD, `PATCH`, borrado `204`, Swagger, seed, health chec
 
 Para crear un administrador inicial, configura `FIXLY_ADMIN_EMAIL` y `FIXLY_ADMIN_PASSWORD` antes de ejecutar el seed. La contraseña se guarda con hash. Si el correo ya existe, el seed conserva esa cuenta y no cambia su contraseña ni su rol.
 
-`npm run seed:reset` elimina físicamente las colecciones de desarrollo (incluidos roles, usuarios, trabajadores, variantes, servicios y categorías) y vuelve a cargar los ejemplos. **No se ha ejecutado.** Para permitirlo deben cumplirse todas estas condiciones:
+`npm run seed:reset` elimina físicamente las colecciones de desarrollo (incluidos pedidos, carritos, roles, usuarios, trabajadores, variantes, servicios y categorías) y vuelve a cargar los ejemplos. **No se ha ejecutado.** Para permitirlo deben cumplirse todas estas condiciones:
 
 - `NODE_ENV=development`.
 - `ALLOW_DESTRUCTIVE_SEED_RESET=true` como confirmación explícita.

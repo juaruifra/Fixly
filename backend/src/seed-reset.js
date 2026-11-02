@@ -2,7 +2,9 @@ import "dotenv/config";
 import mongoose from "mongoose";
 
 import { connectDB } from "./config/db.js";
+import { Cart } from "./models/cart.model.js";
 import { Category } from "./models/category.model.js";
+import { Order } from "./models/order.model.js";
 import { Role } from "./models/role.model.js";
 import { Service } from "./models/service.model.js";
 import { Variant } from "./models/variant.model.js";
@@ -59,7 +61,9 @@ try {
     throw new Error("Reset bloqueado: la conexión no coincide con el destino local esperado.");
   }
 
-  // El orden respeta las relaciones: primero documentos dependientes y al final los catálogos.
+  // El orden elimina primero pedidos y carritos antes de sus usuarios y variantes.
+  await Order.deleteMany({});
+  await Cart.deleteMany({});
   await Variant.deleteMany({});
   await User.deleteMany({});
   await Worker.deleteMany({});
