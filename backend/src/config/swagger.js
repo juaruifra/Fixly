@@ -258,6 +258,59 @@ const options = {
             active: { type: "boolean", default: true },
           },
         },
+        CartItem: {
+          type: "object",
+          required: ["variant", "quantity"],
+          properties: {
+            variant: { $ref: "#/components/schemas/Variant" },
+            quantity: { type: "integer", minimum: 1 },
+          },
+        },
+        Cart: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            user: { type: "string", format: "objectid" },
+            items: {
+              type: "array",
+              items: { $ref: "#/components/schemas/CartItem" },
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        OrderItem: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            variant: { type: "string", format: "objectid" },
+            sku: { type: "string" },
+            serviceName: { type: "string" },
+            variantName: { type: "string" },
+            price: { type: "number", minimum: 0 },
+            duration: { type: "integer", minimum: 1 },
+            quantity: { type: "integer", minimum: 1 },
+            subtotal: { type: "number", minimum: 0 },
+          },
+        },
+        Order: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            user: { type: "string", format: "objectid" },
+            items: {
+              type: "array",
+              items: { $ref: "#/components/schemas/OrderItem" },
+            },
+            total: { type: "number", minimum: 0 },
+            status: {
+              type: "string",
+              enum: ["pending", "confirmed", "cancelled", "completed"],
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
         ErrorResponse: {
           type: "object",
           properties: {

@@ -11,6 +11,8 @@ import authRoutes from "./routes/auth.routes.js";
 import roleRoutes from "./routes/role.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import workerRoutes from "./routes/worker.routes.js";
+import cartRoutes from "./routes/cart.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -33,6 +35,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/workers", workerRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

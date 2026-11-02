@@ -52,6 +52,12 @@ En PowerShell, configura `NODE_ENV` y `ALLOW_DESTRUCTIVE_SEED_RESET` para la ses
 
 Las rutas administrativas existentes de Category, Service y Variant siguen sin autenticación por compatibilidad y requieren protección en una fase posterior.
 
+## Carrito y pedidos
+
+El checkout vuelve a comprobar en MongoDB que las variantes, servicios y categorías siguen publicados y disponibles. Calcula el total con los precios actuales del servidor y guarda en el pedido una copia de nombres, SKU, precio y duración para conservar el historial.
+
+La conexión actual usa MongoDB standalone, que no admite transacciones multidocumento. El checkout guarda una clave interna única para recuperar el mismo pedido si se reintenta después de crearlo, y bloquea cambios del carrito mientras procesa. Esto evita duplicar pedidos en los reintentos cubiertos, pero no constituye una transacción que bloquee cambios concurrentes en variantes; esa limitación se conserva explícitamente.
+
 ## Pruebas
 
 `npm test` ejecuta las pruebas unitarias y de integración. Estas últimas requieren `MONGODB_TEST_URI` apuntando a MongoDB local y una base cuyo nombre empiece por `fixly_test_`; usan y eliminan únicamente esa base temporal.
