@@ -206,6 +206,31 @@ test(
         assert.equal(allowed.status, 200);
       });
 
+      await t.test("el bypass abre administración solo en development y no abre /me", async () => {
+        const previousNodeEnv = process.env.NODE_ENV;
+        const previousAuthDisabled = process.env.AUTH_DISABLED;
+        try {
+          process.env.AUTH_DISABLED = "true";
+          process.env.NODE_ENV = "development";
+
+          const localRoles = await fetch(`${baseUrl}/roles`);
+          assert.equal(localRoles.status, 200);
+          const localWorkers = await fetch(`${baseUrl}/workers`);
+          assert.equal(localWorkers.status, 200);
+          const currentUser = await fetch(`${baseUrl}/auth/me`);
+          assert.equal(currentUser.status, 401);
+
+          process.env.NODE_ENV = "production";
+          const productionRoles = await fetch(`${baseUrl}/roles`);
+          assert.equal(productionRoles.status, 401);
+        } finally {
+          if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+          else process.env.NODE_ENV = previousNodeEnv;
+          if (previousAuthDisabled === undefined) delete process.env.AUTH_DISABLED;
+          else process.env.AUTH_DISABLED = previousAuthDisabled;
+        }
+      });
+
       await t.test("un rol asignado no se puede borrar y uno libre se puede restaurar", async () => {
         const adminRole = await Role.findOne({ name: "ADMIN" }).lean();
         const blocked = await fetch(`${baseUrl}/roles/${adminRole._id}`, {

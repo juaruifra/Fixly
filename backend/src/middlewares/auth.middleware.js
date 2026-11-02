@@ -2,10 +2,13 @@ import mongoose from "mongoose";
 
 import { userRepository } from "../repositories/user.repository.js";
 import { AppError } from "../utils/app-error.js";
+import { isLocalAuthBypassEnabled } from "../utils/auth-config.js";
 import { verifyAccessToken } from "../utils/jwt.util.js";
 
-export async function authenticate(req, _res, next) {
+async function authenticateRequest(req, _res, next, allowLocalBypass) {
   try {
+    if (allowLocalBypass && isLocalAuthBypassEnabled(req)) return next();
+
     const authorization = req.get("authorization") || "";
     const match = authorization.match(/^Bearer\s+(.+)$/i);
     if (!match) throw new AppError("Authentication required", 401);
@@ -45,4 +48,14 @@ export async function authenticate(req, _res, next) {
   } catch (error) {
     next(error);
   }
+}
+
+// En desarrollo puede abrir rutas administrativas locales con AUTH_DISABLED=true.
+export function authenticate(req, res, next) {
+  return authenticateRequest(req, res, next, true);
+}
+
+// La ruta /me siempre necesita una sesión real, incluso con el bypass activado.
+export function authenticateRequired(req, res, next) {
+  return authenticateRequest(req, res, next, false);
 }

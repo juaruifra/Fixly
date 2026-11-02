@@ -2,7 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 
 import { authController } from "../controllers/auth.controller.js";
-import { authenticate } from "../middlewares/auth.middleware.js";
+import { authenticateRequired } from "../middlewares/auth.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
@@ -111,6 +111,6 @@ router.post("/login", credentialsValidation, authController.login);
  *             schema: { $ref: '#/components/schemas/User' }
  *       401: { description: Token ausente o no válido }
  */
-router.get("/me", authenticate, authController.me);
+router.get("/me", authenticateRequired, authController.me);
 
 export default router;
