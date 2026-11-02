@@ -13,7 +13,7 @@ export default function ServiceCreate() {
   async function create(data) {
     const created = await createService(data);
     if (created) {
-      navigate(`/services/${created._id}`);
+      navigate("/services");
     }
   }
 

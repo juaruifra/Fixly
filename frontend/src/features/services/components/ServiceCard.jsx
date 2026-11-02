@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import {
 	ClockIcon,
 	EllipsisIcon,
-	EyeIcon,
 	PencilIcon,
 	Trash2Icon,
 	WrenchIcon,
@@ -65,10 +64,6 @@ export default function ServiceCard({ service, onDelete }) {
 					</DropdownMenuTrigger>
 
 					<DropdownMenuContent align="end">
-						<DropdownMenuItem render={<Link to={`/services/${service._id}`} />}>
-							<EyeIcon />
-							Ver detalle
-						</DropdownMenuItem>
 						<DropdownMenuItem
 							render={<Link to={`/services/${service._id}/edit`} />}
 						>
@@ -92,16 +87,8 @@ export default function ServiceCard({ service, onDelete }) {
 				</p>
 			</CardContent>
 
-			<CardFooter className="flex justify-between border-t px-5 py-4">
+			<CardFooter className="flex border-t px-5 py-4">
 				<strong className="text-lg">{formattedPrice}</strong>
-				<Button
-					variant="outline"
-					size="sm"
-					nativeButton={false}
-					render={<Link to={`/services/${service._id}`} />}
-				>
-					Ver servicio
-				</Button>
 			</CardFooter>
 		</Card>
 	);

@@ -24,7 +24,7 @@ export default function ServiceEdit() {
   async function update(data) {
     const updated = await updateService(id, data);
     if (updated) {
-      navigate(`/services/${id}`);
+      navigate("/services");
     }
   }
 
@@ -77,8 +77,8 @@ export default function ServiceEdit() {
           title="Servicio eliminado"
           message="Restaura el servicio antes de editarlo."
         />
-        <Link className="back-link" to={`/services/${id}`}>
-          Ver detalle y restaurar
+        <Link className="back-link" to="/services">
+          Volver al listado para restaurar
         </Link>
       </section>
     );
@@ -86,8 +86,8 @@ export default function ServiceEdit() {
 
   return (
     <section>
-      <Link className="back-link" to={`/services/${id}`}>
-        ← Volver al detalle
+      <Link className="back-link" to="/services">
+        ← Volver a servicios
       </Link>
 
       <div className="page-header compact">

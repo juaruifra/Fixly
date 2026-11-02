@@ -7,10 +7,10 @@ export default function CategoryCreate() {
   const navigate = useNavigate();
   const { createCategory, submitting } = useCategories();
 
-  // Tras crearla, abrimos la ficha para que el resultado quede visible.
+  // Volvemos al listado; el dashboard no necesita una ficha de detalle.
   async function create(data) {
     const category = await createCategory(data);
-    if (category) navigate(`/categories/${category._id}`);
+    if (category) navigate("/categories");
   }
 
   return (

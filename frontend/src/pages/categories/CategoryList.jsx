@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  EyeIcon,
   PencilIcon,
   PlusIcon,
   RotateCcwIcon,
@@ -119,16 +118,6 @@ export default function CategoryList() {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="service-table-actions">
-            <Button
-              variant="ghost"
-              size="icon"
-              nativeButton={false}
-              render={<Link to={`/categories/${row.original._id}`} />}
-              aria-label={`Ver ${row.original.name}`}
-              title="Ver detalle"
-            >
-              <EyeIcon />
-            </Button>
             {row.original.deletedAt ? (
               <Button
                 variant="outline"

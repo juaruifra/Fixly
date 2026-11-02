@@ -20,7 +20,7 @@ export default function CategoryEdit() {
 
   async function update(data) {
     const updated = await updateCategory(id, data);
-    if (updated) navigate(`/categories/${id}`);
+    if (updated) navigate("/categories");
   }
 
   if (loading) {
@@ -66,8 +66,8 @@ export default function CategoryEdit() {
           title="Categoría eliminada"
           message="Restaura la categoría antes de editarla."
         />
-        <Link className="back-link" to={`/categories/${id}`}>
-          Ver detalle y restaurar
+        <Link className="back-link" to="/categories">
+          Volver al listado para restaurar
         </Link>
       </section>
     );
@@ -75,8 +75,8 @@ export default function CategoryEdit() {
 
   return (
     <section>
-      <Link className="back-link" to={`/categories/${id}`}>
-        ← Volver al detalle
+      <Link className="back-link" to="/categories">
+        ← Volver a categorías
       </Link>
       <div className="page-header compact">
         <div>
