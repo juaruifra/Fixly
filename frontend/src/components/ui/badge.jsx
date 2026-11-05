@@ -18,6 +18,22 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        chip: "badge-chip h-auto min-h-[23px] rounded-full border px-[9px] py-[2px] text-[0.72rem] leading-[1.2] font-semibold",
+      },
+      tone: {
+        success: "tone--success",
+        warning: "tone--warning",
+        info: "tone--info",
+        danger: "tone--danger",
+        neutral: "tone--neutral",
+      },
+      palette: {
+        "color-0": "palette--color-0",
+        "color-1": "palette--color-1",
+        "color-2": "palette--color-2",
+        "color-3": "palette--color-3",
+        "color-4": "palette--color-4",
+        "color-5": "palette--color-5",
       },
     },
     defaultVariants: {
@@ -26,12 +42,12 @@ const badgeVariants = cva(
   },
 );
 
-function Badge({ className, variant = "default", render, ...props }) {
+function Badge({ className, variant = "default", tone, palette, render, ...props }) {
   return useRender({
     defaultTagName: "span",
     props: mergeProps(
       {
-        className: cn(badgeVariants({ variant }), className),
+        className: cn(badgeVariants({ variant, tone, palette }), className),
       },
       props,
     ),
@@ -39,6 +55,8 @@ function Badge({ className, variant = "default", render, ...props }) {
     state: {
       slot: "badge",
       variant,
+      tone,
+      palette,
     },
   });
 }

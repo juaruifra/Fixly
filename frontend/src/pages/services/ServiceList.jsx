@@ -9,6 +9,7 @@ import {
 import { TableSkeleton } from "@/components/common/TableSkeleton";
 import DataTable from "@/components/common/DataTable";
 import ErrorState from "@/components/common/ErrorState";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,9 +19,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import ServiceChip from "@/features/services/components/ServiceChip";
 import { useServices } from "@/hooks/useServices";
 import { confirmServiceAction } from "@/utils/confirmAction";
+
+const STATUS_TONES = {
+  draft: "warning",
+  published: "success",
+  paused: "info",
+  discontinued: "neutral",
+  deleted: "danger",
+};
+
+const CATEGORY_PALETTES = [
+  "color-0",
+  "color-1",
+  "color-2",
+  "color-3",
+  "color-4",
+  "color-5",
+];
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Borrador" },
@@ -28,6 +45,14 @@ const STATUS_OPTIONS = [
   { value: "paused", label: "Pausado" },
   { value: "discontinued", label: "Retirado" },
 ];
+
+function getCategoryPalette(category = "") {
+  const hash = [...category].reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0,
+  );
+  return CATEGORY_PALETTES[hash % CATEGORY_PALETTES.length];
+}
 
 const RECORD_FILTERS = [
   { value: "all", label: "Todos" },
@@ -50,7 +75,7 @@ function ServiceStatusSelect({ service, onChange, disabled }) {
       onValueChange={(status) => onChange(service, status)}
     >
       <SelectTrigger
-        className={`service-status-select service-chip--status-${service.status}`}
+        className={`service-status-select tone--${STATUS_TONES[service.status] ?? "neutral"}`}
         aria-label={`Cambiar estado de ${service.name}`}
       >
         <SelectValue />
@@ -155,7 +180,9 @@ export default function ServiceList() {
         accessorFn: (service) => service.category?.name ?? "",
         header: "Categoría",
         cell: ({ getValue }) => (
-          <ServiceChip value={getValue()} kind="category" />
+          <Badge variant="chip" palette={getCategoryPalette(getValue())}>
+            {getValue()}
+          </Badge>
         ),
       },
       {
@@ -202,11 +229,13 @@ export default function ServiceList() {
         enableGlobalFilter: false,
         cell: ({ getValue }) =>
           getValue() ? (
-            <ServiceChip value="deleted" kind="status" label="Eliminado" />
+            <Badge variant="chip" tone={STATUS_TONES.deleted}>
+              Sí
+            </Badge>
           ) : (
-            <span className="service-chip service-record-live">
-              No eliminado
-            </span>
+            <Badge variant="chip" tone="success">
+              No
+            </Badge>
           ),
       },
       {

@@ -1086,133 +1086,109 @@ textarea {
   flex: 0 0 auto;
 }
 
-.service-chip {
-  --chip-ink: #416078;
+.badge-chip {
+  --badge-ink: var(--tone-ink, var(--palette-ink, #416078));
   display: inline-flex;
   min-height: 23px;
   align-items: center;
   justify-content: center;
   padding: 2px 9px;
-  border: 1px solid color-mix(in srgb, var(--chip-ink) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--badge-ink) 26%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--chip-ink) 10%, var(--background));
-  color: var(--chip-ink);
+  background: color-mix(in srgb, var(--badge-ink) 10%, var(--background));
+  color: var(--badge-ink);
   font-size: 0.72rem;
   font-weight: 650;
   line-height: 1.2;
   white-space: nowrap;
 }
 
-.service-chip--category-0 {
-  --chip-ink: #14766e;
+.tone--success {
+  --tone-ink: #18734d;
 }
 
-.service-chip--category-1 {
-  --chip-ink: #4266a8;
+.tone--warning {
+  --tone-ink: #956000;
 }
 
-.service-chip--category-2 {
-  --chip-ink: #a24f31;
+.tone--info {
+  --tone-ink: #315fa2;
 }
 
-.service-chip--category-3 {
-  --chip-ink: #4d773e;
+.tone--danger {
+  --tone-ink: #b34c28;
 }
 
-.service-chip--category-4 {
-  --chip-ink: #896100;
+.tone--neutral {
+  --tone-ink: #626a73;
 }
 
-.service-chip--category-5 {
-  --chip-ink: #72558d;
+.palette--color-0 {
+  --palette-ink: #14766e;
 }
 
-.service-chip--status-draft {
-  --chip-ink: #956000;
+.palette--color-1 {
+  --palette-ink: #4266a8;
 }
 
-.service-chip--status-published {
-  --chip-ink: #18734d;
+.palette--color-2 {
+  --palette-ink: #a24f31;
 }
 
-.service-chip--status-paused {
-  --chip-ink: #315fa2;
+.palette--color-3 {
+  --palette-ink: #4d773e;
 }
 
-.service-chip--status-discontinued {
-  --chip-ink: #626a73;
+.palette--color-4 {
+  --palette-ink: #896100;
 }
 
-.service-chip--status-deleted {
-  --chip-ink: #b34c28;
+.palette--color-5 {
+  --palette-ink: #72558d;
 }
 
-.service-chip--availability-active {
-  --chip-ink: #18734d;
+.dark .tone--success {
+  --tone-ink: #78d6a8;
 }
 
-.service-chip--availability-inactive {
-  --chip-ink: #626a73;
+.dark .tone--warning {
+  --tone-ink: #edc76f;
 }
 
-.service-chip--availability-deleted {
-  --chip-ink: #b34c28;
+.dark .tone--info {
+  --tone-ink: #9abaff;
 }
 
-.dark .service-chip--category-0 {
-  --chip-ink: #70cbc1;
+.dark .tone--danger {
+  --tone-ink: #f0a084;
 }
 
-.dark .service-chip--category-1 {
-  --chip-ink: #94b0f2;
+.dark .tone--neutral {
+  --tone-ink: #b4bdc7;
 }
 
-.dark .service-chip--category-2 {
-  --chip-ink: #f0a084;
+.dark .palette--color-0 {
+  --palette-ink: #70cbc1;
 }
 
-.dark .service-chip--category-3 {
-  --chip-ink: #a2cf8e;
+.dark .palette--color-1 {
+  --palette-ink: #94b0f2;
 }
 
-.dark .service-chip--category-4 {
-  --chip-ink: #edc76f;
+.dark .palette--color-2 {
+  --palette-ink: #f0a084;
 }
 
-.dark .service-chip--category-5 {
-  --chip-ink: #c6a7e1;
+.dark .palette--color-3 {
+  --palette-ink: #a2cf8e;
 }
 
-.dark .service-chip--status-draft {
-  --chip-ink: #edc76f;
+.dark .palette--color-4 {
+  --palette-ink: #edc76f;
 }
 
-.dark .service-chip--status-published {
-  --chip-ink: #78d6a8;
-}
-
-.dark .service-chip--status-paused {
-  --chip-ink: #9abaff;
-}
-
-.dark .service-chip--status-discontinued {
-  --chip-ink: #b4bdc7;
-}
-
-.dark .service-chip--status-deleted {
-  --chip-ink: #f0a084;
-}
-
-.dark .service-chip--availability-active {
-  --chip-ink: #78d6a8;
-}
-
-.dark .service-chip--availability-inactive {
-  --chip-ink: #b4bdc7;
-}
-
-.dark .service-chip--availability-deleted {
-  --chip-ink: #f0a084;
+.dark .palette--color-5 {
+  --palette-ink: #c6a7e1;
 }
 
 .detail-statuses {
@@ -1224,33 +1200,22 @@ textarea {
 }
 
 .service-status-select {
+  --control-ink: var(--tone-ink, #626a73);
   width: 142px;
   min-height: 28px;
   height: 28px;
   justify-content: flex-start;
   padding: 2px 8px;
-  border-color: color-mix(in srgb, var(--chip-ink) 26%, transparent);
+  border-color: color-mix(in srgb, var(--control-ink) 26%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--chip-ink) 10%, var(--background));
-  color: var(--chip-ink);
+  background: color-mix(in srgb, var(--control-ink) 10%, var(--background));
+  color: var(--control-ink);
   font-size: 0.72rem;
   font-weight: 650;
 }
 
 .service-status-select[data-disabled] {
   opacity: 0.65;
-}
-
-.service-record-live {
-  --chip-ink: #18734d;
-}
-
-.dark .service-record-live {
-  --chip-ink: #78d6a8;
-}
-
-.service-record-live {
-  --chip-ink: #18734d;
 }
 
 .service-list-retry {

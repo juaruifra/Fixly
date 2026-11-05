@@ -106,8 +106,8 @@ export default function CategoryList() {
         header: "Eliminada",
         enableGlobalFilter: false,
         cell: ({ getValue }) => (
-          <Badge variant={getValue() ? "destructive" : "outline"}>
-            {getValue() ? "Eliminada" : "No eliminada"}
+          <Badge variant="chip" tone={getValue() ? "danger" : "success"}>
+            {getValue() ? "Sí" : "No"}
           </Badge>
         ),
       },
