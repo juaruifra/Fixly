@@ -33,12 +33,6 @@ export default function AdminSidebar() {
             Servicios
           </SidebarMenuLink>
           <SidebarMenuLink
-            icon={<PlusIcon aria-hidden="true" />}
-            to="/services/new"
-          >
-            Crear servicio
-          </SidebarMenuLink>
-          <SidebarMenuLink
             icon={<LayersIcon aria-hidden="true" />}
             to="/variants"
           >
