@@ -21,11 +21,28 @@ export default function ServiceEdit() {
     getServiceById(id).then(setService);
   }, [getServiceById, id]);
 
-  async function update(data) {
-    const updated = await updateService(id, data);
-    if (updated) {
-      navigate("/services");
+  // Conservamos los datos actuales si el usuario solo modifica imágenes.
+  async function update(data, imageManager) {
+    const currentCategoryId = String(
+      service.category?._id ?? service.category ?? "",
+    );
+    const hasServiceChanges =
+      data.name !== service.name ||
+      data.category !== currentCategoryId ||
+      data.price !== service.price ||
+      data.duration !== service.duration ||
+      data.description !== (service.description ?? "") ||
+      data.active !== service.active ||
+      data.status !== service.status;
+
+    if (hasServiceChanges) {
+      const updated = await updateService(id, data);
+      if (!updated) return;
+      setService(updated);
     }
+
+    // Las escrituras de imágenes empiezan cuando el servicio ya está al día.
+    if (await imageManager.syncImages(id)) navigate("/services");
   }
 
   if (loading) {
@@ -100,6 +117,7 @@ export default function ServiceEdit() {
 
       <ServiceForm
         initialValues={service}
+        entityId={id}
         onSubmit={update}
         submitLabel="Guardar cambios"
         submitting={submitting}

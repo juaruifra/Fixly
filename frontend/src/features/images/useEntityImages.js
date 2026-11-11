@@ -74,7 +74,7 @@ export function useEntityImages(entityType, hasExistingEntity = false) {
     setSaveError("");
   }, []);
 
-  // Guarda la edición en React para sincronizarla solo al guardar la categoría.
+  // Guarda la edición en React para sincronizarla solo al guardar la entidad.
   const updateImageLocally = useCallback((localId, imageData) => {
     setImages((current) =>
       current.map((image) =>

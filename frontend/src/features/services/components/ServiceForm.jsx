@@ -7,6 +7,8 @@ import {
   SERVICE_STATUS_OPTIONS,
   serviceSchema,
 } from "@/features/services/serviceSchema";
+import ImageManager from "@/features/images/components/ImageManager";
+import { useEntityImages } from "@/features/images/useEntityImages";
 import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -72,7 +74,12 @@ export default function ServiceForm({
   onSubmit,
   submitLabel = "Guardar",
   submitting = false,
+  entityId,
+  savedEntityId,
+  submissionBlocked = false,
 }) {
+  // El gestor carga las imágenes al editar y empieza vacío al crear.
+  const imageManager = useEntityImages("service", Boolean(entityId));
   const {
     availableCategories,
     loading: categoriesLoading,
@@ -119,18 +126,25 @@ export default function ServiceForm({
     reset(getFormValues(initialValues));
   }, [initialValues, reset]);
 
+  useEffect(() => {
+    // No habilitamos el guardado de edición hasta conocer todas las imágenes actuales.
+    if (entityId) void imageManager.loadImages(entityId);
+  }, [entityId, imageManager.loadImages]);
+
   const description = watch("description") || "";
 
   async function submit(values) {
+    // Enviamos los mismos campos existentes y el gestor para coordinar el guardado.
     await onSubmit({
       ...values,
       name: values.name.trim(),
       category: values.category.trim(),
       description: values.description.trim(),
-    });
+    }, imageManager);
   }
 
-  const isSubmitting = submitting || isFormSubmitting;
+  const isSubmitting = submitting || isFormSubmitting || imageManager.saving;
+  const canSubmit = imageManager.ready && !submissionBlocked;
 
   return (
     <form
@@ -306,17 +320,33 @@ export default function ServiceForm({
           <input id="service-active" type="checkbox" {...register("active")} />
           <span>Servicio activo</span>
         </label>
+        <ImageManager
+          manager={imageManager}
+          entityId={entityId ?? savedEntityId}
+          entityType="service"
+        />
       </div>
 
       <div className="form-actions">
         <button
           className="button"
           type="submit"
-          disabled={isSubmitting || categoriesLoading || categoryOptions.length === 0}
+          disabled={
+            !canSubmit ||
+            isSubmitting ||
+            categoriesLoading ||
+            categoryOptions.length === 0
+          }
         >
           {isSubmitting ? "Guardando…" : submitLabel}
         </button>
       </div>
+      {(entityId || savedEntityId) && imageManager.saveError && (
+        <p className="full-width muted" role="status">
+          El servicio ya está guardado. Solo quedan pendientes las imágenes;
+          volver a guardar no creará otro servicio.
+        </p>
+      )}
     </form>
   );
 }

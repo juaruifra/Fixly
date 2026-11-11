@@ -43,7 +43,8 @@ export function useServices() {
     }
   }, []);
 
-  const runMutation = useCallback(async (operation, onSuccess) => {
+  // onError permite reaccionar al fallo sin reemplazar la alerta compartida.
+  const runMutation = useCallback(async (operation, onSuccess, onError) => {
     setSubmitting(true);
 
     try {
@@ -51,7 +52,8 @@ export function useServices() {
       await onSuccess?.(result);
       return result;
     } catch (requestError) {
-      await showApiErrorAlert(requestError);
+      const normalizedError = await showApiErrorAlert(requestError);
+      onError?.(normalizedError);
       return null;
     } finally {
       setSubmitting(false);
@@ -59,7 +61,8 @@ export function useServices() {
   }, []);
 
   const createService = useCallback(
-    (data) =>
+    // La pantalla usa el callback para bloquear reintentos de resultado incierto.
+    (data, onError) =>
       runMutation(
         () => serviceService.createService(data),
         async (created) => {
@@ -67,6 +70,7 @@ export function useServices() {
           // La nueva relación puede cambiar los contadores de categorías.
           await loadCategories();
         },
+        onError,
       ),
     [loadCategories, runMutation, setServices],
   );
