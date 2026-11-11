@@ -26,6 +26,59 @@ const options = {
         },
       },
       schemas: {
+        Image: {
+          type: "object",
+          properties: {
+            _id: { type: "string", format: "objectid" },
+            entityType: {
+              type: "string",
+              enum: ["category", "service", "variant"],
+            },
+            entityId: { type: "string", format: "objectid" },
+            url: { type: "string", format: "uri", maxLength: 2048 },
+            alt: { type: "string", maxLength: 250 },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        ImageInput: {
+          type: "object",
+          additionalProperties: false,
+          required: ["entityType", "entityId", "url", "alt"],
+          properties: {
+            entityType: {
+              type: "string",
+              enum: ["category", "service", "variant"],
+              example: "service",
+            },
+            entityId: {
+              type: "string",
+              format: "objectid",
+              example: "65a1b2c3d4e5f67890123456",
+            },
+            url: {
+              type: "string",
+              format: "uri",
+              maxLength: 2048,
+              description:
+                "URL pública HTTP o HTTPS. Usa una dirección real; la API no comprueba su disponibilidad.",
+            },
+            alt: {
+              type: "string",
+              maxLength: 250,
+              example: "Profesional realizando una reparación",
+            },
+          },
+        },
+        ImagePatchInput: {
+          type: "object",
+          additionalProperties: false,
+          minProperties: 1,
+          properties: {
+            url: { type: "string", format: "uri", maxLength: 2048 },
+            alt: { type: "string", maxLength: 250 },
+          },
+        },
         // Forma completa de una categoría tal como la devuelve la API.
         Category: {
           type: "object",
