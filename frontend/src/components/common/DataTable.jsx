@@ -19,6 +19,7 @@ export default function DataTable({
   columns,
   data,
   emptyMessage = "No hay datos para mostrar.",
+  ariaLabel = "Tabla de servicios",
   getRowClassName,
 }) {
   const [sorting, setSorting] = useState([]);
@@ -45,7 +46,7 @@ export default function DataTable({
   });
 
   return (
-    <section className="data-table" aria-label="Tabla de servicios">
+    <section className="data-table" aria-label={ariaLabel}>
       <div className="data-table-toolbar">
         <label className="data-table-search">
           <span className="sr-only">Buscar en la tabla</span>
