@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { PencilIcon, Trash2Icon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 // Los campos del formulario se limpian después de cada alta o edición local.
 const EMPTY_DRAFT = { url: "", alt: "" };
@@ -175,22 +178,28 @@ export default function ImageManager({ manager, entityId, entityType }) {
             </div>
             <p className="image-manager-alt">{image.alt}</p>
             <div className="image-manager-actions">
-              <button
+              <Button
                 type="button"
-                className="button button-secondary"
+                variant="ghost"
+                size="icon-sm"
                 disabled={manager.saving || manager.uncertainCreateLocalId === image.localId}
                 onClick={() => beginEdit(image)}
+                aria-label={`Editar imagen: ${image.alt}`}
+                title="Editar imagen"
               >
-                Editar
-              </button>
-              <button
+                <PencilIcon aria-hidden="true" />
+              </Button>
+              <Button
                 type="button"
-                className="button button-ghost"
+                variant="ghost"
+                size="icon-sm"
                 disabled={manager.saving || manager.uncertainCreateLocalId === image.localId}
                 onClick={() => removeImage(image)}
+                aria-label={`Quitar imagen: ${image.alt}`}
+                title="Quitar imagen"
               >
-                Quitar
-              </button>
+                <Trash2Icon aria-hidden="true" />
+              </Button>
             </div>
           </article>
         ))}
@@ -223,7 +232,7 @@ export default function ImageManager({ manager, entityId, entityType }) {
           />
         </label>
         {draftError && <p className="field-error" role="alert">{draftError}</p>}
-        <div className="image-manager-actions">
+        <div className="image-manager-form-actions">
           <button type="button" className="button" disabled={manager.saving || !manager.ready} onClick={submitDraft}>
             {editingId ? "Actualizar imagen" : "Añadir imagen"}
           </button>

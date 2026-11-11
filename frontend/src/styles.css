@@ -580,21 +580,34 @@ textarea {
   object-fit: cover;
 }
 
+/* Evita que una descripción larga aumente la altura de una tarjeta. */
 .image-manager-alt {
-  min-height: 2.5em;
   margin: 8px 0;
+  display: -webkit-box;
+  min-height: 2.5em;
   overflow-wrap: anywhere;
+  overflow: hidden;
   font-size: 0.85rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
+.image-manager-card .image-manager-actions {
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+/* La URL ocupa el espacio principal; texto alternativo y acciones quedan compactos. */
 .image-manager-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 2fr) minmax(150px, 1fr) auto;
+  align-items: end;
   gap: 12px;
 }
 
 .image-manager-form label {
   display: grid;
+  min-width: 0;
   gap: 6px;
   font-weight: 650;
 }
@@ -603,9 +616,14 @@ textarea {
   font-size: 0.9rem;
 }
 
-.image-manager-form .field-error,
-.image-manager-form .image-manager-actions {
+.image-manager-form .field-error {
   grid-column: 1 / -1;
+}
+
+.image-manager-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .image-manager-actions {
@@ -628,6 +646,10 @@ textarea {
 
   .image-manager-form {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .image-manager-form-actions {
+    flex-wrap: wrap;
   }
 }
 
