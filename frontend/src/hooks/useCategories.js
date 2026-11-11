@@ -59,7 +59,8 @@ export function useCategories() {
     [categories],
   );
 
-  const runMutation = useCallback(async (operation, onSuccess) => {
+  // onError permite a la pantalla reaccionar sin sustituir el aviso compartido.
+  const runMutation = useCallback(async (operation, onSuccess, onError) => {
     setSubmitting(true);
     setItemError("");
 
@@ -68,7 +69,8 @@ export function useCategories() {
       onSuccess?.(result);
       return result;
     } catch (error) {
-      await showApiErrorAlert(error);
+      const normalizedError = await showApiErrorAlert(error);
+      onError?.(normalizedError);
       return null;
     } finally {
       setSubmitting(false);
@@ -106,13 +108,14 @@ export function useCategories() {
   }, []);
 
   const createCategory = useCallback(
-    (data) =>
+    // La página usa el callback para evitar repetir una creación incierta.
+    (data, onError) =>
       runMutation(() => categoryService.createCategory(data), (created) => {
         setCategories((current) => [
           ...current,
           { ...created, serviceCount: created.serviceCount ?? 0 },
         ]);
-      }),
+      }, onError),
     [runMutation, setCategories],
   );
 

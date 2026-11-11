@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { categorySchema } from "@/features/categories/categorySchema";
+import ImageManager from "@/features/images/components/ImageManager";
+import { useEntityImages } from "@/features/images/useEntityImages";
 
 const EMPTY_VALUES = {
   name: "",
@@ -34,7 +36,12 @@ export default function CategoryForm({
   onSubmit,
   submitLabel = "Guardar",
   submitting = false,
+  entityId,
+  savedEntityId,
+  submissionBlocked = false,
 }) {
+  // El mismo gestor distingue creación local y edición según reciba un ID.
+  const imageManager = useEntityImages("category", Boolean(entityId));
   const {
     register,
     handleSubmit,
@@ -46,15 +53,25 @@ export default function CategoryForm({
   });
 
   useEffect(() => {
+    // Los datos de la categoría pueden llegar después de montar el formulario.
     reset(getFormValues(initialValues));
   }, [initialValues, reset]);
 
-  const isSaving = submitting || isSubmitting;
+  useEffect(() => {
+    // En edición esperamos la galería antes de permitir guardar.
+    if (entityId) void imageManager.loadImages(entityId);
+  }, [entityId, imageManager.loadImages]);
+
+  // El botón espera tanto al guardado de categoría como al de imágenes.
+  const isSaving = submitting || isSubmitting || imageManager.saving;
+  // Evitamos enviar el formulario si falta la galería o la creación es incierta.
+  const canSubmit = imageManager.ready && !submissionBlocked && !isSaving;
 
   return (
     <form
       className="card form-card"
-      onSubmit={handleSubmit(onSubmit)}
+      // React Hook Form valida los datos normales antes de llamar a la página.
+      onSubmit={handleSubmit((data) => onSubmit(data, imageManager))}
       noValidate
     >
       <div className="form-grid">
@@ -99,13 +116,24 @@ export default function CategoryForm({
           />
           <span>Categoría activa</span>
         </label>
+        <ImageManager
+          manager={imageManager}
+          entityType="category"
+          entityId={entityId ?? savedEntityId}
+        />
       </div>
 
       <div className="form-actions">
-        <button className="button" type="submit" disabled={isSaving}>
+        <button className="button" type="submit" disabled={!canSubmit}>
           {isSaving ? "Guardando…" : submitLabel}
         </button>
       </div>
+      {(entityId || savedEntityId) && imageManager.saveError && (
+        <p className="full-width muted" role="status">
+          La categoría ya está guardada. Solo quedan pendientes las imágenes;
+          volver a guardar no creará otra categoría.
+        </p>
+      )}
     </form>
   );
 }

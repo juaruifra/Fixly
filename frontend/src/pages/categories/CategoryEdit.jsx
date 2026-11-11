@@ -18,9 +18,23 @@ export default function CategoryEdit() {
     getCategoryById(id).then(setCategory);
   }, [getCategoryById, id]);
 
-  async function update(data) {
-    const updated = await updateCategory(id, data);
-    if (updated) navigate("/categories");
+  // Evitamos actualizar la categoría si solo cambiaron sus imágenes.
+  async function update(data, imageManager) {
+    // Comparamos solo campos editables para no enviar un PATCH innecesario.
+    const hasCategoryChanges =
+      data.name !== category.name ||
+      (data.description ?? "") !== (category.description ?? "") ||
+      data.active !== category.active;
+
+    if (hasCategoryChanges) {
+      const updated = await updateCategory(id, data);
+      // Si falla la categoría, no empezamos a guardar imágenes.
+      if (!updated) return;
+      setCategory(updated);
+    }
+
+    // La edición de imágenes empieza cuando la categoría ya está al día.
+    if (await imageManager.syncImages(id)) navigate("/categories");
   }
 
   if (loading) {
@@ -87,6 +101,7 @@ export default function CategoryEdit() {
       </div>
       <CategoryForm
         initialValues={category}
+        entityId={id}
         onSubmit={update}
         submitLabel="Guardar cambios"
         submitting={submitting}

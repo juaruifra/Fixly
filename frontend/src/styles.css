@@ -516,6 +516,121 @@ textarea {
   font-weight: 600;
 }
 
+/* Estilos de la galería integrada; la proporción fija mantiene ordenadas las tarjetas. */
+.image-manager {
+  display: grid;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.image-manager-heading,
+.image-manager-actions,
+.image-manager-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.image-manager-heading h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.image-manager-heading p {
+  margin: 4px 0 0;
+}
+
+.image-manager-notice {
+  padding: 8px 10px;
+  border-left: 3px solid var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, var(--background));
+  font-size: 0.88rem;
+}
+
+.image-manager-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: 12px;
+}
+
+.image-manager-card {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.image-manager-preview {
+  display: grid;
+  aspect-ratio: 4 / 3;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.image-manager-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-manager-alt {
+  min-height: 2.5em;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+
+.image-manager-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.image-manager-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 650;
+}
+
+.image-manager-form label span {
+  font-size: 0.9rem;
+}
+
+.image-manager-form .field-error,
+.image-manager-form .image-manager-actions {
+  grid-column: 1 / -1;
+}
+
+.image-manager-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.image-manager-error {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  color: var(--destructive);
+}
+
+@media (max-width: 640px) {
+  /* En pantallas estrechas, el encabezado y los campos ocupan una sola columna. */
+  .image-manager-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .image-manager-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .counter {
   color: #888;
   text-align: right;
