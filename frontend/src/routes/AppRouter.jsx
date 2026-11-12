@@ -20,6 +20,9 @@ const RoleEdit = lazy(() => import("@/pages/roles/RoleEdit"));
 const UserList = lazy(() => import("@/pages/users/UserList"));
 const UserCreate = lazy(() => import("@/pages/users/UserCreate"));
 const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
+const WorkerList = lazy(() => import("@/pages/workers/WorkerList"));
+const WorkerCreate = lazy(() => import("@/pages/workers/WorkerCreate"));
+const WorkerEdit = lazy(() => import("@/pages/workers/WorkerEdit"));
 
 export function AppRouter() {
   return (
@@ -42,6 +45,9 @@ export function AppRouter() {
           <Route path="/users" element={<UserList />} />
           <Route path="/users/new" element={<UserCreate />} />
           <Route path="/users/:id/edit" element={<UserEdit />} />
+          <Route path="/workers" element={<WorkerList />} />
+          <Route path="/workers/new" element={<WorkerCreate />} />
+          <Route path="/workers/:id/edit" element={<WorkerEdit />} />
           {/* Conserva el comportamiento anterior para direcciones desconocidas. */}
           <Route path="*" element={<Navigate to="/services" replace />} />
         </Route>

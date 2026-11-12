@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import app from "../src/app.js";
 import { Role } from "../src/models/role.model.js";
 import { User } from "../src/models/user.model.js";
+import { Worker } from "../src/models/worker.model.js";
 import { verifyPassword } from "../src/utils/password.util.js";
 
 process.env.JWT_SECRET ||= randomUUID().replaceAll("-", "").repeat(2);
@@ -275,17 +276,106 @@ test(
       });
 
       await t.test("el administrador puede gestionar trabajadores sin cuenta", async () => {
+        const legacyWorker = await Worker.collection.insertOne({
+          name: "Trabajador legado",
+          active: true,
+          deletedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        const legacyUpdate = await fetch(
+          `${baseUrl}/workers/${legacyWorker.insertedId}`,
+          {
+            method: "PATCH",
+            headers: adminHeaders,
+            body: JSON.stringify({ name: "Trabajador legado actualizado" }),
+          },
+        );
+        assert.equal(legacyUpdate.status, 400);
+          assert.equal((await legacyUpdate.json()).message, "email is required");
+
+        const legacyEmailUpdate = await fetch(
+          `${baseUrl}/workers/${legacyWorker.insertedId}`,
+          {
+            method: "PATCH",
+            headers: adminHeaders,
+            body: JSON.stringify({ email: "legado@fixly.local" }),
+          },
+        );
+        assert.equal(legacyEmailUpdate.status, 200);
+
+        const missingEmail = await fetch(`${baseUrl}/workers`, {
+          method: "POST",
+          headers: adminHeaders,
+          body: JSON.stringify({
+            name: "Trabajador sin correo",
+            phone: "+34123456789",
+          }),
+        });
+        assert.equal(missingEmail.status, 400);
+
+        const invalidEmail = await fetch(`${baseUrl}/workers`, {
+          method: "POST",
+          headers: adminHeaders,
+          body: JSON.stringify({
+            name: "Trabajador con correo inválido",
+            email: "correo-inválido",
+          }),
+        });
+        assert.equal(invalidEmail.status, 400);
+
+        const invalidPhoneCharacters = await fetch(`${baseUrl}/workers`, {
+          method: "POST",
+          headers: adminHeaders,
+          body: JSON.stringify({
+            name: "Trabajador con teléfono inválido",
+            email: "telefono-invalido@fixly.local",
+            phone: "+34123ABC789",
+          }),
+        });
+        assert.equal(invalidPhoneCharacters.status, 400);
+
+        const phoneTooShort = await fetch(`${baseUrl}/workers`, {
+          method: "POST",
+          headers: adminHeaders,
+          body: JSON.stringify({
+            name: "Trabajador con teléfono corto",
+            email: "telefono-corto@fixly.local",
+            phone: "123456",
+          }),
+        });
+        assert.equal(phoneTooShort.status, 400);
+
         const created = await fetch(`${baseUrl}/workers`, {
           method: "POST",
           headers: adminHeaders,
           body: JSON.stringify({
             name: "Trabajador de prueba",
-            phone: "+34123456789",
+            email: "  TRABAJADOR@FIXLY.LOCAL  ",
+            phone: "+34 (123) 456-789",
           }),
         });
         assert.equal(created.status, 201);
         let worker = await created.json();
         assert.equal("user" in worker, false);
+        assert.equal(worker.email, "trabajador@fixly.local");
+
+        const emptyEmail = await fetch(`${baseUrl}/workers/${worker._id}`, {
+          method: "PATCH",
+          headers: adminHeaders,
+          body: JSON.stringify({ email: "" }),
+        });
+        assert.equal(emptyEmail.status, 400);
+
+        const invalidPhoneUpdate = await fetch(
+          `${baseUrl}/workers/${worker._id}`,
+          {
+            method: "PATCH",
+            headers: adminHeaders,
+            body: JSON.stringify({ phone: "123+456789" }),
+          },
+        );
+        assert.equal(invalidPhoneUpdate.status, 400);
 
         const updated = await fetch(`${baseUrl}/workers/${worker._id}`, {
           method: "PATCH",

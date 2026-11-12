@@ -8,6 +8,7 @@ import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
 router.use(authenticate, requireRole("ADMIN"));
+const phonePattern = /^\+?[0-9\s()-]+$/;
 
 const idValidation = [
   param("id").isMongoId().withMessage("Invalid worker id"),
@@ -15,8 +16,43 @@ const idValidation = [
 ];
 const workerFieldsValidation = [
   body("name").optional().isString().withMessage("name must be a string").bail().trim().notEmpty().isLength({ max: 120 }),
-  body("email").optional().isEmail().withMessage("email must be valid"),
-  body("phone").optional().isString().withMessage("phone must be a string").isLength({ max: 30 }),
+  body("email")
+    .optional()
+    .isString()
+    .withMessage("email must be a string")
+    .bail()
+    .trim()
+    .notEmpty()
+    .withMessage("email cannot be empty")
+    .bail()
+    .isEmail()
+    .withMessage("email must be valid")
+    .bail()
+    .isLength({ max: 254 })
+    .withMessage("email must be at most 254 characters"),
+  body("phone")
+    .optional()
+    .isString()
+    .withMessage("phone must be a string")
+    .bail()
+    .trim()
+    .isLength({ max: 30 })
+    .withMessage("phone must be at most 30 characters")
+    .bail()
+    .custom((phone) => {
+      if (!phone) return true;
+      if (!phonePattern.test(phone)) {
+        throw new Error(
+          "phone may contain only digits, spaces, parentheses, hyphens and a leading plus",
+        );
+      }
+
+      const digitCount = phone.replace(/\D/g, "").length;
+      if (digitCount < 7 || digitCount > 15) {
+        throw new Error("phone must contain between 7 and 15 digits");
+      }
+      return true;
+    }),
   validateRequest,
 ];
 
@@ -86,6 +122,22 @@ router.post(
   "/",
   [
     body("name").exists({ values: "falsy" }).isString().withMessage("name is required").bail().trim().notEmpty().isLength({ max: 120 }),
+    body("email")
+      .exists({ values: "falsy" })
+      .withMessage("email is required")
+      .bail()
+      .isString()
+      .withMessage("email must be a string")
+      .bail()
+      .trim()
+      .notEmpty()
+      .withMessage("email cannot be empty")
+      .bail()
+      .isEmail()
+      .withMessage("email must be valid")
+      .bail()
+      .isLength({ max: 254 })
+      .withMessage("email must be at most 254 characters"),
     ...workerFieldsValidation,
   ],
   workerController.create,

@@ -294,7 +294,12 @@ const options = {
             _id: { type: "string" },
             name: { type: "string" },
             email: { type: "string", format: "email" },
-            phone: { type: "string" },
+              phone: {
+                type: "string",
+                maxLength: 30,
+                description:
+                  "Opcional. Entre 7 y 15 dígitos; admite espacios, paréntesis, guiones y un + inicial.",
+              },
             active: { type: "boolean" },
             deletedAt: { type: "string", format: "date-time", nullable: true },
             createdAt: { type: "string", format: "date-time" },
@@ -303,11 +308,21 @@ const options = {
         },
         WorkerInput: {
           type: "object",
-          required: ["name"],
+          required: ["name", "email"],
           properties: {
             name: { type: "string" },
-            email: { type: "string", format: "email" },
-            phone: { type: "string" },
+            email: {
+              type: "string",
+              format: "email",
+              maxLength: 254,
+              example: "trabajador@fixly.local",
+            },
+              phone: {
+                type: "string",
+                maxLength: 30,
+                description:
+                  "Opcional. Entre 7 y 15 dígitos; admite espacios, paréntesis, guiones y un + inicial.",
+              },
             active: { type: "boolean", default: true },
           },
         },

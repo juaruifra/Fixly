@@ -4,11 +4,48 @@ import { workerRepository } from "../repositories/worker.repository.js";
 import { AppError } from "../utils/app-error.js";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phonePattern = /^\+?[0-9\s()-]+$/;
 
 function validateId(id) {
   if (!mongoose.isObjectIdOrHexString(id)) {
     throw new AppError("Invalid worker id", 400);
   }
+}
+
+// Normaliza el correo y aplica la regla obligatoria también fuera de HTTP.
+function normalizeEmail(email) {
+  if (typeof email !== "string") {
+    throw new AppError("email must be a string", 400);
+  }
+
+  const normalized = email.trim().toLowerCase();
+  if (!normalized || !emailPattern.test(normalized) || normalized.length > 254) {
+    throw new AppError("email must be a valid email address", 400);
+  }
+  return normalized;
+}
+
+// Acepta formatos internacionales comunes sin asumir el país del trabajador.
+function normalizePhone(phone) {
+  if (typeof phone !== "string") {
+    throw new AppError("phone must be a string", 400);
+  }
+
+  const normalized = phone.trim();
+  if (!normalized) return undefined;
+  if (normalized.length > 30) throw new AppError("phone is too long", 400);
+  if (!phonePattern.test(normalized)) {
+    throw new AppError(
+      "phone may contain only digits, spaces, parentheses, hyphens and a leading plus",
+      400,
+    );
+  }
+
+  const digitCount = normalized.replace(/\D/g, "").length;
+  if (digitCount < 7 || digitCount > 15) {
+    throw new AppError("phone must contain between 7 and 15 digits", 400);
+  }
+  return normalized;
 }
 
 function sanitizeInput(data, { creating = false } = {}) {
@@ -27,19 +64,13 @@ function sanitizeInput(data, { creating = false } = {}) {
   }
 
   if (Object.hasOwn(data, "email")) {
-    if (typeof data.email !== "string") throw new AppError("email must be a string", 400);
-    const email = data.email.trim().toLowerCase();
-    if (email && (!emailPattern.test(email) || email.length > 254)) {
-      throw new AppError("email must be a valid email address", 400);
-    }
-    workerData.email = email || undefined;
+    workerData.email = normalizeEmail(data.email);
+  } else if (creating) {
+    throw new AppError("email is required", 400);
   }
 
   if (Object.hasOwn(data, "phone")) {
-    if (typeof data.phone !== "string") throw new AppError("phone must be a string", 400);
-    const phone = data.phone.trim();
-    if (phone.length > 30) throw new AppError("phone is too long", 400);
-    workerData.phone = phone || undefined;
+    workerData.phone = normalizePhone(data.phone);
   }
 
   if (Object.hasOwn(data, "active")) {
@@ -72,12 +103,21 @@ export const workerService = {
     if (Object.keys(updates).length === 0) {
       throw new AppError("No editable worker fields were provided", 400);
     }
-    const worker = await workerRepository.updateById(id, updates);
-    if (worker) return worker;
+
     const existing = await getExistingOrThrow(id);
     if (existing.deletedAt != null) {
       throw new AppError("Cannot edit a deleted worker. Restore it first.", 409);
     }
+    if (!Object.hasOwn(updates, "email")) {
+      // Los registros anteriores sin correo deben completarlo antes de editarse.
+      if (typeof existing.email !== "string" || !existing.email.trim()) {
+        throw new AppError("email is required", 400);
+      }
+      normalizeEmail(existing.email);
+    }
+
+    const worker = await workerRepository.updateById(id, updates);
+    if (worker) return worker;
     throw new AppError("Worker not found", 404);
   },
   async setActive(id, active) {
