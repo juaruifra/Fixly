@@ -17,6 +17,9 @@ const VariantEdit = lazy(() => import("@/pages/variants/VariantEdit"));
 const RoleList = lazy(() => import("@/pages/roles/RoleList"));
 const RoleCreate = lazy(() => import("@/pages/roles/RoleCreate"));
 const RoleEdit = lazy(() => import("@/pages/roles/RoleEdit"));
+const UserList = lazy(() => import("@/pages/users/UserList"));
+const UserCreate = lazy(() => import("@/pages/users/UserCreate"));
+const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
 
 export function AppRouter() {
   return (
@@ -36,6 +39,9 @@ export function AppRouter() {
           <Route path="/roles" element={<RoleList />} />
           <Route path="/roles/new" element={<RoleCreate />} />
           <Route path="/roles/:id/edit" element={<RoleEdit />} />
+          <Route path="/users" element={<UserList />} />
+          <Route path="/users/new" element={<UserCreate />} />
+          <Route path="/users/:id/edit" element={<UserEdit />} />
           {/* Conserva el comportamiento anterior para direcciones desconocidas. */}
           <Route path="*" element={<Navigate to="/services" replace />} />
         </Route>

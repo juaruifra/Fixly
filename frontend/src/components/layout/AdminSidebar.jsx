@@ -4,6 +4,7 @@ import {
   PlusIcon,
   ShieldCheckIcon,
   TagIcon,
+  UsersIcon,
   WrenchIcon,
 } from "lucide-react";
 
@@ -56,6 +57,12 @@ export default function AdminSidebar() {
             to="/roles"
           >
             Roles
+          </SidebarMenuLink>
+          <SidebarMenuLink
+            icon={<UsersIcon aria-hidden="true" />}
+            to="/users"
+          >
+            Usuarios
           </SidebarMenuLink>
         </SidebarMenu>
       </SidebarContent>
