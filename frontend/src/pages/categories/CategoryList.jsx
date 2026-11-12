@@ -165,9 +165,13 @@ export default function CategoryList() {
     <ErrorState message={error} onRetry={() => loadCategories()} />
   ) : (
     <DataTable
+      ariaLabel="Tabla de categorías"
       columns={columns}
       data={visibleCategories}
       emptyMessage="No hay categorías que coincidan."
+      searchLabel="Buscar categorías"
+      searchPlaceholder="Buscar categorías…"
+      searchDescription="Busca por nombre, slug o número de servicios. Los filtros superiores muestran categorías activas, inactivas o eliminadas."
       getRowClassName={(category) =>
         category.deletedAt
           ? "data-row-deleted"

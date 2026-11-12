@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -20,8 +20,14 @@ export default function DataTable({
   data,
   emptyMessage = "No hay datos para mostrar.",
   ariaLabel = "Tabla de servicios",
+  searchLabel = "Buscar en la tabla",
+  searchPlaceholder = "Buscar…",
+  searchDescription = "",
   getRowClassName,
 }) {
+  // El ID conecta cada buscador con su etiqueta y descripción accesibles.
+  const searchId = useId();
+  const searchDescriptionId = `${searchId}-description`;
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const table = useReactTable({
@@ -48,15 +54,30 @@ export default function DataTable({
   return (
     <section className="data-table" aria-label={ariaLabel}>
       <div className="data-table-toolbar">
-        <label className="data-table-search">
-          <span className="sr-only">Buscar en la tabla</span>
+        <div className="data-table-search">
+          <label className="sr-only" htmlFor={searchId}>
+            {searchLabel}
+          </label>
           <input
+            id={searchId}
             type="search"
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
-            placeholder="Buscar servicios…"
+            placeholder={searchPlaceholder}
+            aria-describedby={
+              searchDescription ? searchDescriptionId : undefined
+            }
           />
-        </label>
+          {/* La ayuda enumera los campos buscables y separa los filtros superiores. */}
+          {searchDescription && (
+            <small
+              className="data-table-search-help"
+              id={searchDescriptionId}
+            >
+              {searchDescription}
+            </small>
+          )}
+        </div>
         <label className="data-table-page-size">
           <span>Filas</span>
           <select

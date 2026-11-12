@@ -1062,6 +1062,15 @@ textarea {
   padding: 0 10px;
 }
 
+.data-table-search-help {
+  display: block;
+  max-width: 46rem;
+  margin-top: 5px;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
 .data-table-page-size {
   display: flex;
   align-items: center;

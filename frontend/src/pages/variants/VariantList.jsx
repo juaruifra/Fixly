@@ -166,7 +166,10 @@ export default function VariantList() {
         cell: ({ getValue }) => `${getValue()} min`,
       },
       {
-        accessorKey: "status",
+        id: "status",
+        // La búsqueda usa el nombre visible del estado, no su código interno.
+        accessorFn: (variant) =>
+          VARIANT_STATUS_OPTIONS.find(({ value }) => value === variant.status)?.label ?? variant.status,
         header: "Estado",
         cell: ({ row }) => (
           <VariantStatusSelect
@@ -257,6 +260,9 @@ export default function VariantList() {
       columns={columns}
       data={visibleVariants}
       emptyMessage="No hay variantes que coincidan."
+      searchLabel="Buscar variantes"
+      searchPlaceholder="Buscar variantes…"
+      searchDescription="Busca por nombre, servicio, SKU, precio, duración o estado. Los filtros superiores acotan por registro y estado."
       getRowClassName={getVariantRowClassName}
     />
   );

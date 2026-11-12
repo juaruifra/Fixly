@@ -200,7 +200,10 @@ export default function ServiceList() {
         cell: ({ getValue }) => `${getValue()} min`,
       },
       {
-        accessorKey: "status",
+        id: "status",
+        // La búsqueda usa el nombre visible del estado, no su código interno.
+        accessorFn: (service) =>
+          STATUS_OPTIONS.find(({ value }) => value === service.status)?.label ?? service.status,
         header: "Estado",
         cell: ({ row }) => (
           <ServiceStatusSelect
@@ -294,9 +297,13 @@ export default function ServiceList() {
     <ErrorState message={error} onRetry={retryServices} />
   ) : (
     <DataTable
+      ariaLabel="Tabla de servicios"
       columns={columns}
       data={visibleServices}
       emptyMessage="No hay servicios que coincidan."
+      searchLabel="Buscar servicios"
+      searchPlaceholder="Buscar servicios…"
+      searchDescription="Busca por nombre, categoría, precio, duración o estado. Los filtros superiores acotan por registro y estado."
       getRowClassName={getServiceRowClassName}
     />
   );
