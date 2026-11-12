@@ -1,5 +1,11 @@
 import { Link } from "react-router-dom";
-import { LayersIcon, PlusIcon, TagIcon, WrenchIcon } from "lucide-react";
+import {
+  LayersIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  TagIcon,
+  WrenchIcon,
+} from "lucide-react";
 
 import ThemeSelector from "@/components/ThemeSelector";
 import {
@@ -44,6 +50,12 @@ export default function AdminSidebar() {
             to="/categories"
           >
             Categorías
+          </SidebarMenuLink>
+          <SidebarMenuLink
+            icon={<ShieldCheckIcon aria-hidden="true" />}
+            to="/roles"
+          >
+            Roles
           </SidebarMenuLink>
         </SidebarMenu>
       </SidebarContent>
