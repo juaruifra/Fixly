@@ -10,6 +10,7 @@
    ========================================================= */
 
 :root {
+  color-scheme: light;
   font-family:
     Inter,
     ui-sans-serif,
@@ -310,8 +311,9 @@ h2 {
    ========================================================= */
 
 .card {
-  background: #fff;
-  border: 1px solid #e7e7e3;
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.035);
 }
@@ -491,20 +493,26 @@ h2 {
 input,
 textarea {
   width: 100%;
-  border: 1px solid #d7d7d2;
+  border: 1px solid var(--input);
   border-radius: 10px;
-  background: #fff;
+  background: var(--background);
   padding: 12px 13px;
 
   font: inherit;
-  color: #222;
+  color: var(--foreground);
   outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
 }
 
 input:focus,
 textarea:focus {
-  border-color: #555;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
 }
 
 textarea {
@@ -850,6 +858,7 @@ textarea {
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
