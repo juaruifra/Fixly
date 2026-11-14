@@ -513,6 +513,22 @@ h2 {
   margin: 0;
 }
 
+.account-details {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.account-details dt {
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+
+.account-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

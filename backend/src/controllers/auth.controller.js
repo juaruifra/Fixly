@@ -22,4 +22,13 @@ export const authController = {
       next(error);
     }
   },
+  async changePassword(req, res, next) {
+    try {
+      // El propietario procede del JWT verificado, nunca del cuerpo de la petición.
+      await authService.changeOwnPassword(req.authUser.id, req.body);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
 };

@@ -20,13 +20,18 @@ test("Axios protege el token y distingue 401 de 403", async () => {
     const { apiService, onUnauthorized } = await server.ssrLoadModule(
       "/src/services/apiService.js",
     );
+    const { changeOwnPassword } = await server.ssrLoadModule(
+      "/src/services/authService.js",
+    );
     let responseStatus = 200;
     let authorization;
+    let lastRequest;
     let rejectedSessions = 0;
     const unsubscribe = onUnauthorized(() => { rejectedSessions += 1; });
 
     // El adaptador simula la red sin enviar tokens ni datos a ningún servidor.
     apiService.defaults.adapter = async (config) => {
+      lastRequest = config;
       authorization = config.headers.get("Authorization");
       const response = {
         status: responseStatus,
@@ -52,6 +57,22 @@ test("Axios protege el token y distingue 401 de 403", async () => {
 
     await apiService.post("/auth/login", {});
     assert.equal(authorization, undefined);
+
+    await changeOwnPassword("current-test-password", "new-test-password");
+    assert.equal(lastRequest.method, "patch");
+    assert.equal(lastRequest.url, "/auth/password");
+    assert.deepEqual(JSON.parse(lastRequest.data), {
+      currentPassword: "current-test-password",
+      newPassword: "new-test-password",
+    });
+    assert.equal(authorization, "Bearer token-de-prueba");
+
+    responseStatus = 400;
+    await assert.rejects(
+      changeOwnPassword("wrong-test-password", "new-test-password"),
+      (error) => error.status === 400,
+    );
+    assert.equal(rejectedSessions, 0);
 
     responseStatus = 403;
     await assert.rejects(apiService.get("/users"), (error) => error.status === 403);

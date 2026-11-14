@@ -7,6 +7,7 @@ import {
   UsersIcon,
   BriefcaseIcon,
   LogOutIcon,
+  CircleUserRoundIcon,
   WrenchIcon,
 } from "lucide-react";
 
@@ -75,6 +76,12 @@ export default function AdminSidebar() {
             to="/workers"
           >
             Trabajadores
+          </SidebarMenuLink>
+          <SidebarMenuLink
+            icon={<CircleUserRoundIcon aria-hidden="true" />}
+            to="/account"
+          >
+            Mi cuenta
           </SidebarMenuLink>
         </SidebarMenu>
       </SidebarContent>

@@ -21,6 +21,16 @@ export const userRepository = {
     populateRole(User.findOne({ email }).select("-passwordHash")).lean(),
   findByEmailForAuth: (email) =>
     populateRole(User.findOne({ email }).select("+passwordHash")).lean(),
+  // El hash solo se recupera para verificar el cambio de contraseña propio.
+  findByIdForPassword: (id) =>
+    User.findById(id).select("+passwordHash").lean(),
+  // El hash anterior impide sobrescribir un cambio concurrente de contraseña.
+  updatePasswordHash: (id, currentHash, nextHash) =>
+    User.findOneAndUpdate(
+      { _id: id, active: true, deletedAt: null, passwordHash: currentHash },
+      { $set: { passwordHash: nextHash } },
+      { new: true, runValidators: true },
+    ).select("_id").lean(),
   existsByEmail: (email, { excludeId } = {}) => {
     const query = { email };
     if (excludeId) query._id = { $ne: excludeId };

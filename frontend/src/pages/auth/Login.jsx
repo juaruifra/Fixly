@@ -1,28 +1,18 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import ThemeSelector from "@/components/ThemeSelector";
 import { PageLoader } from "@/components/common/PageLoader";
+import { loginSchema } from "@/pages/auth/loginSchema";
 import { useAuth } from "@/providers/AuthProvider";
-
-// La API exige un correo válido y una contraseña de entre 8 caracteres y 72 bytes.
-const loginSchema = z.object({
-  email: z.string().trim().email("Introduce un correo electrónico válido.").max(254),
-  password: z
-    .string()
-    .min(8, "La contraseña debe tener al menos 8 caracteres.")
-    .refine((value) => new TextEncoder().encode(value).length <= 72, {
-      message: "La contraseña no puede superar 72 bytes en UTF-8.",
-    }),
-});
 
 // El formulario delega la verificación y conservación de la sesión al contexto.
 export default function Login() {
   const [requestError, setRequestError] = useState("");
   const { user, status, signIn, restoreSession, sessionError } = useAuth();
+  const location = useLocation();
   const {
     register,
     handleSubmit,
@@ -66,6 +56,9 @@ export default function Login() {
           <ThemeSelector />
         </div>
         <h1>Iniciar sesión</h1>
+        {location.state?.passwordChanged && (
+          <p role="status">Contraseña actualizada. Inicia sesión de nuevo.</p>
+        )}
         {status === "unavailable" && (
           <div role="alert">
             <p>{sessionError}</p>

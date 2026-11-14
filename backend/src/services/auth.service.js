@@ -11,4 +11,5 @@ export const authService = {
     return { user, token: createAccessToken(user._id) };
   },
   getMe: (userId) => userService.getById(userId),
+  changeOwnPassword: (userId, data) => userService.changeOwnPassword(userId, data),
 };

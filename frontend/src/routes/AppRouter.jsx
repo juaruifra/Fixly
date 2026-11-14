@@ -26,7 +26,7 @@ const WorkerList = lazy(() => import("@/pages/workers/WorkerList"));
 const WorkerCreate = lazy(() => import("@/pages/workers/WorkerCreate"));
 const WorkerEdit = lazy(() => import("@/pages/workers/WorkerEdit"));
 const Login = lazy(() => import("@/pages/auth/Login"));
-const AccountPlaceholder = lazy(() => import("@/pages/auth/AccountPlaceholder"));
+const Account = lazy(() => import("@/pages/auth/Account"));
 
 // Los datos administrativos se cargan solo después de comprobar el rol ADMIN.
 function AdminLayout() {
@@ -43,7 +43,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireAuth />}>
-          <Route path="/account" element={<AccountPlaceholder />} />
+          <Route path="/account" element={<Account />} />
         </Route>
         <Route element={<RequireAuth adminOnly />}>
         <Route element={<AdminLayout />}>

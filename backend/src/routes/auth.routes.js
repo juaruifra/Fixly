@@ -113,4 +113,40 @@ router.post("/login", credentialsValidation, authController.login);
  */
 router.get("/me", authenticateRequired, authController.me);
 
+/**
+ * @openapi
+ * /api/auth/password:
+ *   patch:
+ *     summary: Cambiar la contraseña de la cuenta autenticada
+ *     description: Requiere la contraseña actual; los JWT emitidos siguen vigentes hasta caducar.
+ *     tags: [Authentication]
+ *     security: [{ BearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             required: [currentPassword, newPassword]
+ *             properties:
+ *               currentPassword: { type: string, format: password, writeOnly: true }
+ *               newPassword: { type: string, format: password, writeOnly: true, minLength: 8, maxLength: 72 }
+ *     responses:
+ *       204: { description: Contraseña actualizada }
+ *       400: { description: Datos inválidos o contraseña actual incorrecta }
+ *       401: { description: Token ausente o inválido }
+ *       409: { description: La cuenta cambió durante la operación }
+ */
+router.patch(
+  "/password",
+  authenticateRequired,
+  [
+    body("currentPassword").exists().isString().withMessage("currentPassword is required"),
+    body("newPassword").exists().isString().withMessage("newPassword is required"),
+    validateRequest,
+  ],
+  authController.changePassword,
+);
+
 export default router;

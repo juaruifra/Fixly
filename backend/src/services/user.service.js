@@ -186,6 +186,31 @@ export const userService = {
     if (existing.deletedAt == null) throw new AppError("User is not deleted", 409);
     throw new AppError("User could not be restored", 409);
   },
+  async changeOwnPassword(id, data) {
+    validateId(id);
+    if (data === null || typeof data !== "object" || Array.isArray(data)) {
+      throw new AppError("Password data must be an object", 400);
+    }
+    if (Object.keys(data).some((field) => !["currentPassword", "newPassword"].includes(field))) {
+      throw new AppError("Unexpected password fields", 400);
+    }
+
+    validatePassword(data.currentPassword);
+    validatePassword(data.newPassword);
+    const user = await userRepository.findByIdForPassword(id);
+    if (!user || !user.active || user.deletedAt != null) {
+      throw new AppError("User not found", 404);
+    }
+
+    // Solo la contraseña actual de la cuenta autenticada autoriza el cambio.
+    if (!(await verifyPassword(data.currentPassword, user.passwordHash))) {
+      throw new AppError("Current password is incorrect", 400);
+    }
+
+    const nextHash = await hashPassword(data.newPassword);
+    const updated = await userRepository.updatePasswordHash(id, user.passwordHash, nextHash);
+    if (!updated) throw new AppError("Password could not be updated", 409);
+  },
   async authenticate(email, password) {
     const normalizedEmail = normalizeEmail(email);
     validatePassword(password);

@@ -13,3 +13,8 @@ export async function getCurrentUser(token) {
   });
   return data;
 }
+
+// El endpoint siempre cambia la contraseña de la sesión autenticada.
+export async function changeOwnPassword(currentPassword, newPassword) {
+  await apiService.patch("/auth/password", { currentPassword, newPassword });
+}
