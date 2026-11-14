@@ -307,6 +307,7 @@ export default function VariantForm({
             control={control}
             render={({ field }) => (
               <Select
+                items={VARIANT_STATUS_OPTIONS}
                 value={field.value}
                 onValueChange={field.onChange}
                 disabled={field.disabled}

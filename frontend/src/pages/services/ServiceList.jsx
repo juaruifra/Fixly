@@ -70,6 +70,7 @@ function getServiceRowClassName(service) {
 function ServiceStatusSelect({ service, onChange, disabled }) {
   return (
     <Select
+      items={STATUS_OPTIONS}
       value={service.status}
       disabled={disabled || Boolean(service.deletedAt)}
       onValueChange={(status) => onChange(service, status)}
@@ -339,7 +340,11 @@ export default function ServiceList() {
           ))}
         </div>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          items={[{ value: "all", label: "Todos los estados" }, ...STATUS_OPTIONS]}
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+        >
           <SelectTrigger
             className="service-filter-status"
             aria-label="Filtrar por estado"

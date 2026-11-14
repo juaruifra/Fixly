@@ -47,6 +47,7 @@ function getVariantRowClassName(variant) {
 function VariantStatusSelect({ variant, onChange, disabled }) {
   return (
     <Select
+      items={VARIANT_STATUS_OPTIONS}
       value={variant.status}
       disabled={disabled || Boolean(variant.deletedAt)}
       onValueChange={(status) => onChange(variant, status)}
@@ -295,7 +296,11 @@ export default function VariantList() {
           ))}
         </div>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          items={[{ value: "all", label: "Todos los estados" }, ...VARIANT_STATUS_OPTIONS]}
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+        >
           <SelectTrigger
             className="service-filter-status"
             aria-label="Filtrar variantes por estado"

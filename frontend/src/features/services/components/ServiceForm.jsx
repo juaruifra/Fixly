@@ -265,6 +265,7 @@ export default function ServiceForm({
             control={control}
             render={({ field }) => (
               <Select
+                items={SERVICE_STATUS_OPTIONS}
                 value={field.value}
                 onValueChange={field.onChange}
                 disabled={field.disabled}
