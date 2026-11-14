@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
 import { serviceController } from "../controllers/service.controller.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
@@ -182,12 +184,15 @@ router.get("/public", serviceController.listPublic);
  */
 router.get("/slug/:slug", slugValidation, serviceController.getPublicBySlug);
 
+// Las rutas administrativas siguientes requieren el rol ADMIN.
+router.use(authenticate, requireRole("ADMIN"));
+
 /**
  * @openapi
  * /api/services:
  *   get:
  *     summary: Listar servicios para administración
- *     description: Incluye servicios inactivos y eliminados. Esta ruta administrativa deberá protegerse al incorporar autenticación.
+ *     description: Incluye servicios inactivos y eliminados. Requiere ADMIN.
  *     tags: [Services]
  *     parameters:
  *       - in: query
@@ -216,7 +221,7 @@ router.get("/", listValidation, serviceController.list);
  * /api/services:
  *   post:
  *     summary: Crear un servicio
- *     description: Genera un slug único a partir del nombre y permite establecer el estado inicial. Esta ruta administrativa deberá protegerse al incorporar autenticación.
+ *     description: Genera un slug único a partir del nombre y permite establecer el estado inicial. Requiere ADMIN.
  *     tags: [Services]
  *     requestBody:
  *       required: true
@@ -234,7 +239,7 @@ router.post("/", createValidation, serviceController.create);
  * /api/services/{id}/restore:
  *   patch:
  *     summary: Restaurar un servicio eliminado
- *     description: Esta ruta administrativa deberá protegerse al incorporar autenticación.
+ *     description: Requiere ADMIN.
  *     tags: [Services]
  *     parameters:
  *       - in: path
@@ -253,7 +258,7 @@ router.patch("/:id/restore", idValidation, serviceController.restore);
  * /api/services/{id}/active:
  *   patch:
  *     summary: Activar o desactivar un servicio
- *     description: Cambia solo active. No permite activar servicios eliminados. Ruta administrativa pendiente de proteger con autenticación.
+ *     description: Cambia solo active. No permite activar servicios eliminados. Requiere ADMIN.
  *     tags: [Services]
  *     parameters:
  *       - in: path
@@ -280,7 +285,7 @@ router.patch("/:id/active", activeValidation, serviceController.setActive);
  * /api/services/{id}/status:
  *   patch:
  *     summary: Cambiar el estado de un servicio
- *     description: Ruta administrativa pendiente de proteger con autenticación.
+ *     description: Requiere ADMIN.
  *     tags: [Services]
  *     parameters:
  *       - in: path
@@ -308,7 +313,7 @@ router.patch("/:id/status", statusValidation, serviceController.setStatus);
  * /api/services/{id}:
  *   get:
  *     summary: Obtener un servicio por ID para administración
- *     description: Incluye servicios inactivos y eliminados. Esta ruta deberá protegerse al incorporar autenticación.
+ *     description: Incluye servicios inactivos y eliminados. Requiere ADMIN.
  *     tags: [Services]
  *     parameters:
  *       - in: path
@@ -326,7 +331,7 @@ router.get("/:id", idValidation, serviceController.getById);
  * /api/services/{id}:
  *   patch:
  *     summary: Actualizar los datos editables de un servicio
- *     description: Permite modificar los campos editables, incluido status; no recalcula el slug al cambiar el nombre. Ruta administrativa pendiente de proteger con autenticación.
+ *     description: Permite modificar los campos editables, incluido status; no recalcula el slug al cambiar el nombre. Requiere ADMIN.
  *     tags: [Services]
  *     parameters:
  *       - in: path
@@ -350,7 +355,7 @@ router.patch("/:id", updateValidation, serviceController.update);
  * /api/services/{id}:
  *   delete:
  *     summary: Eliminar lógicamente un servicio
- *     description: Marca deletedAt y active=false sin borrar el documento. Ruta administrativa pendiente de proteger con autenticación.
+ *     description: Marca deletedAt y active=false sin borrar el documento. Requiere ADMIN.
  *     tags: [Services]
  *     parameters:
  *       - in: path

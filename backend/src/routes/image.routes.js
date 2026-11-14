@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
 import { imageController } from "../controllers/image.controller.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
@@ -101,10 +103,49 @@ const updateValidation = [
 
 /**
  * @openapi
+ * /api/images/public/entity/{entityType}/{entityId}:
+ *   get:
+ *     summary: Listar imágenes públicas de una entidad visible
+ *     tags: [Images]
+ *     parameters:
+ *       - in: path
+ *         name: entityType
+ *         required: true
+ *         schema: { type: string, enum: [category, service, variant] }
+ *       - in: path
+ *         name: entityId
+ *         required: true
+ *         schema: { type: string, format: objectid }
+ *     responses:
+ *       200:
+ *         description: Imágenes de una entidad visible
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { $ref: '#/components/schemas/Image' }
+ *       400: { description: Tipo o identificador inválido }
+ *       404: { description: Entidad inexistente o no visible }
+ */
+router.get(
+  "/public/entity/:entityType/:entityId",
+  param("entityType")
+    .isIn(entityTypes)
+    .withMessage("entityType must be category, service or variant"),
+  param("entityId").isMongoId().withMessage("Invalid entityId"),
+  validateRequest,
+  imageController.listPublicByEntity,
+);
+
+// Los listados internos y todas las escrituras son exclusivos de ADMIN.
+router.use(authenticate, requireRole("ADMIN"));
+
+/**
+ * @openapi
  * /api/images:
  *   get:
  *     summary: Listar imágenes
- *     description: Devuelve todas las imágenes registradas. Ruta abierta, sin autenticación.
+ *     description: Devuelve todas las imágenes registradas. Requiere ADMIN.
  *     tags: [Images]
  *     responses:
  *       200:
@@ -123,7 +164,7 @@ router.get("/", imageController.list);
  * /api/images/entity/{entityType}/{entityId}:
  *   get:
  *     summary: Listar imágenes de una entidad
- *     description: Devuelve una colección vacía si la entidad no tiene imágenes. Ruta abierta.
+ *     description: Devuelve las imágenes de una entidad para administración. Requiere ADMIN.
  *     tags: [Images]
  *     parameters:
  *       - in: path
@@ -160,7 +201,7 @@ router.get(
  * /api/images:
  *   post:
  *     summary: Crear una imagen
- *     description: Usa un entityId existente y una URL pública real que el navegador pueda cargar. La API solo valida su formato; esta ruta es abierta.
+ *     description: Usa un entityId existente y una URL pública real. La API solo valida su formato. Requiere ADMIN.
  *     tags: [Images]
  *     requestBody:
  *       required: true
@@ -181,7 +222,7 @@ router.post("/", createValidation, imageController.create);
  * /api/images/{id}:
  *   get:
  *     summary: Obtener una imagen por ID
- *     description: Ruta abierta, sin autenticación.
+ *     description: Requiere ADMIN.
  *     tags: [Images]
  *     parameters:
  *       - in: path
@@ -205,7 +246,7 @@ router.get("/:id", imageIdValidation, imageController.getById);
  * /api/images/{id}:
  *   patch:
  *     summary: Actualizar una imagen
- *     description: Solo permite cambiar url o alt; la relación con la entidad es inmutable. Ruta abierta.
+ *     description: Solo permite cambiar url o alt; la relación con la entidad es inmutable. Requiere ADMIN.
  *     tags: [Images]
  *     parameters:
  *       - in: path
@@ -230,7 +271,7 @@ router.patch("/:id", updateValidation, imageController.update);
  * /api/images/{id}:
  *   delete:
  *     summary: Eliminar definitivamente una imagen
- *     description: Borra el documento de MongoDB; no elimina archivos externos ni ofrece restauración. Ruta abierta.
+ *     description: Borra el documento de MongoDB; no elimina archivos externos ni ofrece restauración. Requiere ADMIN.
  *     tags: [Images]
  *     parameters:
  *       - in: path

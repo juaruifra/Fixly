@@ -7,7 +7,7 @@ const options = {
       title: "Fixly API",
       version: "1.0.0",
       description:
-        "API REST de Fixly. Las rutas nuevas de administración requieren Bearer JWT; las rutas administrativas existentes de Category, Service y Variant siguen pendientes de protección.",
+        "API REST de Fixly. Las rutas administrativas requieren Bearer JWT y rol ADMIN; el catálogo público permanece abierto.",
     },
     servers: [
       {
@@ -392,3 +392,22 @@ const options = {
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
+
+// Los endpoints públicos se mantienen abiertos; el resto de rutas del catálogo requieren ADMIN.
+const publicCatalogPaths = new Set([
+  "/api/categories/available",
+  "/api/categories/slug/{slug}",
+  "/api/services/public",
+  "/api/services/slug/{slug}",
+  "/api/variants/public",
+  "/api/images/public/entity/{entityType}/{entityId}",
+]);
+
+for (const [path, pathItem] of Object.entries(swaggerSpec.paths || {})) {
+  if (!/^\/api\/(categories|services|variants|images)(\/|$)/.test(path)) continue;
+  if (publicCatalogPaths.has(path)) continue;
+
+  for (const method of ["get", "post", "patch", "delete"]) {
+    if (pathItem[method]) pathItem[method].security = [{ BearerAuth: [] }];
+  }
+}

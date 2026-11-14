@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { body, param, query } from "express-validator";
 import { categoryController } from "../controllers/category.controller.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
@@ -127,6 +129,9 @@ router.get(
   slugValidation,
   categoryController.getAvailableBySlug,
 );
+
+// El catálogo público queda arriba; el resto de rutas son administrativas.
+router.use(authenticate, requireRole("ADMIN"));
 
 /**
  * @openapi

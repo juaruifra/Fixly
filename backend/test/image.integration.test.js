@@ -10,10 +10,12 @@ import { Image } from "../src/models/image.model.js";
 import { Service } from "../src/models/service.model.js";
 import { Variant } from "../src/models/variant.model.js";
 import { swaggerSpec } from "../src/config/swagger.js";
+import { userRepository } from "../src/repositories/user.repository.js";
+import { createAccessToken } from "../src/utils/jwt.util.js";
 
 const testUri = process.env.MONGODB_TEST_URI;
 
-test("Swagger documenta las seis rutas públicas de Image", () => {
+test("Swagger distingue las rutas administrativas y públicas de Image", () => {
   const expectedOperations = [
     ["/api/images", "get"],
     ["/api/images", "post"],
@@ -25,8 +27,10 @@ test("Swagger documenta las seis rutas públicas de Image", () => {
 
   for (const [path, method] of expectedOperations) {
     assert.ok(swaggerSpec.paths[path]?.[method], `${method} ${path} is documented`);
-    assert.equal(swaggerSpec.paths[path][method].security, undefined);
+    assert.deepEqual(swaggerSpec.paths[path][method].security, [{ BearerAuth: [] }]);
   }
+  assert.ok(swaggerSpec.paths["/api/images/public/entity/{entityType}/{entityId}"].get);
+  assert.equal(swaggerSpec.paths["/api/images/public/entity/{entityType}/{entityId}"].get.security, undefined);
   assert.equal(swaggerSpec.paths["/api/images/{id}"].put, undefined);
 
   for (const schema of ["Image", "ImageInput", "ImagePatchInput"]) {
@@ -43,6 +47,21 @@ test(
     const localHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
     assert.ok(localHosts.has(parsedUri.hostname), "La base de pruebas debe ser local");
     assert.match(databaseName, /^fixly_test_[a-z0-9_]+$/i);
+
+    process.env.NODE_ENV = "test";
+    process.env.AUTH_DISABLED = "false";
+    process.env.JWT_SECRET ||= randomUUID().replaceAll("-", "");
+    const adminId = new mongoose.Types.ObjectId();
+    const originalFindUser = userRepository.findById;
+    userRepository.findById = async () => ({
+      _id: adminId,
+      name: "Admin de prueba",
+      email: "admin@example.invalid",
+      active: true,
+      deletedAt: null,
+      role: { name: "ADMIN", active: true, deletedAt: null },
+    });
+    const adminHeaders = { Authorization: `Bearer ${createAccessToken(adminId)}` };
 
     await mongoose.connect(testUri, { serverSelectionTimeoutMS: 3000 });
     let server;
@@ -92,7 +111,7 @@ test(
       const postImage = (data) =>
         fetch(baseUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
 
@@ -154,23 +173,25 @@ test(
       });
 
       await t.test("lista, consulta por ID y devuelve listas vacías por entidad", async () => {
-        const allResponse = await fetch(baseUrl);
+        const allResponse = await fetch(baseUrl, { headers: adminHeaders });
         assert.equal(allResponse.status, 200);
         const allImages = await allResponse.json();
         assert.equal(allImages.length, 4);
 
-        const byIdResponse = await fetch(`${baseUrl}/${serviceImage._id}`);
+        const byIdResponse = await fetch(`${baseUrl}/${serviceImage._id}`, { headers: adminHeaders });
         assert.equal(byIdResponse.status, 200);
         assert.equal((await byIdResponse.json())._id, serviceImage._id);
 
         const byEntityResponse = await fetch(
           `${baseUrl}/entity/service/${service._id}`,
+          { headers: adminHeaders },
         );
         assert.equal(byEntityResponse.status, 200);
         assert.equal((await byEntityResponse.json()).length, 2);
 
         const emptyResponse = await fetch(
           `${baseUrl}/entity/service/${new mongoose.Types.ObjectId()}`,
+          { headers: adminHeaders },
         );
         assert.equal(emptyResponse.status, 200);
         assert.deepEqual(await emptyResponse.json(), []);
@@ -179,7 +200,7 @@ test(
       await t.test("PATCH actualiza solo url o alt y rechaza campos de relación", async () => {
         const altResponse = await fetch(`${baseUrl}/${serviceImage._id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({ alt: "Descripción actualizada" }),
         });
         assert.equal(altResponse.status, 200);
@@ -190,7 +211,7 @@ test(
         const nextUrl = "https://example.com/images/updated.jpg";
         const urlResponse = await fetch(`${baseUrl}/${serviceImage._id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({ url: nextUrl }),
         });
         assert.equal(urlResponse.status, 200);
@@ -200,14 +221,14 @@ test(
 
         const entityTypeResponse = await fetch(`${baseUrl}/${serviceImage._id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({ entityType: "category" }),
         });
         assert.equal(entityTypeResponse.status, 400);
 
         const entityIdResponse = await fetch(`${baseUrl}/${serviceImage._id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({ entityId: String(category._id) }),
         });
         assert.equal(entityIdResponse.status, 400);
@@ -217,7 +238,7 @@ test(
             `${baseUrl}/${serviceImage._id}`,
             {
               method: "PATCH",
-              headers: { "Content-Type": "application/json" },
+              headers: { ...adminHeaders, "Content-Type": "application/json" },
               body: JSON.stringify({ [field]: "changed" }),
             },
           );
@@ -226,13 +247,13 @@ test(
 
         const emptyPatchResponse = await fetch(`${baseUrl}/${serviceImage._id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({}),
         });
         assert.equal(emptyPatchResponse.status, 400);
       });
 
-      await t.test("rechaza asociaciones a entidades eliminadas y las rutas no requieren JWT", async () => {
+      await t.test("rechaza asociaciones a entidades eliminadas y exige JWT", async () => {
         await Promise.all([
           Category.updateOne({ _id: category._id }, { $set: { deletedAt: new Date() } }),
           Service.updateOne({ _id: service._id }, { $set: { deletedAt: new Date() } }),
@@ -250,29 +271,32 @@ test(
           );
         }
 
-        assert.equal((await fetch(baseUrl)).status, 200);
+        assert.equal((await fetch(baseUrl)).status, 401);
+        assert.equal((await fetch(baseUrl, { headers: adminHeaders })).status, 200);
       });
 
       await t.test("DELETE elimina físicamente y no existe restauración", async () => {
         const deleteResponse = await fetch(
           `${baseUrl}/${secondServiceImage._id}`,
-          { method: "DELETE" },
+          { method: "DELETE", headers: adminHeaders },
         );
         assert.equal(deleteResponse.status, 204);
         assert.equal(await Image.findById(secondServiceImage._id), null);
 
         const getDeletedResponse = await fetch(
           `${baseUrl}/${secondServiceImage._id}`,
+          { headers: adminHeaders },
         );
         assert.equal(getDeletedResponse.status, 404);
 
         const restoreResponse = await fetch(
           `${baseUrl}/${secondServiceImage._id}/restore`,
-          { method: "PATCH" },
+          { method: "PATCH", headers: adminHeaders },
         );
         assert.equal(restoreResponse.status, 404);
       });
     } finally {
+      userRepository.findById = originalFindUser;
       if (server) {
         await new Promise((resolve, reject) => {
           server.close((error) => (error ? reject(error) : resolve()));

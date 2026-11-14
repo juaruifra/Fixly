@@ -10,6 +10,39 @@ export const imageRepository = {
   findById: (id) => Image.findById(id).lean(),
   findByEntity: (entityType, entityId) =>
     Image.find({ entityType, entityId }).sort({ createdAt: 1 }).lean(),
+  // Una imagen solo es pública si toda su cadena de catálogo es visible.
+  async isEntityPublic(entityType, entityId) {
+    if (entityType === "category") {
+      return Boolean(await Category.exists({ _id: entityId, active: true, deletedAt: null }));
+    }
+
+    let serviceId = entityId;
+    if (entityType === "variant") {
+      const variant = await Variant.findOne({
+        _id: entityId,
+        active: true,
+        status: "published",
+        deletedAt: null,
+      }).select("service").lean();
+      if (!variant) return false;
+      serviceId = variant.service;
+    } else if (entityType !== "service") {
+      return false;
+    }
+
+    const service = await Service.findOne({
+      _id: serviceId,
+      active: true,
+      status: "published",
+      deletedAt: null,
+    }).select("category").lean();
+    if (!service) return false;
+    return Boolean(await Category.exists({
+      _id: service.category,
+      active: true,
+      deletedAt: null,
+    }));
+  },
   findRelatedEntity: (entityType, entityId) =>
     relatedModels[entityType]
       .findById(entityId)

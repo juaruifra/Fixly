@@ -11,6 +11,8 @@ import { seedFixlyData } from "../src/seed-data.js";
 import app from "../src/app.js";
 import { serviceService } from "../src/services/service.service.js";
 import { variantService } from "../src/services/variant.service.js";
+import { userRepository } from "../src/repositories/user.repository.js";
+import { createAccessToken } from "../src/utils/jwt.util.js";
 
 const testUri = process.env.MONGODB_TEST_URI;
 
@@ -25,6 +27,21 @@ test(
     // Esta prueba solo puede borrar una base temporal local, nunca la base habitual.
     assert.ok(localHosts.has(parsedUri.hostname), "La base de pruebas debe ser local");
     assert.match(databaseName, /^fixly_test_[a-z0-9_]+$/i);
+
+    process.env.NODE_ENV = "test";
+    process.env.AUTH_DISABLED = "false";
+    process.env.JWT_SECRET ||= randomUUID().replaceAll("-", "");
+    const adminId = new mongoose.Types.ObjectId();
+    const originalFindUser = userRepository.findById;
+    userRepository.findById = async () => ({
+      _id: adminId,
+      name: "Admin de prueba",
+      email: "admin@example.invalid",
+      active: true,
+      deletedAt: null,
+      role: { name: "ADMIN", active: true, deletedAt: null },
+    });
+    const adminHeaders = { Authorization: `Bearer ${createAccessToken(adminId)}` };
 
     await mongoose.connect(testUri, { serverSelectionTimeoutMS: 3000 });
     let server;
@@ -190,14 +207,14 @@ test(
         const baseUrl = `http://127.0.0.1:${server.address().port}/api/variants`;
         const invalidResponse = await fetch(baseUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({ service: "no-es-un-id" }),
         });
         assert.equal(invalidResponse.status, 400);
 
         const createResponse = await fetch(baseUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...adminHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({
             service: String(service._id),
             name: "Reserva por HTTP",
@@ -219,16 +236,18 @@ test(
 
         const deleteResponse = await fetch(`${baseUrl}/${created._id}`, {
           method: "DELETE",
+          headers: adminHeaders,
         });
         assert.equal(deleteResponse.status, 204);
 
         const restoreResponse = await fetch(
           `${baseUrl}/${created._id}/restore`,
-          { method: "PATCH" },
+          { method: "PATCH", headers: adminHeaders },
         );
         assert.equal(restoreResponse.status, 200);
       });
     } finally {
+      userRepository.findById = originalFindUser;
       if (server) {
         await new Promise((resolve) => server.close(resolve));
       }

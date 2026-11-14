@@ -129,6 +129,16 @@ export const imageService = {
     return imageRepository.findByEntity(entityType, entityId);
   },
 
+  async listPublicByEntity(entityType, entityId) {
+    validateEntityType(entityType);
+    validateId(entityId, "entityId");
+    // Un recurso no público no debe revelar sus imágenes ni su existencia.
+    if (!(await imageRepository.isEntityPublic(entityType, entityId))) {
+      throw new AppError("Entity not found", 404);
+    }
+    return imageRepository.findByEntity(entityType, entityId);
+  },
+
   async create(data) {
     const imageData = sanitizeCreate(data);
     const entity = await imageRepository.findRelatedEntity(

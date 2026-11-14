@@ -11,7 +11,7 @@ API REST de Fixly para gestionar servicios, usuarios y reservas.
 
 Para usar autenticación, configura `JWT_SECRET` con una cadena aleatoria de al menos 32 caracteres y, opcionalmente, `JWT_EXPIRES_IN` (por defecto, `1h`). El registro público siempre asigna el rol `CLIENT`.
 
-Para desarrollo local puedes establecer `AUTH_DISABLED=true` junto con `NODE_ENV=development`. Esto abre las rutas nuevas de administración sin token ni comprobación de rol solo desde `127.0.0.1` o `::1`. `GET /api/auth/me` sigue exigiendo una sesión real. El bypass se ignora fuera de `development` y para clientes de red.
+Para desarrollo local puedes establecer `AUTH_DISABLED=true` junto con `NODE_ENV=development`. Esto abre las rutas de administración sin token ni comprobación de rol solo desde `127.0.0.1` o `::1`. `GET /api/auth/me` sigue exigiendo una sesión real. El bypass se ignora fuera de `development` y para clientes de red.
 
 API: `http://localhost:3000/api/services`  
 Swagger: `http://localhost:3000/api/docs`  
@@ -48,9 +48,9 @@ En PowerShell, configura `NODE_ENV` y `ALLOW_DESTRUCTIVE_SEED_RESET` para la ses
 - `POST /api/auth/register`: crea una cuenta CLIENT.
 - `POST /api/auth/login`: devuelve el usuario y un JWT.
 - `GET /api/auth/me`: devuelve el usuario asociado al token.
-- `/api/roles`, `/api/users` y `/api/workers`: requieren Bearer JWT con rol ADMIN.
+- Las rutas administrativas de categorías, servicios, variantes, imágenes, roles, usuarios y trabajadores requieren Bearer JWT con rol ADMIN.
 
-Las rutas administrativas existentes de Category, Service y Variant siguen sin autenticación por compatibilidad y requieren protección en una fase posterior.
+El catálogo público conserva `/api/categories/available`, `/api/categories/slug/:slug`, `/api/services/public`, `/api/services/slug/:slug` y `/api/variants/public` sin autenticación. Para consultar imágenes públicas, usa `GET /api/images/public/entity/:entityType/:entityId`; devuelve `404` si la entidad no es visible en el catálogo. La ruta anterior `/api/images/entity/:entityType/:entityId` queda reservada a ADMIN.
 
 ## Carrito y pedidos
 

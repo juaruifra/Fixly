@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { getCurrentUser, login } from "@/services/authService";
+import { onUnauthorized, SESSION_TOKEN_KEY } from "@/services/apiService";
 
 const AuthContext = createContext(null);
-const TOKEN_KEY = "fixly-token";
 const ALLOWED_ROLES = ["ADMIN", "CLIENT"];
 
 // Los permisos provienen de /auth/me, no de los datos del JWT sin verificar.
@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
   const signOut = useCallback(() => {
     // Sin revocación en servidor, un JWT emitido puede seguir válido hasta caducar.
     requestId.current += 1;
-    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
     setUser(null);
     setSessionError("");
     setStatus("anonymous");
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
 
   const restoreSession = useCallback(async () => {
     const currentRequest = ++requestId.current;
-    const token = sessionStorage.getItem(TOKEN_KEY);
+    const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
     setUser(null);
     setSessionError("");
 
@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       if (currentRequest !== requestId.current) return;
       if (error?.status === 401 || error?.status === 403 || !error?.status && !error?.type) {
-        sessionStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(SESSION_TOKEN_KEY);
         setStatus("anonymous");
       } else {
         // Un fallo de conexión no demuestra que el token haya caducado.
@@ -67,6 +67,8 @@ export function AuthProvider({ children }) {
     };
   }, [restoreSession]);
 
+  useEffect(() => onUnauthorized(signOut), [signOut]);
+
   const signIn = useCallback(async (credentials) => {
     const currentRequest = ++requestId.current;
     // Guardamos el token únicamente después de verificar la identidad y el rol.
@@ -76,7 +78,7 @@ export function AuthProvider({ children }) {
     }
     const currentUser = assertAllowedUser(await getCurrentUser(result.token));
     if (currentRequest !== requestId.current) return;
-    sessionStorage.setItem(TOKEN_KEY, result.token);
+    sessionStorage.setItem(SESSION_TOKEN_KEY, result.token);
     setUser(currentUser);
     setSessionError("");
     setStatus("authenticated");

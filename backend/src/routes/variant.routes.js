@@ -2,6 +2,8 @@ import { Router } from "express";
 import { body, param, query } from "express-validator";
 
 import { validateRequest } from "../middlewares/validation.middleware.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
+import { requireRole } from "../middlewares/role.middleware.js";
 import { variantController } from "../controllers/variant.controller.js";
 
 const router = Router();
@@ -174,6 +176,9 @@ const statusValidation = [
  *       200: { description: Lista pública de variantes }
  */
 router.get("/public", listValidation, variantController.listPublic);
+
+// La consulta pública se mantiene abierta; las siguientes son administrativas.
+router.use(authenticate, requireRole("ADMIN"));
 
 /**
  * @openapi
