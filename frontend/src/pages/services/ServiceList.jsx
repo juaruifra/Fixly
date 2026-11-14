@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useServices } from "@/hooks/useServices";
+import { getCategoryPalette } from "@/utils/categoryPalette";
 import { confirmServiceAction } from "@/utils/confirmAction";
 
 const STATUS_TONES = {
@@ -30,29 +31,12 @@ const STATUS_TONES = {
   deleted: "danger",
 };
 
-const CATEGORY_PALETTES = [
-  "color-0",
-  "color-1",
-  "color-2",
-  "color-3",
-  "color-4",
-  "color-5",
-];
-
 const STATUS_OPTIONS = [
   { value: "draft", label: "Borrador" },
   { value: "published", label: "Publicado" },
   { value: "paused", label: "Pausado" },
   { value: "discontinued", label: "Retirado" },
 ];
-
-function getCategoryPalette(category = "") {
-  const hash = [...category].reduce(
-    (total, character) => total + character.charCodeAt(0),
-    0,
-  );
-  return CATEGORY_PALETTES[hash % CATEGORY_PALETTES.length];
-}
 
 const RECORD_FILTERS = [
   { value: "all", label: "Todos" },

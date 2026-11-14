@@ -22,6 +22,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { VARIANT_STATUS_OPTIONS } from "@/features/variants/variantSchema";
 import { useVariants } from "@/hooks/useVariants";
+import { getCategoryPalette } from "@/utils/categoryPalette";
 import { confirmServiceAction } from "@/utils/confirmAction";
 
 const RECORD_FILTERS = [
@@ -151,6 +152,16 @@ export default function VariantList() {
         accessorFn: (variant) => variant.service?.name ?? "",
         header: "Servicio",
       },
+      {
+        id: "category",
+        accessorFn: (variant) => variant.service?.category?.name ?? "",
+        header: "Categoría",
+        cell: ({ getValue }) => (
+          <Badge variant="chip" palette={getCategoryPalette(getValue())}>
+            {getValue()}
+          </Badge>
+        ),
+      },
       { accessorKey: "sku", header: "SKU" },
       {
         accessorKey: "price",
@@ -252,7 +263,7 @@ export default function VariantList() {
   );
 
   const tableContent = loading ? (
-    <TableSkeleton rows={6} columns={9} />
+    <TableSkeleton rows={6} columns={10} />
   ) : error ? (
     <ErrorState message={error} onRetry={retryVariants} />
   ) : (
@@ -263,7 +274,7 @@ export default function VariantList() {
       emptyMessage="No hay variantes que coincidan."
       searchLabel="Buscar variantes"
       searchPlaceholder="Buscar variantes…"
-      searchDescription="Busca por nombre, servicio, SKU, precio, duración o estado. Los filtros superiores acotan por registro y estado."
+      searchDescription="Busca por nombre, servicio, categoría, SKU, precio, duración o estado. Los filtros superiores acotan por registro y estado."
       getRowClassName={getVariantRowClassName}
     />
   );
