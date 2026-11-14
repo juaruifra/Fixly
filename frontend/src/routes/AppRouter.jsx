@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import MainLayout from "@/layouts/MainLayout";
 import { PageLoader } from "@/components/common/PageLoader";
+import { AppProvider } from "@/providers/AppProvider";
+import RequireAuth from "@/routes/RequireAuth";
 
 // Las pantallas se cargan cuando se visitan para no enviar todo al inicio.
 const ServiceList = lazy(() => import("@/pages/services/ServiceList"));
@@ -23,12 +25,28 @@ const UserEdit = lazy(() => import("@/pages/users/UserEdit"));
 const WorkerList = lazy(() => import("@/pages/workers/WorkerList"));
 const WorkerCreate = lazy(() => import("@/pages/workers/WorkerCreate"));
 const WorkerEdit = lazy(() => import("@/pages/workers/WorkerEdit"));
+const Login = lazy(() => import("@/pages/auth/Login"));
+const AccountPlaceholder = lazy(() => import("@/pages/auth/AccountPlaceholder"));
+
+// Los datos administrativos se cargan solo después de comprobar el rol ADMIN.
+function AdminLayout() {
+  return (
+    <AppProvider>
+      <MainLayout />
+    </AppProvider>
+  );
+}
 
 export function AppRouter() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route element={<MainLayout />}>
+        <Route path="/login" element={<Login />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/account" element={<AccountPlaceholder />} />
+        </Route>
+        <Route element={<RequireAuth adminOnly />}>
+        <Route element={<AdminLayout />}>
           <Route index element={<Navigate to="/services" replace />} />
           <Route path="/services" element={<ServiceList />} />
           <Route path="/services/new" element={<ServiceCreate />} />
@@ -50,6 +68,7 @@ export function AppRouter() {
           <Route path="/workers/:id/edit" element={<WorkerEdit />} />
           {/* Conserva el comportamiento anterior para direcciones desconocidas. */}
           <Route path="*" element={<Navigate to="/services" replace />} />
+        </Route>
         </Route>
       </Routes>
     </Suspense>

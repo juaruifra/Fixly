@@ -6,3 +6,5 @@
 - Conserva el comportamiento funcional existente y limita cada cambio a la fase autorizada.
 - No cambies autenticación, backend ni dependencias sin autorización.
 - Valida cada entrega, detente para que se pruebe y no hagas commits automáticamente.
+- Protege los datos y permisos en el servidor; no registres contraseñas, tokens ni secretos.
+- Revisa los contratos y regresiones relacionados con cada fase, limitando las lecturas y pruebas al alcance autorizado.

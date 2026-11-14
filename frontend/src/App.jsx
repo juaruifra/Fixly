@@ -1,17 +1,17 @@
 import { BrowserRouter } from "react-router-dom";
 
-import { AppProvider } from "@/providers/AppProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AppRouter } from "@/routes/AppRouter";
 
 function App() {
   return (
     <BrowserRouter>
-      {/* Los providers comparten tema y datos con todas las páginas. */}
+      {/* La sesión se comprueba antes de cargar las páginas privadas. */}
       <ThemeProvider defaultTheme="system">
-        <AppProvider>
+        <AuthProvider>
           <AppRouter />
-        </AppProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

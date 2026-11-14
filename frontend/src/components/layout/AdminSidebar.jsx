@@ -6,10 +6,13 @@ import {
   TagIcon,
   UsersIcon,
   BriefcaseIcon,
+  LogOutIcon,
   WrenchIcon,
 } from "lucide-react";
 
 import ThemeSelector from "@/components/ThemeSelector";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/providers/AuthProvider";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +23,8 @@ import {
 } from "@/components/ui/sidebar";
 
 export default function AdminSidebar() {
+  const { signOut } = useAuth();
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -77,6 +82,9 @@ export default function AdminSidebar() {
       <SidebarFooter>
         <span className="admin-theme-label">Tema</span>
         <ThemeSelector />
+        <Button variant="ghost" size="icon" onClick={signOut} aria-label="Cerrar sesión" title="Cerrar sesión">
+          <LogOutIcon aria-hidden="true" />
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
