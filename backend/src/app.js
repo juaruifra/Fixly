@@ -14,6 +14,7 @@ import workerRoutes from "./routes/worker.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import imageRoutes from "./routes/image.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -39,6 +40,7 @@ app.use("/api/workers", workerRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/images", imageRoutes);
+app.use("/api/profiles", profileRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

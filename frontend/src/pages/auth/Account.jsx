@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import ThemeSelector from "@/components/ThemeSelector";
+import ProfileManager from "@/features/profiles/components/ProfileManager";
 import { accountPasswordSchema } from "@/pages/auth/accountSchema";
 import { useAuth } from "@/providers/AuthProvider";
 import { changeOwnPassword } from "@/services/authService";
@@ -88,6 +89,7 @@ export default function Account() {
             {isSubmitting ? "Guardando…" : "Cambiar contraseña"}
           </button>
         </form>
+        <ProfileManager />
         <div className="form-actions">
           <button className="button button-secondary" type="button" onClick={signOut}>
             Cerrar sesión

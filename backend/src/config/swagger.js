@@ -281,6 +281,23 @@ const options = {
             role: { type: "string", format: "objectid" },
           },
         },
+        Profile: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "objectid" },
+            name: { type: "string", maxLength: 120 },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        ProfileInput: {
+          type: "object",
+          required: ["name"],
+          additionalProperties: false,
+          properties: {
+            name: { type: "string", maxLength: 120 },
+          },
+        },
         AuthResponse: {
           type: "object",
           properties: {

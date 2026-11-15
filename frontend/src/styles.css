@@ -529,6 +529,71 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.account-profiles {
+  margin: 28px 0;
+}
+
+.account-profiles h2,
+.account-profiles h3 {
+  margin: 0 0 14px;
+}
+
+.account-profile-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.account-profile-form h3 {
+  margin: 0;
+}
+
+.account-profile-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account-profile-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+
+.account-profile-list li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.account-profile-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.account-profile-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.account-profile-actions svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 480px) {
+  .account-profile-list li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

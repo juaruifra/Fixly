@@ -49,6 +49,9 @@ En PowerShell, configura `NODE_ENV` y `ALLOW_DESTRUCTIVE_SEED_RESET` para la ses
 - `POST /api/auth/login`: devuelve el usuario y un JWT.
 - `GET /api/auth/me`: devuelve el usuario asociado al token.
 - `PATCH /api/auth/password`: cambia la contraseña propia con JWT y contraseña actual. La nueva contraseña admite hasta 72 bytes UTF-8.
+- `GET /api/profiles`: lista los perfiles del usuario autenticado.
+- `POST /api/profiles`: crea un perfil propio con `name`.
+- `GET`, `PATCH` y `DELETE /api/profiles/:id`: consultan, actualizan o eliminan perfiles propios; el servidor deriva el propietario del JWT y responde `404` ante perfiles ajenos.
 - Las rutas administrativas de categorías, servicios, variantes, imágenes, roles, usuarios y trabajadores requieren Bearer JWT con rol ADMIN.
 
 El cambio de contraseña no revoca los JWT ya emitidos; el frontend cierra la sesión local y esos tokens siguen vigentes hasta su caducidad.
