@@ -6,10 +6,18 @@ import { Variant } from "../models/variant.model.js";
 const relatedModels = { category: Category, service: Service, variant: Variant };
 
 export const imageRepository = {
-  findAll: () => Image.find().sort({ createdAt: -1 }).lean(),
-  findById: (id) => Image.findById(id).lean(),
+  findAll: () => Image.find({ entityType: { $ne: "profile" } }).sort({ createdAt: -1 }).lean(),
+  findById: (id) => Image.findOne({ _id: id, entityType: { $ne: "profile" } }).lean(),
   findByEntity: (entityType, entityId) =>
     Image.find({ entityType, entityId }).sort({ createdAt: 1 }).lean(),
+  findAvatarByProfile: (profileId) =>
+    Image.findOne({ entityType: "profile", entityId: profileId })
+      .select("_id entityId url alt createdAt updatedAt")
+      .lean(),
+  findAvatarsByProfiles: (profileIds) =>
+    Image.find({ entityType: "profile", entityId: { $in: profileIds } })
+      .select("_id entityId url alt createdAt updatedAt")
+      .lean(),
   // Una imagen solo es pública si toda su cadena de catálogo es visible.
   async isEntityPublic(entityType, entityId) {
     if (entityType === "category") {
@@ -49,10 +57,25 @@ export const imageRepository = {
       .select("_id deletedAt")
       .lean(),
   create: (data) => Image.create(data),
+  createAvatarForProfile: (profileId, data) =>
+    Image.create({
+      ...data,
+      entityType: "profile",
+      entityId: profileId,
+    }).then((image) => image.toObject()),
+  updateAvatarForProfile: (profileId, data) =>
+    Image.findOneAndUpdate(
+      { entityType: "profile", entityId: profileId },
+      { $set: data },
+      { new: true, runValidators: true },
+    ).select("_id entityId url alt createdAt updatedAt").lean(),
+  deleteAvatarForProfile: (profileId) =>
+    Image.findOneAndDelete({ entityType: "profile", entityId: profileId }).lean(),
   updateById: (id, data) =>
-    Image.findByIdAndUpdate(id, { $set: data }, {
+    Image.findOneAndUpdate({ _id: id, entityType: { $ne: "profile" } }, { $set: data }, {
       new: true,
       runValidators: true,
     }).lean(),
-  deleteById: (id) => Image.findByIdAndDelete(id).lean(),
+  deleteById: (id) =>
+    Image.findOneAndDelete({ _id: id, entityType: { $ne: "profile" } }).lean(),
 };

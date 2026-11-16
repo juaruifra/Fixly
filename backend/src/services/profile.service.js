@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+import { imageRepository } from "../repositories/image.repository.js";
 import { profileRepository } from "../repositories/profile.repository.js";
 import { AppError } from "../utils/app-error.js";
 
@@ -34,10 +35,11 @@ function validateProfileData(data, { creating = false } = {}) {
   return { name };
 }
 
-function toPublicProfile(profile) {
+function toPublicProfile(profile, avatar = null) {
   return {
     id: String(profile._id),
     name: profile.name,
+    avatar: avatar ? { url: avatar.url, alt: avatar.alt } : null,
     createdAt: profile.createdAt,
     updatedAt: profile.updatedAt,
   };
@@ -46,14 +48,24 @@ function toPublicProfile(profile) {
 export const profileService = {
   async list(ownerId) {
     validateId(ownerId, "user");
-    return (await profileRepository.findAllByOwner(ownerId)).map(toPublicProfile);
+    const profiles = await profileRepository.findAllByOwner(ownerId);
+    const avatars = await imageRepository.findAvatarsByProfiles(
+      profiles.map((profile) => profile._id),
+    );
+    const avatarsByProfile = new Map(
+      avatars.map((avatar) => [String(avatar.entityId), avatar]),
+    );
+    return profiles.map((profile) =>
+      toPublicProfile(profile, avatarsByProfile.get(String(profile._id))),
+    );
   },
   async getById(ownerId, id) {
     validateId(ownerId, "user");
     validateId(id, "profile");
-    const profile = await profileRepository.findByIdForOwner(id, ownerId);
-    if (!profile) throw new AppError("Profile not found", 404);
-    return toPublicProfile(profile);
+    const existingProfile = await profileRepository.findByIdForOwner(id, ownerId);
+    if (!existingProfile) throw new AppError("Profile not found", 404);
+    const avatar = await imageRepository.findAvatarByProfile(id);
+    return toPublicProfile(existingProfile, avatar);
   },
   async create(ownerId, data) {
     validateId(ownerId, "user");
@@ -69,12 +81,20 @@ export const profileService = {
     const updates = validateProfileData(data);
     const profile = await profileRepository.updateByIdForOwner(id, ownerId, updates);
     if (!profile) throw new AppError("Profile not found", 404);
-    return toPublicProfile(profile);
+    const avatar = await imageRepository.findAvatarByProfile(id);
+    return toPublicProfile(profile, avatar);
   },
   async remove(ownerId, id) {
     validateId(ownerId, "user");
     validateId(id, "profile");
-    const profile = await profileRepository.deleteByIdForOwner(id, ownerId);
+    const profile = await profileRepository.findByIdForOwner(id, ownerId);
     if (!profile) throw new AppError("Profile not found", 404);
+
+    // Primero quitamos el avatar para no borrar el perfil si falla su limpieza.
+    await imageRepository.deleteAvatarForProfile(id);
+    const deletedProfile = await profileRepository.deleteByIdForOwner(id, ownerId);
+    if (!deletedProfile) throw new AppError("Profile not found", 404);
+    // Una segunda limpieza cubre un avatar creado durante la eliminación.
+    await imageRepository.deleteAvatarForProfile(id);
   },
 };

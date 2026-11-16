@@ -11,6 +11,7 @@ const ENTITY_LABELS = {
   category: "la categoría",
   service: "el servicio",
   variant: "la variante",
+  profile: "el avatar de este perfil",
 };
 
 // Comprueba el formato localmente; que la URL exista depende del servidor externo.
@@ -42,7 +43,16 @@ function validateImageDraft(draft) {
 }
 
 // Permite preparar imágenes en el formulario y guardarlas junto a la entidad.
-export default function ImageManager({ manager, entityId, entityType }) {
+export default function ImageManager({
+  manager,
+  entityId,
+  entityType,
+  maxImages = Number.POSITIVE_INFINITY,
+  title = "Imágenes",
+  description,
+  saveNotice,
+  onDraftDirtyChange,
+}) {
   // Borrador separado para que editar una tarjeta no la cambie hasta confirmar.
   const [draft, setDraft] = useState(EMPTY_DRAFT);
   // Identifica la tarjeta en edición; null significa que se está añadiendo.
@@ -57,6 +67,7 @@ export default function ImageManager({ manager, entityId, entityType }) {
     setDraft(EMPTY_DRAFT);
     setEditingId(null);
     setDraftError("");
+    onDraftDirtyChange?.(false);
   }
 
   // Añadir o confirmar una edición solo cambia el estado local del formulario.
@@ -86,6 +97,19 @@ export default function ImageManager({ manager, entityId, entityType }) {
     setEditingId(image.localId);
     setDraft({ url: image.url, alt: image.alt });
     setDraftError("");
+    onDraftDirtyChange?.(false);
+  }
+
+  function updateDraft(field, value) {
+    const nextDraft = { ...draft, [field]: value };
+    setDraft(nextDraft);
+    const original = editingId
+      ? manager.images.find((image) => image.localId === editingId)
+      : EMPTY_DRAFT;
+    onDraftDirtyChange?.(
+      nextDraft.url !== (original?.url || EMPTY_DRAFT.url) ||
+      nextDraft.alt !== (original?.alt || EMPTY_DRAFT.alt),
+    );
   }
 
   // El hook distingue entre descartar una nueva y marcar una existente para borrar.
@@ -108,13 +132,12 @@ export default function ImageManager({ manager, entityId, entityType }) {
     <section className="image-manager full-width" aria-labelledby="image-manager-title">
       <div className="image-manager-heading">
         <div>
-          <h2 id="image-manager-title">Imágenes</h2>
+            <h2 id="image-manager-title">{title}</h2>
             <p className="muted">
-              Añade imágenes y guárdalas junto con {ENTITY_LABELS[entityType]}.
+              {description || `Añade imágenes y guárdalas junto con ${ENTITY_LABELS[entityType]}.`}
             </p>
             <p className="image-manager-notice" role="note">
-              Guarda {ENTITY_LABELS[entityType]} para aplicar los cambios
-              pendientes de imágenes. Si sales antes, esos cambios locales se perderán.
+              {saveNotice || `Guarda ${ENTITY_LABELS[entityType]} para aplicar los cambios pendientes de imágenes. Si sales antes, esos cambios locales se perderán.`}
             </p>
         </div>
         {manager.removedImages.length > 0 && (
@@ -208,6 +231,7 @@ export default function ImageManager({ manager, entityId, entityType }) {
         )}
       </div>
 
+      {(editingId || (manager.images.length < maxImages && manager.removedImages.length === 0)) && (
       <div className="image-manager-form">
         <label htmlFor="image-url">
           <span>URL de la imagen</span>
@@ -217,7 +241,7 @@ export default function ImageManager({ manager, entityId, entityType }) {
             maxLength={2048}
             value={draft.url}
             aria-invalid={Boolean(draftError)}
-            onChange={(event) => setDraft({ ...draft, url: event.target.value })}
+            onChange={(event) => updateDraft("url", event.target.value)}
           />
         </label>
         <label htmlFor="image-alt">
@@ -228,7 +252,7 @@ export default function ImageManager({ manager, entityId, entityType }) {
             maxLength={250}
             value={draft.alt}
             aria-invalid={Boolean(draftError)}
-            onChange={(event) => setDraft({ ...draft, alt: event.target.value })}
+            onChange={(event) => updateDraft("alt", event.target.value)}
           />
         </label>
         {draftError && <p className="field-error" role="alert">{draftError}</p>}
@@ -243,6 +267,7 @@ export default function ImageManager({ manager, entityId, entityType }) {
           )}
         </div>
       </div>
+      )}
     </section>
   );
 }

@@ -49,14 +49,19 @@ En PowerShell, configura `NODE_ENV` y `ALLOW_DESTRUCTIVE_SEED_RESET` para la ses
 - `POST /api/auth/login`: devuelve el usuario y un JWT.
 - `GET /api/auth/me`: devuelve el usuario asociado al token.
 - `PATCH /api/auth/password`: cambia la contraseña propia con JWT y contraseña actual. La nueva contraseña admite hasta 72 bytes UTF-8.
-- `GET /api/profiles`: lista los perfiles del usuario autenticado.
+- `GET /api/profiles`: lista los perfiles del usuario autenticado junto con el avatar opcional de cada uno.
 - `POST /api/profiles`: crea un perfil propio con `name`.
 - `GET`, `PATCH` y `DELETE /api/profiles/:id`: consultan, actualizan o eliminan perfiles propios; el servidor deriva el propietario del JWT y responde `404` ante perfiles ajenos.
+- `GET`, `POST`, `PATCH` y `DELETE /api/profiles/:id/avatar`: gestionan el avatar propio. El alta concurrente se limita a uno mediante índice único; el reemplazo se hace editando la imagen existente.
 - Las rutas administrativas de categorías, servicios, variantes, imágenes, roles, usuarios y trabajadores requieren Bearer JWT con rol ADMIN.
 
 El cambio de contraseña no revoca los JWT ya emitidos; el frontend cierra la sesión local y esos tokens siguen vigentes hasta su caducidad.
 
 El catálogo público conserva `/api/categories/available`, `/api/categories/slug/:slug`, `/api/services/public`, `/api/services/slug/:slug` y `/api/variants/public` sin autenticación. Para consultar imágenes públicas, usa `GET /api/images/public/entity/:entityType/:entityId`; devuelve `404` si la entidad no es visible en el catálogo. La ruta anterior `/api/images/entity/:entityType/:entityId` queda reservada a ADMIN.
+
+Los avatares de perfiles no forman parte del catálogo público ni de los endpoints genéricos de administración de imágenes. `Image.entityId` contiene el ID del perfil y la propiedad se comprueba mediante `Profile.owner`. Se guardan como URLs HTTP(S); si la URL externa es pública, la API no puede volverla privada. Al eliminar un perfil se intenta borrar su avatar antes que el documento; MongoDB standalone no garantiza atomicidad entre ambas colecciones.
+
+Antes de arrancar la API con esta versión, ejecuta `npm run migrate:profile-avatar-index` una vez. La migración comprueba duplicados y reemplaza los índices anteriores sin modificar documentos.
 
 ## Carrito y pedidos
 

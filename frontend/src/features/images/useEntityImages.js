@@ -154,10 +154,11 @@ export function useEntityImages(entityType, hasExistingEntity = false) {
           }
 
           // El PATCH conserva la relación y modifica solo los datos editables.
-          const updated = await imageService.updateImage(image.serverId, {
-            url: image.url,
-            alt: image.alt,
-          });
+          const updated = await imageService.updateImage(
+            image.serverId,
+            { url: image.url, alt: image.alt },
+            { entityType, entityId },
+          );
           setImages((current) =>
             current.map((item) =>
               item.localId === image.localId
@@ -177,7 +178,7 @@ export function useEntityImages(entityType, hasExistingEntity = false) {
         // Borramos al final para conservar imágenes si una escritura falla.
         for (const image of removedImages) {
           currentAction = { type: "delete", localId: image.localId };
-          await imageService.deleteImage(image.serverId);
+          await imageService.deleteImage(image.serverId, { entityType, entityId });
           // Quitamos el pendiente solo después de confirmar el DELETE.
           setRemovedImages((current) =>
             current.filter((item) => item.localId !== image.localId),

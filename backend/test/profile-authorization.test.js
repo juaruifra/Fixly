@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import mongoose from "mongoose";
 
 import app from "../src/app.js";
+import { imageRepository } from "../src/repositories/image.repository.js";
 import { profileRepository } from "../src/repositories/profile.repository.js";
 import { userRepository } from "../src/repositories/user.repository.js";
 import { createAccessToken } from "../src/utils/jwt.util.js";
@@ -26,6 +27,9 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
     create: profileRepository.create,
     updateByIdForOwner: profileRepository.updateByIdForOwner,
     deleteByIdForOwner: profileRepository.deleteByIdForOwner,
+    findAvatarByProfile: imageRepository.findAvatarByProfile,
+    findAvatarsByProfiles: imageRepository.findAvatarsByProfiles,
+    deleteAvatarForProfile: imageRepository.deleteAvatarForProfile,
   };
 
   userRepository.findById = async (id) => users.get(String(id));
@@ -53,6 +57,9 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
     profiles.delete(String(id));
     return profile;
   };
+  imageRepository.findAvatarByProfile = async () => null;
+  imageRepository.findAvatarsByProfiles = async () => [];
+  imageRepository.deleteAvatarForProfile = async () => null;
 
   const server = app.listen(0, "127.0.0.1");
   await new Promise((resolve, reject) => {
@@ -80,7 +87,12 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
     assert.equal(createResponse.status, 201);
     const created = await createResponse.json();
     assert.equal(created.name, "Casa");
+    assert.equal(created.avatar, null);
     assert.equal(Object.hasOwn(created, "owner"), false);
+
+    const ownerProfile = await request(`/${created.id}`, ownerToken);
+    assert.equal(ownerProfile.status, 200);
+    assert.equal((await ownerProfile.json()).id, created.id);
 
     const otherProfile = await request("", otherToken, "POST", { name: "Otro perfil" });
     assert.equal(otherProfile.status, 201);
@@ -107,6 +119,9 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
       updateByIdForOwner: originals.updateByIdForOwner,
       deleteByIdForOwner: originals.deleteByIdForOwner,
     });
+    imageRepository.findAvatarByProfile = originals.findAvatarByProfile;
+    imageRepository.findAvatarsByProfiles = originals.findAvatarsByProfiles;
+    imageRepository.deleteAvatarForProfile = originals.deleteAvatarForProfile;
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
 });

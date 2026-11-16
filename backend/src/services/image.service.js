@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { imageRepository } from "../repositories/image.repository.js";
+import { profileRepository } from "../repositories/profile.repository.js";
 import { AppError } from "../utils/app-error.js";
 
 const ENTITY_TYPES = ["category", "service", "variant"];
@@ -113,6 +114,29 @@ function sanitizeUpdate(data) {
   return updates;
 }
 
+function sanitizeAvatarCreate(data) {
+  assertObject(data);
+  assertAllowedFields(data, UPDATE_FIELDS);
+  for (const field of UPDATE_FIELDS) {
+    if (!Object.hasOwn(data, field)) {
+      throw new AppError(`${field} is required`, 400);
+    }
+  }
+  return { url: normalizeUrl(data.url), alt: normalizeAlt(data.alt) };
+}
+
+async function getOwnedProfileOrThrow(ownerId, profileId) {
+  validateId(ownerId, "userId");
+  validateId(profileId, "profileId");
+  const profile = await profileRepository.findByIdForOwner(profileId, ownerId);
+  if (!profile) throw new AppError("Profile not found", 404);
+  return profile;
+}
+
+function isDuplicateProfileAvatar(error) {
+  return error?.code === 11000 && Boolean(error.keyPattern?.entityId);
+}
+
 export const imageService = {
   list: () => imageRepository.findAll(),
 
@@ -164,5 +188,50 @@ export const imageService = {
     validateId(id);
     const image = await imageRepository.deleteById(id);
     if (!image) throw new AppError("Image not found", 404);
+  },
+
+  async listProfileAvatar(ownerId, profileId) {
+    await getOwnedProfileOrThrow(ownerId, profileId);
+    const avatar = await imageRepository.findAvatarByProfile(profileId);
+    return avatar ? [avatar] : [];
+  },
+
+  async createProfileAvatar(ownerId, profileId, data) {
+    await getOwnedProfileOrThrow(ownerId, profileId);
+    const avatarData = sanitizeAvatarCreate(data);
+    if (await imageRepository.findAvatarByProfile(profileId)) {
+      throw new AppError("Profile already has an avatar", 409);
+    }
+
+    let avatar;
+    try {
+      avatar = await imageRepository.createAvatarForProfile(profileId, avatarData);
+    } catch (error) {
+      if (isDuplicateProfileAvatar(error)) {
+        throw new AppError("Profile already has an avatar", 409);
+      }
+      throw error;
+    }
+
+    // Compensa un alta concurrente con el borrado del perfil sin transacciones.
+    const stillOwned = await profileRepository.findByIdForOwner(profileId, ownerId);
+    if (!stillOwned) {
+      await imageRepository.deleteAvatarForProfile(profileId);
+      throw new AppError("Profile not found", 404);
+    }
+    return avatar;
+  },
+
+  async updateProfileAvatar(ownerId, profileId, data) {
+    await getOwnedProfileOrThrow(ownerId, profileId);
+    const updates = sanitizeUpdate(data);
+    const avatar = await imageRepository.updateAvatarForProfile(profileId, updates);
+    if (!avatar) throw new AppError("Profile avatar not found", 404);
+    return avatar;
+  },
+
+  async removeProfileAvatar(ownerId, profileId) {
+    await getOwnedProfileOrThrow(ownerId, profileId);
+    await imageRepository.deleteAvatarForProfile(profileId);
   },
 };

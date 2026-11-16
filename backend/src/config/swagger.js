@@ -32,7 +32,7 @@ const options = {
             _id: { type: "string", format: "objectid" },
             entityType: {
               type: "string",
-              enum: ["category", "service", "variant"],
+              enum: ["category", "service", "variant", "profile"],
             },
             entityId: { type: "string", format: "objectid" },
             url: { type: "string", format: "uri", maxLength: 2048 },
@@ -286,6 +286,14 @@ const options = {
           properties: {
             id: { type: "string", format: "objectid" },
             name: { type: "string", maxLength: 120 },
+            avatar: {
+              type: "object",
+              nullable: true,
+              properties: {
+                url: { type: "string", format: "uri", maxLength: 2048 },
+                alt: { type: "string", maxLength: 250 },
+              },
+            },
             createdAt: { type: "string", format: "date-time" },
             updatedAt: { type: "string", format: "date-time" },
           },
@@ -296,6 +304,15 @@ const options = {
           additionalProperties: false,
           properties: {
             name: { type: "string", maxLength: 120 },
+          },
+        },
+        ProfileAvatarInput: {
+          type: "object",
+          additionalProperties: false,
+          required: ["url", "alt"],
+          properties: {
+            url: { type: "string", format: "uri", maxLength: 2048 },
+            alt: { type: "string", maxLength: 250 },
           },
         },
         AuthResponse: {

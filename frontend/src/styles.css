@@ -548,6 +548,20 @@ h2 {
   margin: 0;
 }
 
+.account-avatar-editor {
+  margin: 24px 0;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+.account-avatar-editor > h3 {
+  margin: 0 0 14px;
+}
+
+.account-avatar-editor .image-manager {
+  margin-top: 0;
+}
+
 .account-profile-list {
   display: grid;
   gap: 8px;
@@ -568,6 +582,26 @@ h2 {
 .account-profile-list li > span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.account-profile-avatar,
+.account-profile-avatar-placeholder {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.account-profile-avatar {
+  object-fit: cover;
+}
+
+.account-profile-avatar-placeholder {
+  color: var(--muted-foreground);
+}
+
+.account-profile-name {
+  flex: 1 1 auto;
 }
 
 .account-profile-actions {

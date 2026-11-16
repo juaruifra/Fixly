@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import { CircleUserRoundIcon, PencilIcon, Trash2Icon } from "lucide-react";
 
+import ProfileAvatarEditor from "@/features/profiles/components/ProfileAvatarEditor";
 import { profileSchema } from "@/features/profiles/profileSchema";
 import { useProfiles } from "@/hooks/useProfiles";
 import { confirmServiceAction } from "@/utils/confirmAction";
 
 export default function ProfileManager() {
   const [editingProfile, setEditingProfile] = useState(null);
+  const [avatarProfile, setAvatarProfile] = useState(null);
   const [notice, setNotice] = useState("");
   const {
     profiles,
@@ -70,6 +72,7 @@ export default function ProfileManager() {
     const removed = await deleteProfile(profile.id);
     if (removed) {
       if (editingProfile?.id === profile.id) cancelEditing();
+      setAvatarProfile((current) => current?.id === profile.id ? null : current);
       setNotice("Perfil eliminado.");
     }
   }
@@ -125,8 +128,29 @@ export default function ProfileManager() {
         <ul className="account-profile-list">
           {profiles.map((profile) => (
             <li key={profile.id}>
-              <span>{profile.name}</span>
+              {profile.avatar ? (
+                <img
+                  className="account-profile-avatar"
+                  src={profile.avatar.url}
+                  alt={profile.avatar.alt}
+                  loading="lazy"
+                />
+              ) : (
+                <CircleUserRoundIcon className="account-profile-avatar-placeholder" aria-hidden="true" />
+              )}
+              <span className="account-profile-name">{profile.name}</span>
               <div className="account-profile-actions">
+                <button
+                  className="button button-secondary"
+                  type="button"
+                  onClick={() => {
+                    setNotice("");
+                    setAvatarProfile(profile);
+                  }}
+                  disabled={isSaving}
+                >
+                  Editar avatar
+                </button>
                 <button
                   className="button button-secondary"
                   type="button"
@@ -153,6 +177,18 @@ export default function ProfileManager() {
             </li>
           ))}
         </ul>
+      )}
+      {avatarProfile && profiles.some((profile) => profile.id === avatarProfile.id) && (
+        <ProfileAvatarEditor
+          key={avatarProfile.id}
+          profile={avatarProfile}
+          onClose={() => setAvatarProfile(null)}
+          onSaved={async () => {
+            await loadProfiles();
+            setAvatarProfile(null);
+            setNotice("Avatar guardado.");
+          }}
+        />
       )}
     </section>
   );
