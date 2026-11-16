@@ -4,11 +4,11 @@ import { CircleUserRoundIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-re
 import ProfileFormModal from "@/features/profiles/components/ProfileFormModal";
 import { useProfiles } from "@/hooks/useProfiles";
 import { confirmServiceAction } from "@/utils/confirmAction";
+import { showSuccessAlert } from "@/utils/successAlert";
 
 // Gestiona el listado; el modal concentra los cambios de nombre y avatar.
 export default function ProfileManager() {
   const [modalProfile, setModalProfile] = useState(undefined);
-  const [notice, setNotice] = useState("");
   const creationKeyRef = useRef(null);
   const {
     profiles,
@@ -27,7 +27,6 @@ export default function ProfileManager() {
   }, [loadProfiles]);
 
   function openNewProfile() {
-    setNotice("");
     // Reutilizamos la clave si se cerró un alta cuya respuesta pudo perderse.
     if (!creationKeyRef.current) {
       creationKeyRef.current = globalThis.crypto.randomUUID();
@@ -35,11 +34,16 @@ export default function ProfileManager() {
     setModalProfile(null);
   }
 
-  function finishSaving({ profile, avatar, created }) {
+  async function finishSaving({ profile, avatar, created }) {
     setProfileAvatar(profile.id, avatar);
     if (created) creationKeyRef.current = null;
     setModalProfile(undefined);
-    setNotice(created ? "Perfil creado." : "Perfil actualizado.");
+    await showSuccessAlert(
+      created ? "Perfil creado" : "Perfil actualizado",
+      created
+        ? "El perfil se ha creado correctamente."
+        : "Los cambios se han guardado correctamente.",
+    );
   }
 
   async function removeProfile(profile) {
@@ -51,10 +55,14 @@ export default function ProfileManager() {
     });
     if (!confirmed) return;
 
-    setNotice("");
     // La confirmación de éxito solo se muestra si el servidor elimina el perfil.
     const removed = await deleteProfile(profile.id);
-    if (removed) setNotice("Perfil eliminado.");
+    if (removed) {
+      await showSuccessAlert(
+        "Perfil eliminado",
+        "El perfil se ha eliminado correctamente.",
+      );
+    }
   }
 
   const isBusy = submitting || loading;
@@ -74,8 +82,6 @@ export default function ProfileManager() {
         </button>
       </header>
       {error && modalProfile === undefined && <p className="field-error" role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
-
       {loading ? (
         <p role="status">Cargando perfiles…</p>
       ) : profiles.length === 0 && !error ? (
@@ -108,7 +114,6 @@ export default function ProfileManager() {
                   title={`Editar perfil ${profile.name}`}
                   aria-label={`Editar perfil ${profile.name}`}
                   onClick={() => {
-                    setNotice("");
                     setModalProfile(profile);
                   }}
                   disabled={isBusy}

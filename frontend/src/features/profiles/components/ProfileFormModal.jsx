@@ -84,6 +84,19 @@ export default function ProfileFormModal({
     let createdNow = false;
 
     try {
+      const hasAvatarChanges =
+        avatarManager.removedImages.length > 0 ||
+        avatarManager.images.some((image) =>
+          !image.serverId ||
+          image.url !== image.savedUrl ||
+          image.alt !== image.savedAlt,
+        );
+      if (profile && profile.name === values.name && !hasAvatarChanges) {
+        if (dialogRef.current?.open) dialogRef.current.close();
+        onCancel();
+        return;
+      }
+
       if (!profile) {
         profile = await createProfile({ name: values.name }, creationKey);
         if (!profile) return;
@@ -108,7 +121,9 @@ export default function ProfileFormModal({
       const avatar = avatarManager.images[0]
         ? { url: avatarManager.images[0].url, alt: avatarManager.images[0].alt }
         : null;
-      onSaved({ profile, avatar, created: createdNow || createdInModal });
+      // Cerramos el diálogo nativo antes de que el padre muestre SweetAlert2.
+      if (dialogRef.current?.open) dialogRef.current.close();
+      await onSaved({ profile, avatar, created: createdNow || createdInModal });
     } finally {
       setSaving(false);
     }
