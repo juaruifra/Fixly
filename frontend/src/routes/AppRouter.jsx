@@ -27,6 +27,8 @@ const WorkerCreate = lazy(() => import("@/pages/workers/WorkerCreate"));
 const WorkerEdit = lazy(() => import("@/pages/workers/WorkerEdit"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Account = lazy(() => import("@/pages/auth/Account"));
+const AccountProfiles = lazy(() => import("@/pages/auth/AccountProfiles"));
+const AccountPassword = lazy(() => import("@/pages/auth/AccountPassword"));
 
 // Los datos de administración solo se cargan dentro de las rutas ADMIN.
 function AdminDataProvider() {
@@ -45,6 +47,8 @@ export function AppRouter() {
         <Route element={<RequireAuth />}>
           <Route element={<MainLayout />}>
             <Route path="/account" element={<Account />} />
+            <Route path="/account/profiles" element={<AccountProfiles />} />
+            <Route path="/account/password" element={<AccountPassword />} />
             <Route element={<RequireAuth adminOnly />}>
               <Route element={<AdminDataProvider />}>
                 <Route path="/services" element={<ServiceList />} />

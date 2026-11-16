@@ -81,7 +81,10 @@ export default function ProfileManager() {
 
   return (
     <section className="account-profiles" aria-labelledby="profiles-heading">
-      <h2 id="profiles-heading">Perfiles</h2>
+      <h2 id="profiles-heading">Mis perfiles</h2>
+      <p className="account-profiles-description">
+        Gestiona los perfiles asociados a tu cuenta.
+      </p>
       {error && <p className="field-error" role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
 

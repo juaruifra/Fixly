@@ -516,7 +516,7 @@ h2 {
 .account-details {
   display: grid;
   gap: 12px;
-  margin: 20px 0;
+  margin: 0;
 }
 
 .account-details dt {
@@ -527,6 +527,111 @@ h2 {
 .account-details dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.account-page {
+  width: min(100%, 1160px);
+  margin: 0 auto;
+}
+
+.account-page-header {
+  margin-bottom: 24px;
+}
+
+.account-page-header h1 {
+  margin: 0;
+}
+
+.account-home {
+  display: grid;
+  gap: 28px;
+}
+
+.account-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 4px 0 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-summary-icon,
+.account-shortcut-icon {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.account-summary-icon svg,
+.account-shortcut-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.account-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.account-shortcut {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  color: var(--card-foreground);
+  text-decoration: none;
+}
+
+.account-shortcut:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.account-shortcut:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.account-shortcut-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.account-shortcut-copy strong {
+  font-size: 1rem;
+}
+
+.account-shortcut-copy > span {
+  color: var(--muted-foreground);
+  overflow-wrap: anywhere;
+}
+
+.account-shortcut > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted-foreground);
+}
+
+.account-password-form {
+  width: min(100%, 520px);
+}
+
+.account-profiles {
+  margin: 0;
+}
+
+.account-profiles-description {
+  margin: -6px 0 20px;
+  color: var(--muted-foreground);
 }
 
 .account-profiles {
@@ -622,6 +727,14 @@ h2 {
 }
 
 @media (max-width: 480px) {
+  .account-shortcuts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-summary {
+    gap: 12px;
+  }
+
   .account-profile-list li {
     align-items: flex-start;
     flex-direction: column;
