@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Navigate, useLocation } from "react-router-dom";
+import { WrenchIcon } from "lucide-react";
 
 import ThemeSelector from "@/components/ThemeSelector";
 import { PageLoader } from "@/components/common/PageLoader";
@@ -50,12 +51,22 @@ export default function Login() {
 
   return (
     <main className="login-page">
-      <div className="login-content">
+      <section className="card login-content">
         <div className="login-header">
-          <strong className="login-brand">Fixly</strong>
+          <div className="login-brand">
+            <span className="login-brand-icon">
+              <WrenchIcon aria-hidden="true" />
+            </span>
+            <span className="login-brand-copy">
+              <strong>Fixly</strong>
+              <small>Gestión de servicios</small>
+            </span>
+          </div>
           <ThemeSelector />
         </div>
-        <h1>Iniciar sesión</h1>
+        <div className="login-heading">
+          <h1>Iniciar sesión</h1>
+        </div>
         {location.state?.passwordChanged && (
           <p role="status">Contraseña actualizada. Inicia sesión de nuevo.</p>
         )}
@@ -67,7 +78,7 @@ export default function Login() {
             </button>
           </div>
         )}
-        <form className="card form-card login-form" onSubmit={handleSubmit(submit)} noValidate>
+        <form className="login-form" onSubmit={handleSubmit(submit)} noValidate>
           <label htmlFor="login-email">
             <span>Correo electrónico</span>
             <input
@@ -105,7 +116,7 @@ export default function Login() {
             {isSubmitting ? "Comprobando…" : "Iniciar sesión"}
           </button>
         </form>
-      </div>
+      </section>
     </main>
   );
 }
