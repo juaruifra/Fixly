@@ -18,7 +18,13 @@ export const profileController = {
   },
   async create(req, res, next) {
     try {
-      res.status(201).json(await profileService.create(req.authUser.id, req.body));
+      res.status(201).json(
+        await profileService.create(
+          req.authUser.id,
+          req.body,
+          req.get("Idempotency-Key"),
+        ),
+      );
     } catch (error) {
       next(error);
     }

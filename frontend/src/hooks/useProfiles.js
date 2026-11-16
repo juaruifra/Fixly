@@ -36,13 +36,21 @@ export function useProfiles() {
     }
   }, []);
 
+  // La clave estable permite repetir el alta si se pierde la respuesta HTTP.
   const createProfile = useCallback(
-    (data) =>
-      runMutation(() => profileService.createProfile(data), (created) => {
+    (data, creationKey) =>
+      runMutation(() => profileService.createProfile(data, creationKey), (created) => {
         setProfiles((current) => [created, ...current]);
       }),
     [runMutation],
   );
+
+  // Actualiza la tarjeta local después de que nombre y avatar se hayan guardado.
+  const setProfileAvatar = useCallback((id, avatar) => {
+    setProfiles((current) =>
+      current.map((profile) => profile.id === id ? { ...profile, avatar } : profile),
+    );
+  }, []);
 
   const updateProfile = useCallback(
     (id, data) =>
@@ -74,5 +82,6 @@ export function useProfiles() {
     createProfile,
     updateProfile,
     deleteProfile,
+    setProfileAvatar,
   };
 }

@@ -7,8 +7,10 @@ export async function getProfiles() {
   return data;
 }
 
-export async function createProfile(profileData) {
-  const { data } = await apiService.post(PROFILES_PATH, profileData);
+export async function createProfile(profileData, creationKey) {
+  const { data } = await apiService.post(PROFILES_PATH, profileData, {
+    headers: { "Idempotency-Key": creationKey },
+  });
   return data;
 }
 

@@ -102,10 +102,52 @@ export function useEntityImages(entityType, hasExistingEntity = false) {
   );
 
   // Exige que el usuario compruebe el listado antes de repetir una creación dudosa.
-  const confirmUncertainRetry = useCallback(() => {
+  const confirmUncertainRetry = useCallback(async (entityId) => {
+    if (entityType === "profile" && uncertainCreateLocalId && entityId) {
+      const uncertainImage = images.find(
+        (image) => image.localId === uncertainCreateLocalId,
+      );
+      if (!uncertainImage) return false;
+
+      setLoading(true);
+      try {
+        // Antes de repetir un avatar, comprobamos si la primera petición sí llegó.
+        const savedImages = await imageService.getImagesByEntity(entityType, entityId);
+        const matchingImage = savedImages.find(
+          (image) => image.url === uncertainImage.url && image.alt === uncertainImage.alt,
+        );
+        if (matchingImage) {
+          setImages((current) =>
+            current.map((image) => image.localId === uncertainImage.localId
+              ? {
+                  ...image,
+                  serverId: matchingImage._id,
+                  savedUrl: matchingImage.url,
+                  savedAlt: matchingImage.alt,
+                }
+              : image),
+          );
+          setUncertainCreateLocalId(null);
+          setSaveError("");
+          return true;
+        }
+        if (savedImages.length > 0) {
+          setSaveError("El perfil ya tiene otro avatar. Cierra y vuelve a abrir el formulario para cargarlo.");
+          return false;
+        }
+      } catch (error) {
+        const normalized = await showApiErrorAlert(error);
+        setSaveError(normalized.message);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    }
+
     setUncertainCreateLocalId(null);
     setSaveError("");
-  }, []);
+    return true;
+  }, [entityType, images, uncertainCreateLocalId]);
 
   const syncImages = useCallback(
     async (entityId) => {

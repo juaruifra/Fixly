@@ -165,15 +165,16 @@ export default function ImageManager({
       {manager.uncertainCreateLocalId && (
         <div className="image-manager-error" role="alert">
           <span>
-            No se pudo confirmar si una imagen se guardó. Comprueba la galería
-            de esta entidad en Swagger antes de repetir la operación.
+            {entityType === "profile"
+              ? "No se pudo confirmar si el avatar se guardó. Comprueba el perfil antes de reintentar."
+              : "No se pudo confirmar si una imagen se guardó. Comprueba la galería de esta entidad antes de repetir la operación."}
           </span>
           <button
             type="button"
             className="button button-secondary"
-            onClick={manager.confirmUncertainRetry}
+            onClick={() => void manager.confirmUncertainRetry(entityId)}
           >
-            Ya lo comprobé; permitir reintento
+            {entityType === "profile" ? "Comprobar avatar" : "Ya lo comprobé; permitir reintento"}
           </button>
         </div>
       )}

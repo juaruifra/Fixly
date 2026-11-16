@@ -10,6 +10,23 @@ function validateId(id, label) {
   }
 }
 
+function validateCreationKey(creationKey) {
+  if (creationKey === undefined || creationKey === null || creationKey === "") {
+    return null;
+  }
+  if (
+    typeof creationKey !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(creationKey)
+  ) {
+    throw new AppError("Idempotency-Key must be a UUID v4", 400);
+  }
+  return creationKey;
+}
+
+function isDuplicateCreationKey(error) {
+  return error?.code === 11000 && Boolean(error.keyPattern?.creationKey);
+}
+
 function validateProfileData(data, { creating = false } = {}) {
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     throw new AppError("Profile data must be an object", 400);
@@ -67,13 +84,26 @@ export const profileService = {
     const avatar = await imageRepository.findAvatarByProfile(id);
     return toPublicProfile(existingProfile, avatar);
   },
-  async create(ownerId, data) {
+  async create(ownerId, data, creationKey) {
     validateId(ownerId, "user");
-    const profile = await profileRepository.create(
-      ownerId,
-      validateProfileData(data, { creating: true }),
-    );
-    return toPublicProfile(profile);
+    const key = validateCreationKey(creationKey);
+    const profileData = validateProfileData(data, { creating: true });
+
+    if (key) {
+      // Reutilizamos el perfil existente cuando el cliente repite la misma creación.
+      const existing = await profileRepository.findByCreationKey(ownerId, key);
+      if (existing) return toPublicProfile(existing);
+    }
+
+    try {
+      return toPublicProfile(await profileRepository.create(ownerId, profileData, key));
+    } catch (error) {
+      if (!key || !isDuplicateCreationKey(error)) throw error;
+      // El índice único resuelve carreras entre dos peticiones con la misma clave.
+      const existing = await profileRepository.findByCreationKey(ownerId, key);
+      if (!existing) throw error;
+      return toPublicProfile(existing);
+    }
   },
   async update(ownerId, id, data) {
     validateId(ownerId, "user");

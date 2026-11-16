@@ -7,8 +7,14 @@ export const profileRepository = {
     Profile.find({ owner: ownerId }).select(publicFields).sort({ createdAt: -1 }).lean(),
   findByIdForOwner: (id, ownerId) =>
     Profile.findOne({ _id: id, owner: ownerId }).select(publicFields).lean(),
-  create: async (ownerId, data) => {
-    const profile = await Profile.create({ ...data, owner: ownerId });
+  findByCreationKey: (ownerId, creationKey) =>
+    Profile.findOne({ owner: ownerId, creationKey }).select(publicFields).lean(),
+  create: async (ownerId, data, creationKey) => {
+    const profile = await Profile.create({
+      ...data,
+      owner: ownerId,
+      ...(creationKey ? { creationKey } : {}),
+    });
     return Profile.findById(profile._id).select(publicFields).lean();
   },
   updateByIdForOwner: (id, ownerId, data) =>

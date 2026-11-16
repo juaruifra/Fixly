@@ -1,17 +1,15 @@
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CircleUserRoundIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CircleUserRoundIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
-import ProfileAvatarEditor from "@/features/profiles/components/ProfileAvatarEditor";
-import { profileSchema } from "@/features/profiles/profileSchema";
+import ProfileFormModal from "@/features/profiles/components/ProfileFormModal";
 import { useProfiles } from "@/hooks/useProfiles";
 import { confirmServiceAction } from "@/utils/confirmAction";
 
+// Gestiona el listado; el modal concentra los cambios de nombre y avatar.
 export default function ProfileManager() {
-  const [editingProfile, setEditingProfile] = useState(null);
-  const [avatarProfile, setAvatarProfile] = useState(null);
+  const [modalProfile, setModalProfile] = useState(undefined);
   const [notice, setNotice] = useState("");
+  const creationKeyRef = useRef(null);
   const {
     profiles,
     loading,
@@ -21,42 +19,27 @@ export default function ProfileManager() {
     createProfile,
     updateProfile,
     deleteProfile,
+    setProfileAvatar,
   } = useProfiles();
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(profileSchema),
-    defaultValues: { name: "" },
-  });
 
   useEffect(() => {
     void loadProfiles();
   }, [loadProfiles]);
 
-  function startEditing(profile) {
+  function openNewProfile() {
     setNotice("");
-    setEditingProfile(profile);
-    reset({ name: profile.name });
+    // Reutilizamos la clave si se cerró un alta cuya respuesta pudo perderse.
+    if (!creationKeyRef.current) {
+      creationKeyRef.current = globalThis.crypto.randomUUID();
+    }
+    setModalProfile(null);
   }
 
-  function cancelEditing() {
-    setEditingProfile(null);
-    reset({ name: "" });
-  }
-
-  async function saveProfile(values) {
-    setNotice("");
-    const saved = editingProfile
-      ? await updateProfile(editingProfile.id, values)
-      : await createProfile(values);
-    if (!saved) return;
-
-    setNotice(editingProfile ? "Perfil actualizado." : "Perfil creado.");
-    setEditingProfile(null);
-    reset({ name: "" });
+  function finishSaving({ profile, avatar, created }) {
+    setProfileAvatar(profile.id, avatar);
+    if (created) creationKeyRef.current = null;
+    setModalProfile(undefined);
+    setNotice(created ? "Perfil creado." : "Perfil actualizado.");
   }
 
   async function removeProfile(profile) {
@@ -69,68 +52,44 @@ export default function ProfileManager() {
     if (!confirmed) return;
 
     setNotice("");
+    // La confirmación de éxito solo se muestra si el servidor elimina el perfil.
     const removed = await deleteProfile(profile.id);
-    if (removed) {
-      if (editingProfile?.id === profile.id) cancelEditing();
-      setAvatarProfile((current) => current?.id === profile.id ? null : current);
-      setNotice("Perfil eliminado.");
-    }
+    if (removed) setNotice("Perfil eliminado.");
   }
 
-  const isSaving = submitting || isSubmitting;
+  const isBusy = submitting || loading;
 
   return (
     <section className="account-profiles" aria-labelledby="profiles-heading">
-      <h2 id="profiles-heading">Mis perfiles</h2>
-      <p className="account-profiles-description">
-        Gestiona los perfiles asociados a tu cuenta.
-      </p>
-      {error && <p className="field-error" role="alert">{error}</p>}
+      <header className="account-profiles-header">
+        <div>
+          <h1 id="profiles-heading">Mis perfiles</h1>
+          <p className="account-profiles-description">
+            Gestiona los perfiles asociados a tu cuenta.
+          </p>
+        </div>
+        <button className="button" type="button" onClick={openNewProfile} disabled={loading}>
+          <PlusIcon aria-hidden="true" />
+          Nuevo perfil
+        </button>
+      </header>
+      {error && modalProfile === undefined && <p className="field-error" role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
 
-      <form className="card form-card account-profile-form" onSubmit={handleSubmit(saveProfile)} noValidate>
-        <h3>{editingProfile ? "Editar perfil" : "Crear perfil"}</h3>
-        <label htmlFor="profile-name">
-          <span>Nombre</span>
-          <input
-            id="profile-name"
-            maxLength={120}
-            aria-invalid={Boolean(errors.name)}
-            aria-describedby={errors.name ? "profile-name-error" : undefined}
-            {...register("name")}
-          />
-          {errors.name && (
-            <small id="profile-name-error" className="field-error">
-              {errors.name.message}
-            </small>
-          )}
-        </label>
-        <div className="form-actions">
-          <button className="button" type="submit" disabled={isSaving}>
-            {isSaving ? "Guardando…" : editingProfile ? "Guardar cambios" : "Crear perfil"}
-          </button>
-          {editingProfile && (
-            <button
-              className="button button-secondary"
-              type="button"
-              onClick={cancelEditing}
-              disabled={isSaving}
-            >
-              Cancelar
-            </button>
-          )}
-        </div>
-      </form>
-
-      <h3>Perfiles guardados</h3>
       {loading ? (
         <p role="status">Cargando perfiles…</p>
-      ) : profiles.length === 0 ? (
-        <p className="muted">Aún no hay perfiles.</p>
+      ) : profiles.length === 0 && !error ? (
+        <div className="card account-profiles-empty">
+          <CircleUserRoundIcon aria-hidden="true" />
+          <p>Aún no tienes perfiles.</p>
+          <button className="button button-secondary" type="button" onClick={openNewProfile}>
+            Crear primer perfil
+          </button>
+        </div>
       ) : (
-        <ul className="account-profile-list">
+        <ul className="account-profile-grid">
           {profiles.map((profile) => (
-            <li key={profile.id}>
+            <li className="card account-profile-card" key={profile.id}>
               {profile.avatar ? (
                 <img
                   className="account-profile-avatar"
@@ -146,21 +105,13 @@ export default function ProfileManager() {
                 <button
                   className="button button-secondary"
                   type="button"
-                  onClick={() => {
-                    setNotice("");
-                    setAvatarProfile(profile);
-                  }}
-                  disabled={isSaving}
-                >
-                  Editar avatar
-                </button>
-                <button
-                  className="button button-secondary"
-                  type="button"
                   title={`Editar perfil ${profile.name}`}
                   aria-label={`Editar perfil ${profile.name}`}
-                  onClick={() => startEditing(profile)}
-                  disabled={isSaving}
+                  onClick={() => {
+                    setNotice("");
+                    setModalProfile(profile);
+                  }}
+                  disabled={isBusy}
                 >
                   <PencilIcon aria-hidden="true" />
                   Editar
@@ -171,7 +122,7 @@ export default function ProfileManager() {
                   title={`Eliminar perfil ${profile.name}`}
                   aria-label={`Eliminar perfil ${profile.name}`}
                   onClick={() => void removeProfile(profile)}
-                  disabled={isSaving}
+                  disabled={isBusy}
                 >
                   <Trash2Icon aria-hidden="true" />
                   Eliminar
@@ -181,16 +132,16 @@ export default function ProfileManager() {
           ))}
         </ul>
       )}
-      {avatarProfile && profiles.some((profile) => profile.id === avatarProfile.id) && (
-        <ProfileAvatarEditor
-          key={avatarProfile.id}
-          profile={avatarProfile}
-          onClose={() => setAvatarProfile(null)}
-          onSaved={async () => {
-            await loadProfiles();
-            setAvatarProfile(null);
-            setNotice("Avatar guardado.");
-          }}
+      {modalProfile !== undefined && (
+        <ProfileFormModal
+          key={modalProfile?.id ?? "new-profile"}
+          initialProfile={modalProfile}
+          creationKey={creationKeyRef.current}
+          profileError={error}
+          createProfile={createProfile}
+          updateProfile={updateProfile}
+          onCancel={() => setModalProfile(undefined)}
+          onSaved={finishSaving}
         />
       )}
     </section>

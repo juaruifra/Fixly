@@ -635,65 +635,83 @@ h2 {
 }
 
 .account-profiles {
-  margin: 28px 0;
-}
-
-.account-profiles h2,
-.account-profiles h3 {
-  margin: 0 0 14px;
-}
-
-.account-profile-form {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.account-profile-form h3 {
   margin: 0;
 }
 
-.account-avatar-editor {
-  margin: 24px 0;
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
+.account-profiles-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
 }
 
-.account-avatar-editor > h3 {
-  margin: 0 0 14px;
+.account-profiles-header h1 {
+  margin: 0 0 8px;
 }
 
-.account-avatar-editor .image-manager {
-  margin-top: 0;
+.account-profiles-header .button,
+.account-profile-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 
-.account-profile-list {
+.account-profiles-header .button svg,
+.account-profile-actions svg {
+  width: 16px;
+  height: 16px;
+}
+
+.account-profiles-empty {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 28px;
+  text-align: center;
+}
+
+.account-profiles-empty > svg {
+  width: 34px;
+  height: 34px;
+  color: var(--muted-foreground);
+}
+
+.account-profiles-empty p {
+  margin: 0;
+}
+
+.account-profile-grid {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 16px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.account-profile-list li {
-  display: flex;
+.account-profile-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: start;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--border);
-  padding: 12px 0;
+  gap: 14px;
+  padding: 18px;
 }
 
-.account-profile-list li > span {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.account-profile-card .account-profile-avatar,
+.account-profile-card .account-profile-avatar-placeholder {
+  grid-row: span 2;
 }
 
 .account-profile-avatar,
 .account-profile-avatar-placeholder {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
 }
 
@@ -706,24 +724,71 @@ h2 {
 }
 
 .account-profile-name {
-  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 650;
 }
 
 .account-profile-actions {
+  grid-column: 1 / -1;
   display: flex;
-  flex: 0 0 auto;
+  justify-content: flex-end;
   gap: 8px;
 }
 
-.account-profile-actions .button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.profile-modal {
+  width: min(640px, calc(100vw - 28px));
+  max-width: none;
+  max-height: min(90vh, 840px);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: 0 24px 72px oklch(0 0 0 / 35%);
 }
 
-.account-profile-actions svg {
-  width: 16px;
-  height: 16px;
+.profile-modal::backdrop {
+  background: oklch(0 0 0 / 58%);
+}
+
+.profile-modal-content {
+  max-height: min(90vh, 840px);
+  display: grid;
+  gap: 18px;
+  overflow-y: auto;
+  padding: 24px;
+  overscroll-behavior: contain;
+}
+
+.profile-modal-header h2 {
+  margin: 0 0 6px;
+}
+
+.profile-modal-header p {
+  margin: 0;
+}
+
+.profile-modal-content > label {
+  display: grid;
+  gap: 8px;
+  font-weight: 650;
+}
+
+.profile-modal-content input {
+  width: 100%;
+}
+
+.profile-modal .account-avatar-editor {
+  margin: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.profile-modal-actions {
+  justify-content: flex-end;
+  margin: 0;
 }
 
 @media (max-width: 480px) {
@@ -735,9 +800,27 @@ h2 {
     gap: 12px;
   }
 
-  .account-profile-list li {
-    align-items: flex-start;
+  .account-profiles-header {
+    align-items: stretch;
     flex-direction: column;
+  }
+
+  .account-profiles-header .button {
+    align-self: flex-start;
+  }
+
+  .account-profiles-empty {
+    min-height: 180px;
+    flex-direction: column;
+  }
+
+  .profile-modal-content {
+    padding: 18px;
+  }
+
+  .profile-modal-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
   }
 }
 

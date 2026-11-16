@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { body, param } from "express-validator";
+import { body, header, param } from "express-validator";
 
 import { profileController } from "../controllers/profile.controller.js";
 import { authenticateRequired } from "../middlewares/auth.middleware.js";
@@ -199,6 +199,12 @@ router.get("/", profileController.list);
  *     summary: Crear un perfil propio
  *     tags: [Profiles]
  *     security: [{ BearerAuth: [] }]
+ *     parameters:
+ *       - in: header
+ *         name: Idempotency-Key
+ *         required: false
+ *         description: UUID v4 reutilizado al reintentar la misma creación.
+ *         schema: { type: string, format: uuid }
  *     requestBody:
  *       required: true
  *       content:
@@ -213,7 +219,16 @@ router.get("/", profileController.list);
  *       400: { description: Datos no válidos o campos no permitidos }
  *       401: { description: Se requiere autenticación }
  */
-router.post("/", nameValidation, validateRequest, profileController.create);
+router.post(
+  "/",
+  nameValidation,
+  header("Idempotency-Key")
+    .optional()
+    .isUUID(4)
+    .withMessage("Idempotency-Key must be a UUID v4"),
+  validateRequest,
+  profileController.create,
+);
 
 /**
  * @openapi
