@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import MainLayout from "@/layouts/MainLayout";
 import { PageLoader } from "@/components/common/PageLoader";
@@ -28,11 +28,11 @@ const WorkerEdit = lazy(() => import("@/pages/workers/WorkerEdit"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Account = lazy(() => import("@/pages/auth/Account"));
 
-// Los datos administrativos se cargan solo después de comprobar el rol ADMIN.
-function AdminLayout() {
+// Los datos de administración solo se cargan dentro de las rutas ADMIN.
+function AdminDataProvider() {
   return (
     <AppProvider>
-      <MainLayout />
+      <Outlet />
     </AppProvider>
   );
 }
@@ -43,32 +43,33 @@ export function AppRouter() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireAuth />}>
-          <Route path="/account" element={<Account />} />
-        </Route>
-        <Route element={<RequireAuth adminOnly />}>
-        <Route element={<AdminLayout />}>
-          <Route index element={<Navigate to="/services" replace />} />
-          <Route path="/services" element={<ServiceList />} />
-          <Route path="/services/new" element={<ServiceCreate />} />
-          <Route path="/services/:id/edit" element={<ServiceEdit />} />
-          <Route path="/categories" element={<CategoryList />} />
-          <Route path="/categories/new" element={<CategoryCreate />} />
-          <Route path="/categories/:id/edit" element={<CategoryEdit />} />
-          <Route path="/variants" element={<VariantList />} />
-          <Route path="/variants/new" element={<VariantCreate />} />
-          <Route path="/variants/:id/edit" element={<VariantEdit />} />
-          <Route path="/roles" element={<RoleList />} />
-          <Route path="/roles/new" element={<RoleCreate />} />
-          <Route path="/roles/:id/edit" element={<RoleEdit />} />
-          <Route path="/users" element={<UserList />} />
-          <Route path="/users/new" element={<UserCreate />} />
-          <Route path="/users/:id/edit" element={<UserEdit />} />
-          <Route path="/workers" element={<WorkerList />} />
-          <Route path="/workers/new" element={<WorkerCreate />} />
-          <Route path="/workers/:id/edit" element={<WorkerEdit />} />
-          {/* Conserva el comportamiento anterior para direcciones desconocidas. */}
-          <Route path="*" element={<Navigate to="/services" replace />} />
-        </Route>
+          <Route element={<MainLayout />}>
+            <Route path="/account" element={<Account />} />
+            <Route element={<RequireAuth adminOnly />}>
+              <Route element={<AdminDataProvider />}>
+                <Route path="/services" element={<ServiceList />} />
+                <Route path="/services/new" element={<ServiceCreate />} />
+                <Route path="/services/:id/edit" element={<ServiceEdit />} />
+                <Route path="/categories" element={<CategoryList />} />
+                <Route path="/categories/new" element={<CategoryCreate />} />
+                <Route path="/categories/:id/edit" element={<CategoryEdit />} />
+                <Route path="/variants" element={<VariantList />} />
+                <Route path="/variants/new" element={<VariantCreate />} />
+                <Route path="/variants/:id/edit" element={<VariantEdit />} />
+                <Route path="/roles" element={<RoleList />} />
+                <Route path="/roles/new" element={<RoleCreate />} />
+                <Route path="/roles/:id/edit" element={<RoleEdit />} />
+                <Route path="/users" element={<UserList />} />
+                <Route path="/users/new" element={<UserCreate />} />
+                <Route path="/users/:id/edit" element={<UserEdit />} />
+                <Route path="/workers" element={<WorkerList />} />
+                <Route path="/workers/new" element={<WorkerCreate />} />
+                <Route path="/workers/:id/edit" element={<WorkerEdit />} />
+              </Route>
+            </Route>
+            <Route index element={<Navigate to="/account" replace />} />
+            <Route path="*" element={<Navigate to="/account" replace />} />
+          </Route>
         </Route>
       </Routes>
     </Suspense>

@@ -45,7 +45,7 @@ export default function Login() {
 
   if (status === "checking") return <PageLoader />;
   if (status === "authenticated") {
-    return <Navigate to={user.role.name === "ADMIN" ? "/services" : "/account"} replace />;
+    return <Navigate to="/account" replace />;
   }
 
   return (
