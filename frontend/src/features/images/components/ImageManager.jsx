@@ -128,6 +128,11 @@ export default function ImageManager({
     if (entityId) await manager.loadImages(entityId);
   }
 
+  // Solo el avatar único debe esperar a que termine el borrado antes de reemplazarse.
+  const canAddImage =
+    manager.images.length < maxImages &&
+    (entityType !== "profile" || manager.removedImages.length === 0);
+
   return (
     <section className="image-manager full-width" aria-labelledby="image-manager-title">
       <div className="image-manager-heading">
@@ -232,7 +237,7 @@ export default function ImageManager({
         )}
       </div>
 
-      {(editingId || (manager.images.length < maxImages && manager.removedImages.length === 0)) && (
+      {(editingId || canAddImage) && (
       <div className="image-manager-form">
         <label htmlFor="image-url">
           <span>URL de la imagen</span>
