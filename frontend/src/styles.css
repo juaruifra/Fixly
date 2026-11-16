@@ -737,6 +737,9 @@ h2 {
 }
 
 .profile-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
   width: min(640px, calc(100vw - 28px));
   max-width: none;
   max-height: min(90vh, 840px);
