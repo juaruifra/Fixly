@@ -16,7 +16,7 @@ export default function ProfileAvatarEditor({
         maxImages={1}
         title="Avatar"
         description="Cada perfil puede tener un único avatar. Edita el existente para sustituirlo."
-        saveNotice="Guarda el avatar para aplicar los cambios. Si cierras antes, los cambios pendientes se descartarán."
+        saveNotice="Guarda el avatar y luego aplica los cambios. Si cierras antes, los cambios pendientes se descartarán."
         onDraftDirtyChange={onDraftDirtyChange}
       />
     </section>
