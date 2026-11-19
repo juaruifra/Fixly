@@ -71,6 +71,7 @@ export default function ProfileFormModal({
           : "Los cambios que no hayas guardado se perderán.",
         confirmText: "Descartar",
         danger: true,
+        target: dialogRef.current,
       });
       if (!confirmed) return;
     }

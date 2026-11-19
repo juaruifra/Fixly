@@ -268,7 +268,7 @@ export default function ImageManager({
           </button>
           {editingId && (
             <button type="button" className="button button-secondary" onClick={resetDraft}>
-              Cancelar edición
+              {entityType === "profile" ? "Descartar cambios del avatar" : "Cancelar edición"}
             </button>
           )}
         </div>

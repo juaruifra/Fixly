@@ -835,6 +835,14 @@ h2 {
   padding-top: 18px;
 }
 
+.profile-modal .image-manager-form {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.profile-modal .image-manager-form-actions {
+  flex-wrap: wrap;
+}
+
 .profile-modal-actions {
   justify-content: flex-end;
   margin: 0;

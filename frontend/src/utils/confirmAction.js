@@ -13,11 +13,13 @@ export async function confirmServiceAction({
   message,
   confirmText,
   danger = false,
+  target,
 }) {
   const result = await Swal.fire({
     icon: danger ? "warning" : "question",
     title,
     text: message,
+    ...(target ? { target } : {}),
     showCancelButton: true,
     confirmButtonText: confirmText,
     cancelButtonText: "Cancelar",
