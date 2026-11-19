@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ImageManager from "@/features/images/components/ImageManager";
-import { useEntityImages } from "@/features/images/useEntityImages";
+import { useEntityImages } from "@/hooks/useEntityImages";
 import {
   VARIANT_STATUS_OPTIONS,
   variantSchema,

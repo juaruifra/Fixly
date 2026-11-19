@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import ProfileAvatarEditor from "@/features/profiles/components/ProfileAvatarEditor";
 import { profileSchema } from "@/features/profiles/profileSchema";
-import { useEntityImages } from "@/features/images/useEntityImages";
+import { useEntityImages } from "@/hooks/useEntityImages";
 import { confirmServiceAction } from "@/utils/confirmAction";
 
 function hasPendingChanges(formDirty, avatarManager, avatarDraftDirty) {

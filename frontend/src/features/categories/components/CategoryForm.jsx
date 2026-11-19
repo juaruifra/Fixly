@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { categorySchema } from "@/features/categories/categorySchema";
 import ImageManager from "@/features/images/components/ImageManager";
-import { useEntityImages } from "@/features/images/useEntityImages";
+import { useEntityImages } from "@/hooks/useEntityImages";
 
 const EMPTY_VALUES = {
   name: "",

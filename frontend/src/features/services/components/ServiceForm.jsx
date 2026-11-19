@@ -8,7 +8,7 @@ import {
   serviceSchema,
 } from "@/features/services/serviceSchema";
 import ImageManager from "@/features/images/components/ImageManager";
-import { useEntityImages } from "@/features/images/useEntityImages";
+import { useEntityImages } from "@/hooks/useEntityImages";
 import { useCategories } from "@/hooks/useCategories";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
