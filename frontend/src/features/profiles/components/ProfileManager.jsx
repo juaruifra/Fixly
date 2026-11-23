@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
-import { CircleUserRoundIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { CircleUserRoundIcon, PencilIcon, PlusIcon, StarIcon, Trash2Icon } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import ProfileFormModal from "@/features/profiles/components/ProfileFormModal";
 import { useProfiles } from "@/hooks/useProfiles";
 import { confirmServiceAction } from "@/utils/confirmAction";
@@ -92,7 +94,10 @@ export default function ProfileManager() {
       ) : (
         <ul className="account-profile-grid">
           {profiles.map((profile) => (
-            <li className="card account-profile-card" key={profile.id}>
+            <li
+              className={`card account-profile-card${profile.id === defaultProfileId ? " account-profile-card-default" : ""}`}
+              key={profile.id}
+            >
               {profile.avatar ? (
                 <img
                   className="account-profile-avatar"
@@ -105,21 +110,30 @@ export default function ProfileManager() {
               )}
               <span className="account-profile-name">{profile.name}</span>
               {profile.id === defaultProfileId && (
-                <span className="account-profile-default">Predeterminado</span>
+                <Badge className="account-profile-default" variant="chip" tone="info">
+                  <StarIcon aria-hidden="true" />
+                  Predeterminado
+                </Badge>
               )}
               <div className="account-profile-actions">
                 {profile.id !== defaultProfileId && (
-                  <button
-                    className="button button-secondary"
+                  <Button
+                    className="account-profile-icon-action"
+                    variant="outline"
+                    size="icon-sm"
                     type="button"
+                    title={`Establecer ${profile.name} como predeterminado`}
+                    aria-label={`Establecer ${profile.name} como predeterminado`}
                     onClick={() => void selectDefaultProfile(profile.id)}
                     disabled={isBusy}
                   >
-                    Establecer como predeterminado
-                  </button>
+                    <StarIcon aria-hidden="true" />
+                  </Button>
                 )}
-                <button
-                  className="button button-secondary"
+                <Button
+                  className="account-profile-icon-action"
+                  variant="outline"
+                  size="icon-sm"
                   type="button"
                   title={`Editar perfil ${profile.name}`}
                   aria-label={`Editar perfil ${profile.name}`}
@@ -129,10 +143,11 @@ export default function ProfileManager() {
                   disabled={isBusy}
                 >
                   <PencilIcon aria-hidden="true" />
-                  Editar
-                </button>
-                <button
-                  className="button button-secondary"
+                </Button>
+                <Button
+                  className="account-profile-icon-action"
+                  variant="outline"
+                  size="icon-sm"
                   type="button"
                   title={`Eliminar perfil ${profile.name}`}
                   aria-label={`Eliminar perfil ${profile.name}`}
@@ -140,8 +155,7 @@ export default function ProfileManager() {
                   disabled={isBusy}
                 >
                   <Trash2Icon aria-hidden="true" />
-                  Eliminar
-                </button>
+                </Button>
               </div>
             </li>
           ))}
