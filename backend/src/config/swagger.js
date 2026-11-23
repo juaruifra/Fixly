@@ -277,7 +277,12 @@ const options = {
           properties: {
             name: { type: "string" },
             email: { type: "string", format: "email" },
-            password: { type: "string", writeOnly: true, minLength: 8, maxLength: 128 },
+            password: {
+              type: "string",
+              writeOnly: true,
+              minLength: 8,
+              description: "Al menos 8 caracteres; máximo 72 bytes UTF-8.",
+            },
             role: { type: "string", format: "objectid" },
           },
         },

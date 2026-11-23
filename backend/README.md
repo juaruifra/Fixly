@@ -49,7 +49,8 @@ En PowerShell, configura `NODE_ENV` y `ALLOW_DESTRUCTIVE_SEED_RESET` para la ses
 - `POST /api/auth/login`: devuelve el usuario y un JWT.
 - `GET /api/auth/me`: devuelve el usuario asociado al token.
 - `POST /api/auth/logout`: revoca únicamente el JWT de la petición y devuelve `204` al confirmar la persistencia.
-- `PATCH /api/auth/password`: cambia la contraseña propia con JWT y contraseña actual. La nueva contraseña admite hasta 72 bytes UTF-8 e invalida las sesiones anteriores del usuario.
+- Las contraseñas de registro, login y cambios propios o administrativos requieren al menos 8 caracteres y no pueden superar 72 bytes UTF-8.
+- `PATCH /api/auth/password`: cambia la contraseña propia con JWT y contraseña actual; invalida las sesiones anteriores del usuario.
 - `GET /api/profiles`: lista los perfiles del usuario autenticado junto con el avatar opcional de cada uno.
 - `POST /api/profiles`: crea un perfil propio con `name`; admite `Idempotency-Key` UUID v4 para devolver el mismo perfil al reintentar una creación.
 - `GET`, `PATCH` y `DELETE /api/profiles/:id`: consultan, actualizan o eliminan perfiles propios; el servidor deriva el propietario del JWT y responde `404` ante perfiles ajenos.

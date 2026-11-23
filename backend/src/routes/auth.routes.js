@@ -18,10 +18,7 @@ const credentialsValidation = [
     .withMessage("password is required")
     .bail()
     .isString()
-    .withMessage("password must be a string")
-    .bail()
-    .isLength({ min: 8, max: 72 })
-    .withMessage("password must contain between 8 and 72 characters"),
+    .withMessage("password must be a string"),
   validateRequest,
 ];
 
@@ -42,7 +39,10 @@ const credentialsValidation = [
  *             properties:
  *               name: { type: string, example: "Ana García" }
  *               email: { type: string, format: email, example: "ana@example.com" }
- *               password: { type: string, minLength: 8, maxLength: 128 }
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: Al menos 8 caracteres; máximo 72 bytes UTF-8.
  *     responses:
  *       201:
  *         description: Cuenta y token creados
@@ -84,7 +84,10 @@ router.post(
  *             required: [email, password]
  *             properties:
  *               email: { type: string, format: email }
- *               password: { type: string }
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: Al menos 8 caracteres; máximo 72 bytes UTF-8.
  *     responses:
  *       200:
  *         description: Token emitido
@@ -145,8 +148,18 @@ router.post("/logout", authenticateRequired, authController.logout);
  *             additionalProperties: false
  *             required: [currentPassword, newPassword]
  *             properties:
- *               currentPassword: { type: string, format: password, writeOnly: true }
- *               newPassword: { type: string, format: password, writeOnly: true, minLength: 8, maxLength: 72 }
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *                 writeOnly: true
+ *                 minLength: 8
+ *                 description: Al menos 8 caracteres; máximo 72 bytes UTF-8.
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 writeOnly: true
+ *                 minLength: 8
+ *                 description: Al menos 8 caracteres; máximo 72 bytes UTF-8.
  *     responses:
  *       204: { description: Contraseña actualizada }
  *       400: { description: Datos inválidos o contraseña actual incorrecta }

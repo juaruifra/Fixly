@@ -19,9 +19,7 @@ const userFieldsValidation = [
   body("password")
     .optional()
     .isString()
-    .withMessage("password must be a string")
-    .isLength({ min: 8, max: 128 })
-    .withMessage("password must contain between 8 and 128 characters"),
+    .withMessage("password must be a string"),
   body("role").optional().isMongoId().withMessage("role must be a valid role id"),
   validateRequest,
 ];
@@ -78,7 +76,7 @@ router.post(
   [
     body("name").exists({ values: "falsy" }).isString().withMessage("name is required").bail().trim().notEmpty(),
     body("email").exists({ values: "falsy" }).isEmail().withMessage("email must be valid"),
-    body("password").exists({ values: "null" }).isString().isLength({ min: 8, max: 128 }).withMessage("password must contain between 8 and 128 characters"),
+    body("password").exists({ values: "null" }).isString().withMessage("password must be a string"),
     body("role").exists({ values: "falsy" }).isMongoId().withMessage("role must be a valid role id"),
     ...userFieldsValidation,
   ],

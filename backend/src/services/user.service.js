@@ -7,7 +7,7 @@ import { hashPassword, verifyPassword } from "../utils/password.util.js";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const minimumPasswordLength = 8;
-const maximumPasswordLength = 128;
+const maximumPasswordBytes = 72;
 
 function validateId(id) {
   if (!mongoose.isObjectIdOrHexString(id)) {
@@ -32,20 +32,15 @@ function validateName(name) {
   return normalized;
 }
 
+// Todas las vías de contraseña comparten mínimo en caracteres y máximo en bytes UTF-8.
 function validatePassword(password) {
   if (typeof password !== "string") {
     throw new AppError("password must be a string", 400);
   }
-  if (
-    password.length < minimumPasswordLength ||
-    password.length > maximumPasswordLength
-  ) {
-    throw new AppError(
-      `password must contain between ${minimumPasswordLength} and ${maximumPasswordLength} characters`,
-      400,
-    );
+  if ([...password].length < minimumPasswordLength) {
+    throw new AppError(`password must contain at least ${minimumPasswordLength} characters`, 400);
   }
-  if (Buffer.byteLength(password, "utf8") > 72) {
+  if (Buffer.byteLength(password, "utf8") > maximumPasswordBytes) {
     throw new AppError("password must not exceed 72 UTF-8 bytes", 400);
   }
 }
