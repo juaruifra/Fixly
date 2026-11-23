@@ -265,6 +265,12 @@ const options = {
             name: { type: "string", example: "Ana García" },
             email: { type: "string", format: "email" },
             role: { $ref: "#/components/schemas/Role" },
+            defaultProfile: {
+              type: "string",
+              format: "objectid",
+              nullable: true,
+              description: "ID del perfil predeterminado; null si no hay selección.",
+            },
             active: { type: "boolean" },
             deletedAt: { type: "string", format: "date-time", nullable: true },
             createdAt: { type: "string", format: "date-time" },

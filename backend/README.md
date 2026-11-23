@@ -48,6 +48,8 @@ En PowerShell, configura `NODE_ENV` y `ALLOW_DESTRUCTIVE_SEED_RESET` para la ses
 - `POST /api/auth/register`: crea una cuenta CLIENT.
 - `POST /api/auth/login`: devuelve el usuario y un JWT.
 - `GET /api/auth/me`: devuelve el usuario asociado al token.
+- `PATCH /api/auth/me`: actualiza el nombre o correo del usuario autenticado; no permite cambiar el rol ni campos internos.
+- `PATCH /api/auth/me/default-profile`: selecciona un perfil propio o limpia la selección con `profileId: null`.
 - `POST /api/auth/logout`: revoca únicamente el JWT de la petición y devuelve `204` al confirmar la persistencia.
 - Las contraseñas de registro, login y cambios propios o administrativos requieren al menos 8 caracteres y no pueden superar 72 bytes UTF-8.
 - `PATCH /api/auth/password`: cambia la contraseña propia con JWT y contraseña actual; invalida las sesiones anteriores del usuario.
@@ -74,6 +76,8 @@ En Postman, inicia sesión dos veces y conserva ambos tokens. Envía `POST /api/
 El catálogo público conserva `/api/categories/available`, `/api/categories/slug/:slug`, `/api/services/public`, `/api/services/slug/:slug` y `/api/variants/public` sin autenticación. Para consultar imágenes públicas, usa `GET /api/images/public/entity/:entityType/:entityId`; devuelve `404` si la entidad no es visible en el catálogo. La ruta anterior `/api/images/entity/:entityType/:entityId` queda reservada a ADMIN.
 
 Los avatares de perfiles no forman parte del catálogo público ni de los endpoints genéricos de administración de imágenes. `Image.entityId` contiene el ID del perfil y la propiedad se comprueba mediante `Profile.owner`. Se guardan como URLs HTTP(S); si la URL externa es pública, la API no puede volverla privada. Al eliminar un perfil se intenta borrar su avatar antes que el documento; MongoDB standalone no garantiza atomicidad entre ambas colecciones.
+
+`User.defaultProfile` es una preferencia opcional, devuelta como ID string o `null`. Al seleccionar un perfil se comprueba su propietario antes y después de guardar; al eliminarlo se limpia la preferencia solo si aún apunta a ese ID. Esta secuencia evita referencias inválidas por carreras entre selección y borrado en la ejecución normal.
 
 Antes de arrancar la API con esta versión, ejecuta `npm run migrate:profile-avatar-index` una vez. La migración comprueba duplicados y reemplaza los índices anteriores sin modificar documentos.
 

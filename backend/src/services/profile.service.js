@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 import { imageRepository } from "../repositories/image.repository.js";
 import { profileRepository } from "../repositories/profile.repository.js";
+import { userRepository } from "../repositories/user.repository.js";
 import { AppError } from "../utils/app-error.js";
 
 function validateId(id, label) {
@@ -124,6 +125,8 @@ export const profileService = {
     await imageRepository.deleteAvatarForProfile(id);
     const deletedProfile = await profileRepository.deleteByIdForOwner(id, ownerId);
     if (!deletedProfile) throw new AppError("Profile not found", 404);
+    // La selección se limpia después de borrar; una selección concurrente se revalida.
+    await userRepository.clearDefaultProfileIfMatches(ownerId, id);
     // Una segunda limpieza cubre un avatar creado durante la eliminación.
     await imageRepository.deleteAvatarForProfile(id);
   },

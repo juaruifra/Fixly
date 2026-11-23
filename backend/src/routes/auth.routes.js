@@ -118,6 +118,90 @@ router.get("/me", authenticateRequired, authController.me);
 
 /**
  * @openapi
+ * /api/auth/me:
+ *   patch:
+ *     summary: Actualizar nombre o correo del usuario autenticado
+ *     tags: [Authentication]
+ *     security: [{ BearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             minProperties: 1
+ *             properties:
+ *               name: { type: string, minLength: 1, maxLength: 120 }
+ *               email: { type: string, format: email, maxLength: 254 }
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado en formato público
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/User' }
+ *       400: { description: Datos inválidos o campos no permitidos }
+ *       401: { description: Token ausente o inválido }
+ *       409: { description: El correo ya está registrado }
+ */
+router.patch(
+  "/me",
+  authenticateRequired,
+  [
+    body("name").optional().isString().withMessage("name must be a string"),
+    body("email").optional().isString().withMessage("email must be a string"),
+    validateRequest,
+  ],
+  authController.updateMe,
+);
+
+/**
+ * @openapi
+ * /api/auth/me/default-profile:
+ *   patch:
+ *     summary: Seleccionar el perfil predeterminado del usuario autenticado
+ *     description: Envía null para limpiar la selección. El perfil debe pertenecer al usuario.
+ *     tags: [Authentication]
+ *     security: [{ BearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             required: [profileId]
+ *             properties:
+ *               profileId: { type: string, format: objectid, nullable: true }
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado en formato público
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/User' }
+ *       400: { description: Identificador inválido o campos no permitidos }
+ *       401: { description: Token ausente o inválido }
+ *       404: { description: Perfil propio no encontrado }
+ */
+router.patch(
+  "/me/default-profile",
+  authenticateRequired,
+  [
+    body("profileId")
+      .exists({ values: "undefined" })
+      .withMessage("profileId is required")
+      .bail()
+      .custom((value) => value === null || (
+        typeof value === "string" && /^[0-9a-f]{24}$/i.test(value)
+      ))
+      .withMessage("profileId must be a valid ObjectId or null"),
+    validateRequest,
+  ],
+  authController.setDefaultProfile,
+);
+
+/**
+ * @openapi
  * /api/auth/logout:
  *   post:
  *     summary: Revocar la sesión actual

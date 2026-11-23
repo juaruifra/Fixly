@@ -34,6 +34,7 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
     findAvatarByProfile: imageRepository.findAvatarByProfile,
     findAvatarsByProfiles: imageRepository.findAvatarsByProfiles,
     deleteAvatarForProfile: imageRepository.deleteAvatarForProfile,
+    clearDefaultProfileIfMatches: userRepository.clearDefaultProfileIfMatches,
   };
 
   userRepository.findById = async (id) => users.get(String(id));
@@ -96,6 +97,7 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
   imageRepository.findAvatarByProfile = async () => null;
   imageRepository.findAvatarsByProfiles = async () => [];
   imageRepository.deleteAvatarForProfile = async () => null;
+  userRepository.clearDefaultProfileIfMatches = async () => ({ modifiedCount: 0 });
 
   const server = app.listen(0, "127.0.0.1");
   await new Promise((resolve, reject) => {
@@ -189,6 +191,7 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
     imageRepository.findAvatarByProfile = originals.findAvatarByProfile;
     imageRepository.findAvatarsByProfiles = originals.findAvatarsByProfiles;
     imageRepository.deleteAvatarForProfile = originals.deleteAvatarForProfile;
+    userRepository.clearDefaultProfileIfMatches = originals.clearDefaultProfileIfMatches;
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
 });

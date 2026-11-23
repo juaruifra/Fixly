@@ -31,6 +31,7 @@ test("El avatar es único y solo el propietario del perfil puede gestionarlo", a
     findById: userRepository.findById,
     findByIdForAuth: userRepository.findByIdForAuth,
     isRevoked: revokedTokenRepository.isRevoked,
+    clearDefaultProfileIfMatches: userRepository.clearDefaultProfileIfMatches,
     findProfileById: profileRepository.findByIdForOwner,
     deleteProfileById: profileRepository.deleteByIdForOwner,
     findAvatarByProfile: imageRepository.findAvatarByProfile,
@@ -42,6 +43,7 @@ test("El avatar es único y solo el propietario del perfil puede gestionarlo", a
   userRepository.findById = async (id) => users.get(String(id));
   userRepository.findByIdForAuth = userRepository.findById;
   revokedTokenRepository.isRevoked = async () => false;
+  userRepository.clearDefaultProfileIfMatches = async () => ({ modifiedCount: 0 });
   profileRepository.findByIdForOwner = async (id, owner) =>
     profiles.get(String(id)) === String(owner) ? { _id: id, name: "Casa" } : null;
   profileRepository.deleteByIdForOwner = async (id, owner) => {
@@ -148,6 +150,7 @@ test("El avatar es único y solo el propietario del perfil puede gestionarlo", a
     userRepository.findById = originals.findById;
     userRepository.findByIdForAuth = originals.findByIdForAuth;
     revokedTokenRepository.isRevoked = originals.isRevoked;
+    userRepository.clearDefaultProfileIfMatches = originals.clearDefaultProfileIfMatches;
     profileRepository.findByIdForOwner = originals.findProfileById;
     profileRepository.deleteByIdForOwner = originals.deleteProfileById;
     imageRepository.findAvatarByProfile = originals.findAvatarByProfile;

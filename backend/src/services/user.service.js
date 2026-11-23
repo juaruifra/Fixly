@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+import { profileRepository } from "../repositories/profile.repository.js";
 import { roleRepository } from "../repositories/role.repository.js";
 import { userRepository } from "../repositories/user.repository.js";
 import { AppError } from "../utils/app-error.js";
@@ -49,6 +50,15 @@ function isDuplicateEmail(error) {
   return error?.code === 11000 && error.keyPattern?.email === 1;
 }
 
+function toPublicUser(user) {
+  if (!user) return user;
+  const { passwordHash, tokenVersion, ...publicUser } = user;
+  return {
+    ...publicUser,
+    defaultProfile: user.defaultProfile ? String(user.defaultProfile) : null,
+  };
+}
+
 async function getActiveRoleOrThrow(roleId) {
   if (!mongoose.isObjectIdOrHexString(roleId)) {
     throw new AppError("Invalid role id", 400);
@@ -72,12 +82,12 @@ async function createWithRole(data, roleId) {
   }
 
   try {
-    return await userRepository.create({
+    return toPublicUser(await userRepository.create({
       name,
       email,
       passwordHash: await hashPassword(data.password),
       role: roleId,
-    });
+    }));
   } catch (error) {
     if (isDuplicateEmail(error)) throw new AppError("Email already exists", 409);
     throw error;
@@ -114,7 +124,67 @@ export const userService = {
   list: (filters) => userRepository.findAll(filters),
   async getById(id) {
     validateId(id);
-    return getExistingOrThrow(id);
+    return toPublicUser(await getExistingOrThrow(id));
+  },
+  async updateOwnProfile(id, data) {
+    validateId(id);
+    if (data === null || typeof data !== "object" || Array.isArray(data)) {
+      throw new AppError("User data must be an object", 400);
+    }
+    const editableFields = new Set(["name", "email"]);
+    if (Object.keys(data).some((field) => !editableFields.has(field))) {
+      throw new AppError("User data contains unsupported fields", 400);
+    }
+
+    const updates = {};
+    if (Object.hasOwn(data, "name")) updates.name = validateName(data.name);
+    if (Object.hasOwn(data, "email")) updates.email = normalizeEmail(data.email);
+    if (Object.keys(updates).length === 0) {
+      throw new AppError("No editable user fields were provided", 400);
+    }
+    if (updates.email && await userRepository.existsByEmail(updates.email, { excludeId: id })) {
+      throw new AppError("Email already exists", 409);
+    }
+
+    try {
+      const user = await userRepository.updateOwnProfile(id, updates);
+      if (user) return toPublicUser(user);
+    } catch (error) {
+      if (isDuplicateEmail(error)) throw new AppError("Email already exists", 409);
+      throw error;
+    }
+    throw new AppError("User not found", 404);
+  },
+  async setDefaultProfile(ownerId, data) {
+    validateId(ownerId, "user");
+    if (data === null || typeof data !== "object" || Array.isArray(data)) {
+      throw new AppError("Profile selection must be an object", 400);
+    }
+    if (Object.keys(data).some((field) => field !== "profileId")) {
+      throw new AppError("Profile selection contains unsupported fields", 400);
+    }
+    if (!Object.hasOwn(data, "profileId")) {
+      throw new AppError("profileId is required", 400);
+    }
+    const profileId = data.profileId;
+    if (profileId !== null) {
+      validateId(profileId, "profile");
+      const profile = await profileRepository.findByIdForOwner(profileId, ownerId);
+      if (!profile) throw new AppError("Profile not found", 404);
+    }
+
+    const user = await userRepository.setDefaultProfile(ownerId, profileId);
+    if (!user) throw new AppError("User not found", 404);
+
+    if (profileId !== null) {
+      // Revalidamos por si la eliminación empezó mientras guardábamos la selección.
+      const stillOwned = await profileRepository.findByIdForOwner(profileId, ownerId);
+      if (!stillOwned) {
+        await userRepository.clearDefaultProfileIfMatches(ownerId, profileId);
+        throw new AppError("Profile not found", 404);
+      }
+    }
+    return toPublicUser(user);
   },
   async update(id, data) {
     validateId(id);
@@ -222,6 +292,6 @@ export const userService = {
 
     const { passwordHash, ...safeUser } = user;
     // Login usa la versión leída junto con el hash que acaba de verificar.
-    return { ...safeUser, tokenVersion: user.tokenVersion ?? 0 };
+    return { ...toPublicUser(safeUser), tokenVersion: user.tokenVersion ?? 0 };
   },
 };

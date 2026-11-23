@@ -13,6 +13,8 @@ export const authService = {
     return { user, token: createAccessToken(user._id, tokenVersion) };
   },
   getMe: (userId) => userService.getById(userId),
+  updateOwnProfile: (userId, data) => userService.updateOwnProfile(userId, data),
+  setDefaultProfile: (userId, data) => userService.setDefaultProfile(userId, data),
   changeOwnPassword: (userId, data) => userService.changeOwnPassword(userId, data),
   logout: (authUser, authToken) =>
     revokedTokenRepository.revoke({

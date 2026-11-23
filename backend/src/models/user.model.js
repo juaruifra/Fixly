@@ -22,6 +22,11 @@ const userSchema = new mongoose.Schema(
         message: "tokenVersion must be an integer",
       },
     },
+    defaultProfile: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Profile",
+      default: null,
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",

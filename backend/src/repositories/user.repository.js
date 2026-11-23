@@ -54,6 +54,28 @@ export const userRepository = {
       ).select("-passwordHash -tokenVersion"),
     ).lean();
   },
+  updateOwnProfile: (id, data) =>
+    populateRole(
+      User.findOneAndUpdate(
+        { _id: id, active: true, deletedAt: null },
+        { $set: data },
+        { new: true, runValidators: true },
+      ).select("-passwordHash -tokenVersion"),
+    ).lean(),
+  setDefaultProfile: (id, profileId) =>
+    populateRole(
+      User.findOneAndUpdate(
+        { _id: id, active: true, deletedAt: null },
+        { $set: { defaultProfile: profileId } },
+        { new: true, runValidators: true },
+      ).select("-passwordHash -tokenVersion"),
+    ).lean(),
+  // Solo limpia el valor si aún apunta al perfil que está siendo eliminado.
+  clearDefaultProfileIfMatches: (id, profileId) =>
+    User.updateOne(
+      { _id: id, defaultProfile: profileId },
+      { $set: { defaultProfile: null } },
+    ),
   setActiveById: (id, active) =>
     populateRole(
       User.findOneAndUpdate(

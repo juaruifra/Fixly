@@ -22,6 +22,22 @@ export const authController = {
       next(error);
     }
   },
+  async updateMe(req, res, next) {
+    try {
+      res.json(await authService.updateOwnProfile(req.authUser.id, req.body));
+    } catch (error) {
+      next(error);
+    }
+  },
+  async setDefaultProfile(req, res, next) {
+    try {
+      res.json(
+        await authService.setDefaultProfile(req.authUser.id, req.body),
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
   async logout(req, res, next) {
     try {
       await authService.logout(req.authUser, req.authToken);
