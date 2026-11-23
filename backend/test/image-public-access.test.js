@@ -7,13 +7,14 @@ import { Category } from "../src/models/category.model.js";
 import { Service } from "../src/models/service.model.js";
 import { Variant } from "../src/models/variant.model.js";
 import { imageRepository } from "../src/repositories/image.repository.js";
+import { revokedTokenRepository } from "../src/repositories/revoked-token.repository.js";
 import { userRepository } from "../src/repositories/user.repository.js";
 import { imageService } from "../src/services/image.service.js";
 import { createAccessToken } from "../src/utils/jwt.util.js";
 
 test("Las imágenes públicas respetan visibilidad y las internas requieren ADMIN", async () => {
   process.env.NODE_ENV = "test";
-  process.env.AUTH_DISABLED = "false";
+  process.env.AUTH_DISABLED = "true";
   process.env.JWT_SECRET = "test-secret-for-image-authorization-only";
 
   const ids = Object.fromEntries(
@@ -41,6 +42,8 @@ test("Las imágenes públicas respetan visibilidad y las internas requieren ADMI
     variantFindOne: Variant.findOne,
     findImages: imageRepository.findByEntity,
     findUser: userRepository.findById,
+    findAuthUser: userRepository.findByIdForAuth,
+    isRevoked: revokedTokenRepository.isRevoked,
     createImage: imageService.create,
     updateImage: imageService.update,
     removeImage: imageService.remove,
@@ -70,6 +73,8 @@ test("Las imágenes públicas respetan visibilidad y las internas requieren ADMI
     deletedAt: null,
     role: { name: String(id) === String(ids.admin) ? "ADMIN" : "CLIENT", active: true, deletedAt: null },
   });
+  userRepository.findByIdForAuth = userRepository.findById;
+  revokedTokenRepository.isRevoked = async () => false;
 
   const server = app.listen(0, "127.0.0.1");
   await new Promise((resolve, reject) => {
@@ -151,6 +156,8 @@ test("Las imágenes públicas respetan visibilidad y las internas requieren ADMI
     Variant.findOne = originals.variantFindOne;
     imageRepository.findByEntity = originals.findImages;
     userRepository.findById = originals.findUser;
+    userRepository.findByIdForAuth = originals.findAuthUser;
+    revokedTokenRepository.isRevoked = originals.isRevoked;
     imageService.create = originals.createImage;
     imageService.update = originals.updateImage;
     imageService.remove = originals.removeImage;

@@ -115,10 +115,25 @@ router.get("/me", authenticateRequired, authController.me);
 
 /**
  * @openapi
+ * /api/auth/logout:
+ *   post:
+ *     summary: Revocar la sesión actual
+ *     description: Revoca únicamente el JWT usado en esta petición. Las peticiones que ya superaron la autenticación pueden terminar.
+ *     tags: [Authentication]
+ *     security: [{ BearerAuth: [] }]
+ *     responses:
+ *       204: { description: Token revocado }
+ *       401: { description: Token ausente, inválido, caducado o ya revocado }
+ *       500: { description: No se pudo confirmar la revocación }
+ */
+router.post("/logout", authenticateRequired, authController.logout);
+
+/**
+ * @openapi
  * /api/auth/password:
  *   patch:
  *     summary: Cambiar la contraseña de la cuenta autenticada
- *     description: Requiere la contraseña actual; los JWT emitidos siguen vigentes hasta caducar.
+ *     description: Requiere la contraseña actual e invalida todas las sesiones anteriores del usuario.
  *     tags: [Authentication]
  *     security: [{ BearerAuth: [] }]
  *     requestBody:

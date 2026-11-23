@@ -9,6 +9,7 @@ import { Cart } from "../src/models/cart.model.js";
 import { Category } from "../src/models/category.model.js";
 import { Order } from "../src/models/order.model.js";
 import { Role } from "../src/models/role.model.js";
+import { RevokedToken } from "../src/models/revoked-token.model.js";
 import { Service } from "../src/models/service.model.js";
 import { User } from "../src/models/user.model.js";
 import { Variant } from "../src/models/variant.model.js";
@@ -38,6 +39,7 @@ test(
         Category.syncIndexes(),
         Order.syncIndexes(),
         Role.syncIndexes(),
+        RevokedToken.syncIndexes(),
         Service.syncIndexes(),
         User.syncIndexes(),
         Variant.syncIndexes(),

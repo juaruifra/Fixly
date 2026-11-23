@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 
 import app from "../src/app.js";
 import { Role } from "../src/models/role.model.js";
+import { RevokedToken } from "../src/models/revoked-token.model.js";
 import { User } from "../src/models/user.model.js";
 import { Worker } from "../src/models/worker.model.js";
 import { verifyPassword } from "../src/utils/password.util.js";
@@ -34,7 +35,11 @@ test(
 
     try {
       await mongoose.connection.dropDatabase();
-      await Promise.all([Role.syncIndexes(), User.syncIndexes()]);
+      await Promise.all([
+        Role.syncIndexes(),
+        User.syncIndexes(),
+        RevokedToken.syncIndexes(),
+      ]);
 
       const suffix = randomUUID().replaceAll("-", "");
       process.env.FIXLY_ADMIN_NAME = "Admin de pruebas";
@@ -207,7 +212,7 @@ test(
         assert.equal(allowed.status, 200);
       });
 
-      await t.test("el bypass abre administración solo en development y no abre /me", async () => {
+      await t.test("AUTH_DISABLED no omite autenticación ni autorización", async () => {
         const previousNodeEnv = process.env.NODE_ENV;
         const previousAuthDisabled = process.env.AUTH_DISABLED;
         try {
@@ -215,15 +220,16 @@ test(
           process.env.NODE_ENV = "development";
 
           const localRoles = await fetch(`${baseUrl}/roles`);
-          assert.equal(localRoles.status, 200);
+          assert.equal(localRoles.status, 401);
           const localWorkers = await fetch(`${baseUrl}/workers`);
-          assert.equal(localWorkers.status, 200);
+          assert.equal(localWorkers.status, 401);
           const currentUser = await fetch(`${baseUrl}/auth/me`);
           assert.equal(currentUser.status, 401);
 
-          process.env.NODE_ENV = "production";
-          const productionRoles = await fetch(`${baseUrl}/roles`);
-          assert.equal(productionRoles.status, 401);
+          const authenticatedRoles = await fetch(`${baseUrl}/roles`, {
+            headers: { Authorization: `Bearer ${adminSession.token}` },
+          });
+          assert.equal(authenticatedRoles.status, 200);
         } finally {
           if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
           else process.env.NODE_ENV = previousNodeEnv;

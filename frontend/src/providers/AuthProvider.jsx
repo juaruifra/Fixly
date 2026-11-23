@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import { getCurrentUser, login } from "@/services/authService";
+import { getCurrentUser, login, logout } from "@/services/authService";
 import { onUnauthorized, SESSION_TOKEN_KEY } from "@/services/apiService";
 
 const AuthContext = createContext(null);
@@ -19,16 +19,56 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState("checking");
   const [sessionError, setSessionError] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const requestId = useRef(0);
+  const logoutPromise = useRef(null);
 
-  const signOut = useCallback(() => {
-    // Sin revocación en servidor, un JWT emitido puede seguir válido hasta caducar.
+  const clearSession = useCallback((expectedToken) => {
+    // Una respuesta vieja no debe borrar una sesión nueva iniciada en otra pestaña.
+    if (expectedToken && sessionStorage.getItem(SESSION_TOKEN_KEY) !== expectedToken) {
+      return false;
+    }
     requestId.current += 1;
     sessionStorage.removeItem(SESSION_TOKEN_KEY);
     setUser(null);
     setSessionError("");
     setStatus("anonymous");
+    return true;
   }, []);
+
+  const signOut = useCallback(() => {
+    if (logoutPromise.current) return logoutPromise.current;
+
+    const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+    if (!token) {
+      clearSession();
+      return Promise.resolve();
+    }
+
+    const logoutRequestId = ++requestId.current;
+    let pendingLogout;
+    pendingLogout = (async () => {
+      setIsLoggingOut(true);
+      try {
+        // Conservamos el token si no podemos confirmar la revocación para permitir reintentar.
+        await logout();
+        if (requestId.current === logoutRequestId) clearSession(token);
+      } catch (error) {
+        if (error?.status === 401) {
+          clearSession(token);
+          return;
+        }
+        throw error;
+      } finally {
+        if (logoutPromise.current === pendingLogout) {
+          logoutPromise.current = null;
+          setIsLoggingOut(false);
+        }
+      }
+    })();
+    logoutPromise.current = pendingLogout;
+    return pendingLogout;
+  }, [clearSession]);
 
   const restoreSession = useCallback(async () => {
     const currentRequest = ++requestId.current;
@@ -67,7 +107,7 @@ export function AuthProvider({ children }) {
     };
   }, [restoreSession]);
 
-  useEffect(() => onUnauthorized(signOut), [signOut]);
+  useEffect(() => onUnauthorized(clearSession), [clearSession]);
 
   const signIn = useCallback(async (credentials) => {
     const currentRequest = ++requestId.current;
@@ -85,7 +125,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, status, sessionError, signIn, signOut, restoreSession }}>
+    <AuthContext.Provider value={{
+      user,
+      status,
+      sessionError,
+      isLoggingOut,
+      signIn,
+      signOut,
+      clearSession,
+      restoreSession,
+    }}>
       {children}
     </AuthContext.Provider>
   );

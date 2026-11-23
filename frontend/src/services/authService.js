@@ -6,7 +6,7 @@ export async function login(credentials) {
   return data;
 }
 
-// /auth/me exige el token real incluso cuando está activo el bypass local.
+// /auth/me comprueba el token y devuelve la identidad vigente.
 export async function getCurrentUser(token) {
   const { data } = await apiService.get("/auth/me", {
     headers: { Authorization: `Bearer ${token}` },
@@ -17,4 +17,8 @@ export async function getCurrentUser(token) {
 // El endpoint siempre cambia la contraseña de la sesión autenticada.
 export async function changeOwnPassword(currentPassword, newPassword) {
   await apiService.patch("/auth/password", { currentPassword, newPassword });
+}
+
+export async function logout() {
+  await apiService.post("/auth/logout");
 }

@@ -9,8 +9,10 @@ import { Category } from "../src/models/category.model.js";
 import { Image } from "../src/models/image.model.js";
 import { Service } from "../src/models/service.model.js";
 import { Variant } from "../src/models/variant.model.js";
+import { RevokedToken } from "../src/models/revoked-token.model.js";
 import { swaggerSpec } from "../src/config/swagger.js";
 import { userRepository } from "../src/repositories/user.repository.js";
+import { revokedTokenRepository } from "../src/repositories/revoked-token.repository.js";
 import { createAccessToken } from "../src/utils/jwt.util.js";
 
 const testUri = process.env.MONGODB_TEST_URI;
@@ -49,10 +51,11 @@ test(
     assert.match(databaseName, /^fixly_test_[a-z0-9_]+$/i);
 
     process.env.NODE_ENV = "test";
-    process.env.AUTH_DISABLED = "false";
     process.env.JWT_SECRET ||= randomUUID().replaceAll("-", "");
     const adminId = new mongoose.Types.ObjectId();
     const originalFindUser = userRepository.findById;
+    const originalFindAuthUser = userRepository.findByIdForAuth;
+    const originalIsRevoked = revokedTokenRepository.isRevoked;
     userRepository.findById = async () => ({
       _id: adminId,
       name: "Admin de prueba",
@@ -61,6 +64,8 @@ test(
       deletedAt: null,
       role: { name: "ADMIN", active: true, deletedAt: null },
     });
+    userRepository.findByIdForAuth = userRepository.findById;
+    revokedTokenRepository.isRevoked = async () => false;
     const adminHeaders = { Authorization: `Bearer ${createAccessToken(adminId)}` };
 
     await mongoose.connect(testUri, { serverSelectionTimeoutMS: 3000 });
@@ -72,6 +77,7 @@ test(
         Service.syncIndexes(),
         Variant.syncIndexes(),
         Image.syncIndexes(),
+        RevokedToken.syncIndexes(),
       ]);
 
       const suffix = randomUUID().replaceAll("-", "");
@@ -297,6 +303,8 @@ test(
       });
     } finally {
       userRepository.findById = originalFindUser;
+      userRepository.findByIdForAuth = originalFindAuthUser;
+      revokedTokenRepository.isRevoked = originalIsRevoked;
       if (server) {
         await new Promise((resolve, reject) => {
           server.close((error) => (error ? reject(error) : resolve()));

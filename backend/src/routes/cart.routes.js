@@ -6,7 +6,7 @@ import { authenticateRequired } from "../middlewares/auth.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
-// El carrito siempre necesita un usuario real, incluso con el bypass local activo.
+// El carrito siempre necesita un usuario autenticado.
 router.use(authenticateRequired);
 
 /**

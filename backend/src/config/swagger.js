@@ -319,7 +319,10 @@ const options = {
           type: "object",
           properties: {
             user: { $ref: "#/components/schemas/User" },
-            token: { type: "string" },
+            token: {
+              type: "string",
+              description: "JWT firmado con jti único y tokenVersion del usuario.",
+            },
           },
         },
         Worker: {

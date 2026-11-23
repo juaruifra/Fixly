@@ -23,6 +23,9 @@ test("Axios protege el token y distingue 401 de 403", async () => {
     const { changeOwnPassword } = await server.ssrLoadModule(
       "/src/services/authService.js",
     );
+    const { logout } = await server.ssrLoadModule(
+      "/src/services/authService.js",
+    );
     const { createProfile } = await server.ssrLoadModule(
       "/src/services/profileService.js",
     );
@@ -71,6 +74,11 @@ test("Axios protege el token y distingue 401 de 403", async () => {
 
     await apiService.post("/auth/login", {});
     assert.equal(authorization, undefined);
+
+    await logout();
+    assert.equal(lastRequest.method, "post");
+    assert.equal(lastRequest.url, "/auth/logout");
+    assert.equal(authorization, "Bearer token-de-prueba");
 
     await changeOwnPassword("current-test-password", "new-test-password");
     assert.equal(lastRequest.method, "patch");
@@ -121,11 +129,14 @@ test("Axios y la API aplican los permisos sin acceder a MongoDB", async () => {
 
   const { default: app } = await import("../../backend/src/app.js");
   const { userRepository } = await import("../../backend/src/repositories/user.repository.js");
+  const { revokedTokenRepository } = await import("../../backend/src/repositories/revoked-token.repository.js");
   const { categoryService } = await import("../../backend/src/services/category.service.js");
   const { createAccessToken } = await import("../../backend/src/utils/jwt.util.js");
   const adminId = "507f1f77bcf86cd799439011";
   const clientId = "507f1f77bcf86cd799439012";
   const originalFindUser = userRepository.findById;
+  const originalFindAuthUser = userRepository.findByIdForAuth;
+  const originalIsRevoked = revokedTokenRepository.isRevoked;
   const originalList = categoryService.list;
   const originalPublicList = categoryService.listAvailable;
   let token = createAccessToken(adminId);
@@ -142,6 +153,8 @@ test("Axios y la API aplican los permisos sin acceder a MongoDB", async () => {
     deletedAt: null,
     role: { name: String(id) === adminId ? "ADMIN" : "CLIENT", active: true, deletedAt: null },
   });
+  userRepository.findByIdForAuth = userRepository.findById;
+  revokedTokenRepository.isRevoked = async () => false;
   categoryService.list = async () => [];
   categoryService.listAvailable = async () => [];
 
@@ -173,6 +186,8 @@ test("Axios y la API aplican los permisos sin acceder a MongoDB", async () => {
     unsubscribe();
   } finally {
     userRepository.findById = originalFindUser;
+    userRepository.findByIdForAuth = originalFindAuthUser;
+    revokedTokenRepository.isRevoked = originalIsRevoked;
     categoryService.list = originalList;
     categoryService.listAvailable = originalPublicList;
     globalThis.sessionStorage = savedStorage;

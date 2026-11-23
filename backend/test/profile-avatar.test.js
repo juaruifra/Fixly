@@ -6,12 +6,12 @@ import app from "../src/app.js";
 import { Image } from "../src/models/image.model.js";
 import { imageRepository } from "../src/repositories/image.repository.js";
 import { profileRepository } from "../src/repositories/profile.repository.js";
+import { revokedTokenRepository } from "../src/repositories/revoked-token.repository.js";
 import { userRepository } from "../src/repositories/user.repository.js";
 import { createAccessToken } from "../src/utils/jwt.util.js";
 
 test("El avatar es único y solo el propietario del perfil puede gestionarlo", async () => {
   process.env.NODE_ENV = "test";
-  process.env.AUTH_DISABLED = "true";
   process.env.JWT_SECRET = "test-secret-for-profile-avatar-ownership";
 
   const ownerId = String(new mongoose.Types.ObjectId());
@@ -29,6 +29,8 @@ test("El avatar es único y solo el propietario del perfil puede gestionarlo", a
   ]);
   const originals = {
     findById: userRepository.findById,
+    findByIdForAuth: userRepository.findByIdForAuth,
+    isRevoked: revokedTokenRepository.isRevoked,
     findProfileById: profileRepository.findByIdForOwner,
     deleteProfileById: profileRepository.deleteByIdForOwner,
     findAvatarByProfile: imageRepository.findAvatarByProfile,
@@ -38,6 +40,8 @@ test("El avatar es único y solo el propietario del perfil puede gestionarlo", a
   };
 
   userRepository.findById = async (id) => users.get(String(id));
+  userRepository.findByIdForAuth = userRepository.findById;
+  revokedTokenRepository.isRevoked = async () => false;
   profileRepository.findByIdForOwner = async (id, owner) =>
     profiles.get(String(id)) === String(owner) ? { _id: id, name: "Casa" } : null;
   profileRepository.deleteByIdForOwner = async (id, owner) => {
@@ -142,6 +146,8 @@ test("El avatar es único y solo el propietario del perfil puede gestionarlo", a
     assert.ok(createdAvatar._id);
   } finally {
     userRepository.findById = originals.findById;
+    userRepository.findByIdForAuth = originals.findByIdForAuth;
+    revokedTokenRepository.isRevoked = originals.isRevoked;
     profileRepository.findByIdForOwner = originals.findProfileById;
     profileRepository.deleteByIdForOwner = originals.deleteProfileById;
     imageRepository.findAvatarByProfile = originals.findAvatarByProfile;

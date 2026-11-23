@@ -15,6 +15,7 @@ import {
 import ThemeSelector from "@/components/ThemeSelector";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/AuthProvider";
+import { showApiErrorAlert } from "@/utils/errorHandler";
 import {
   Sidebar,
   SidebarContent,
@@ -25,9 +26,17 @@ import {
 } from "@/components/ui/sidebar";
 
 export default function AdminSidebar() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoggingOut } = useAuth();
   // Las opciones de administración solo se muestran a este rol.
   const isAdmin = user?.role?.name === "ADMIN";
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } catch (error) {
+      await showApiErrorAlert(error, "No se pudo cerrar la sesión en el servidor");
+    }
+  }
 
   return (
     <Sidebar>
@@ -89,9 +98,9 @@ export default function AdminSidebar() {
           <span>Apariencia</span>
           <ThemeSelector />
         </div>
-        <Button className="admin-logout" variant="ghost" onClick={signOut}>
+        <Button className="admin-logout" variant="ghost" onClick={handleSignOut} disabled={isLoggingOut}>
           <LogOutIcon aria-hidden="true" />
-          <span>Cerrar sesión</span>
+          <span>{isLoggingOut ? "Cerrando sesión…" : "Cerrar sesión"}</span>
         </Button>
       </SidebarFooter>
     </Sidebar>

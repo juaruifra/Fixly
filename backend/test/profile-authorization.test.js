@@ -6,12 +6,12 @@ import app from "../src/app.js";
 import { imageRepository } from "../src/repositories/image.repository.js";
 import { Profile } from "../src/models/profile.model.js";
 import { profileRepository } from "../src/repositories/profile.repository.js";
+import { revokedTokenRepository } from "../src/repositories/revoked-token.repository.js";
 import { userRepository } from "../src/repositories/user.repository.js";
 import { createAccessToken } from "../src/utils/jwt.util.js";
 
 test("Los perfiles solo se pueden consultar y modificar por su propietario", async () => {
   process.env.NODE_ENV = "development";
-  process.env.AUTH_DISABLED = "true";
   process.env.JWT_SECRET = "test-secret-for-profile-ownership-only";
 
   const ownerId = String(new mongoose.Types.ObjectId());
@@ -23,6 +23,8 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
   ]);
   const originals = {
     findById: userRepository.findById,
+    findByIdForAuth: userRepository.findByIdForAuth,
+    isRevoked: revokedTokenRepository.isRevoked,
     findAllByOwner: profileRepository.findAllByOwner,
     findByIdForOwner: profileRepository.findByIdForOwner,
     findByCreationKey: profileRepository.findByCreationKey,
@@ -35,6 +37,8 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
   };
 
   userRepository.findById = async (id) => users.get(String(id));
+  userRepository.findByIdForAuth = userRepository.findById;
+  revokedTokenRepository.isRevoked = async () => false;
   profileRepository.findAllByOwner = async (id) =>
     [...profiles.values()].filter((profile) => profile.owner === String(id));
   profileRepository.findByIdForOwner = async (id, owner) => {
@@ -173,6 +177,8 @@ test("Los perfiles solo se pueden consultar y modificar por su propietario", asy
     assert.equal((await request(`/${created.id}`, ownerToken)).status, 404);
   } finally {
     Object.assign(userRepository, { findById: originals.findById });
+    userRepository.findByIdForAuth = originals.findByIdForAuth;
+    revokedTokenRepository.isRevoked = originals.isRevoked;
     Object.assign(profileRepository, {
       findAllByOwner: originals.findAllByOwner,
       findByIdForOwner: originals.findByIdForOwner,

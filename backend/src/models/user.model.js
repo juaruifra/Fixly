@@ -12,6 +12,16 @@ const userSchema = new mongoose.Schema(
       maxlength: 254,
     },
     passwordHash: { type: String, required: true, select: false },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
+      select: false,
+      validate: {
+        validator: Number.isInteger,
+        message: "tokenVersion must be an integer",
+      },
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
@@ -27,6 +37,7 @@ const userSchema = new mongoose.Schema(
 userSchema.set("toJSON", {
   transform(_document, result) {
     delete result.passwordHash;
+    delete result.tokenVersion;
     return result;
   },
 });

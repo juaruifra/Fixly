@@ -9,7 +9,7 @@ import { changeOwnPassword } from "@/services/authService";
 
 // Conserva las validaciones y el cierre de sesión del cambio de contraseña.
 export default function AccountPassword() {
-  const { signOut } = useAuth();
+  const { clearSession } = useAuth();
   const navigate = useNavigate();
   const [requestError, setRequestError] = useState("");
   const {
@@ -28,7 +28,7 @@ export default function AccountPassword() {
       // Solo se envían las contraseñas necesarias; la confirmación queda en React.
       await changeOwnPassword(values.currentPassword, values.newPassword);
       reset();
-      signOut();
+      clearSession();
       navigate("/login", { replace: true, state: { passwordChanged: true } });
     } catch (error) {
       setRequestError(

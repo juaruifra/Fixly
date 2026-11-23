@@ -17,10 +17,13 @@ export const userRepository = {
   },
   findById: (id) =>
     populateRole(User.findById(id).select("-passwordHash")).lean(),
+  // La versión se incluye solo para autenticar; nunca se devuelve al cliente.
+  findByIdForAuth: (id) =>
+    populateRole(User.findById(id).select("+tokenVersion -passwordHash")).lean(),
   findByEmail: (email) =>
     populateRole(User.findOne({ email }).select("-passwordHash")).lean(),
   findByEmailForAuth: (email) =>
-    populateRole(User.findOne({ email }).select("+passwordHash")).lean(),
+    populateRole(User.findOne({ email }).select("+passwordHash +tokenVersion")).lean(),
   // El hash solo se recupera para verificar el cambio de contraseña propio.
   findByIdForPassword: (id) =>
     User.findById(id).select("+passwordHash").lean(),
@@ -28,7 +31,7 @@ export const userRepository = {
   updatePasswordHash: (id, currentHash, nextHash) =>
     User.findOneAndUpdate(
       { _id: id, active: true, deletedAt: null, passwordHash: currentHash },
-      { $set: { passwordHash: nextHash } },
+      { $set: { passwordHash: nextHash }, $inc: { tokenVersion: 1 } },
       { new: true, runValidators: true },
     ).select("_id").lean(),
   existsByEmail: (email, { excludeId } = {}) => {
@@ -40,14 +43,17 @@ export const userRepository = {
     const user = await User.create(data);
     return populateRole(User.findById(user._id).select("-passwordHash")).lean();
   },
-  updateById: (id, data) =>
-    populateRole(
+  updateById: (id, data) => {
+    const update = { $set: data };
+    if (Object.hasOwn(data, "passwordHash")) update.$inc = { tokenVersion: 1 };
+    return populateRole(
       User.findOneAndUpdate(
         { _id: id, deletedAt: null },
-        data,
+        update,
         { new: true, runValidators: true },
-      ).select("-passwordHash"),
-    ).lean(),
+      ).select("-passwordHash -tokenVersion"),
+    ).lean();
+  },
   setActiveById: (id, active) =>
     populateRole(
       User.findOneAndUpdate(

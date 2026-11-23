@@ -226,6 +226,7 @@ export const userService = {
     }
 
     const { passwordHash, ...safeUser } = user;
-    return safeUser;
+    // Login usa la versión leída junto con el hash que acaba de verificar.
+    return { ...safeUser, tokenVersion: user.tokenVersion ?? 0 };
   },
 };

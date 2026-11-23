@@ -7,7 +7,7 @@ import { requireRole } from "../middlewares/role.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 
 const router = Router();
-// El bypass local no cambia la propiedad ni el acceso a pedidos.
+// Los pedidos siempre pertenecen al usuario autenticado.
 router.use(authenticateRequired);
 const statuses = ["pending", "confirmed", "cancelled", "completed"];
 

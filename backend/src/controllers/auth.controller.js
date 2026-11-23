@@ -22,6 +22,14 @@ export const authController = {
       next(error);
     }
   },
+  async logout(req, res, next) {
+    try {
+      await authService.logout(req.authUser, req.authToken);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
   async changePassword(req, res, next) {
     try {
       // El propietario procede del JWT verificado, nunca del cuerpo de la petición.

@@ -6,16 +6,19 @@ import app from "../src/app.js";
 import { categoryService } from "../src/services/category.service.js";
 import { serviceService } from "../src/services/service.service.js";
 import { variantService } from "../src/services/variant.service.js";
+import { revokedTokenRepository } from "../src/repositories/revoked-token.repository.js";
 import { userRepository } from "../src/repositories/user.repository.js";
 import { createAccessToken } from "../src/utils/jwt.util.js";
 
 test("El catálogo público sigue abierto y la administración exige ADMIN", async () => {
   process.env.NODE_ENV = "test";
-  process.env.AUTH_DISABLED = "false";
+  process.env.AUTH_DISABLED = "true";
   process.env.JWT_SECRET = "test-secret-for-catalog-authorization-only";
   const adminId = new mongoose.Types.ObjectId();
   const clientId = new mongoose.Types.ObjectId();
   const originalFindUser = userRepository.findById;
+  const originalFindUserForAuth = userRepository.findByIdForAuth;
+  const originalIsRevoked = revokedTokenRepository.isRevoked;
   const originalMethods = [
     [categoryService, "listAvailable"],
     [categoryService, "getAvailableBySlug"],
@@ -45,6 +48,8 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
     deletedAt: null,
     role: { name: String(id) === String(adminId) ? "ADMIN" : "CLIENT", active: true, deletedAt: null },
   });
+  userRepository.findByIdForAuth = userRepository.findById;
+  revokedTokenRepository.isRevoked = async () => false;
   categoryService.listAvailable = async () => [];
   categoryService.getAvailableBySlug = async () => ({ name: "Test" });
   categoryService.list = async () => [];
@@ -141,6 +146,8 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
     );
   } finally {
     userRepository.findById = originalFindUser;
+    userRepository.findByIdForAuth = originalFindUserForAuth;
+    revokedTokenRepository.isRevoked = originalIsRevoked;
     for (const [service, name, original] of originalMethods) service[name] = original;
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
