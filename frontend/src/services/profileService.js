@@ -25,3 +25,8 @@ export async function updateProfile(id, profileData) {
 export async function deleteProfile(id) {
   await apiService.delete(`${PROFILES_PATH}/${encodeURIComponent(id)}`);
 }
+
+export async function setDefaultProfile(profileId) {
+  const { data } = await apiService.patch("/auth/me/default-profile", { profileId });
+  return data;
+}

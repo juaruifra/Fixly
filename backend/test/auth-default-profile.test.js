@@ -7,9 +7,13 @@ import { imageRepository } from "../src/repositories/image.repository.js";
 import { profileRepository } from "../src/repositories/profile.repository.js";
 import { revokedTokenRepository } from "../src/repositories/revoked-token.repository.js";
 import { userRepository } from "../src/repositories/user.repository.js";
+import { swaggerSpec } from "../src/config/swagger.js";
 import { createAccessToken } from "../src/utils/jwt.util.js";
 
 test("Mi cuenta edita datos y mantiene un perfil predeterminado propio", async () => {
+  assert.ok(swaggerSpec.paths["/api/auth/me"]?.patch);
+  assert.ok(swaggerSpec.paths["/api/auth/me/default-profile"]?.patch);
+  assert.equal(swaggerSpec.components.schemas.User.properties.defaultProfile.nullable, true);
   process.env.NODE_ENV = "test";
   process.env.AUTH_DISABLED = "true";
   process.env.JWT_SECRET = "test-secret-for-default-profile-tests";

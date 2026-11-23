@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import ThemeSelector from "@/components/ThemeSelector";
+import ProfileSelector from "@/components/layout/ProfileSelector";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/AuthProvider";
 import { showApiErrorAlert } from "@/utils/errorHandler";
@@ -93,6 +94,7 @@ export default function AdminSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <ProfileSelector />
         <div className="admin-preference-row">
           <SunIcon aria-hidden="true" />
           <span>Apariencia</span>

@@ -775,10 +775,17 @@ h2 {
   font-weight: 650;
 }
 
+.account-profile-default {
+  grid-column: 2;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+
 .account-profile-actions {
   grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -1465,6 +1472,95 @@ textarea {
   align-items: stretch;
   gap: 8px;
   border-top: 1px solid var(--sidebar-border);
+}
+
+.sidebar-profile-trigger {
+  width: 100%;
+  min-width: 0;
+  min-height: 60px;
+  height: auto;
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 9px;
+  border: 1px solid var(--sidebar-border);
+  color: var(--sidebar-foreground);
+  text-align: left;
+  white-space: normal;
+}
+
+.sidebar-profile-trigger:hover {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+
+.sidebar-profile-avatar,
+.sidebar-profile-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+}
+
+.sidebar-profile-avatar {
+  object-fit: cover;
+}
+
+.sidebar-profile-avatar-placeholder {
+  color: var(--muted-foreground);
+}
+
+.sidebar-profile-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 2px;
+}
+
+.sidebar-profile-copy strong,
+.sidebar-profile-copy > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-profile-copy strong {
+  font-size: 0.86rem;
+}
+
+.sidebar-profile-copy > span {
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+}
+
+.sidebar-profile-chevron {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  color: var(--muted-foreground);
+}
+
+.sidebar-profile-menu {
+  min-width: min(216px, calc(100vw - 24px));
+}
+
+.sidebar-profile-menu [data-slot="dropdown-menu-item"] {
+  min-height: 40px;
+}
+
+.sidebar-profile-option-name {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-profile-error {
+  margin: 6px 8px;
+  color: var(--destructive);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
 }
 
 .admin-preference-row {

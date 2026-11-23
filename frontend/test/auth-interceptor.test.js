@@ -29,6 +29,9 @@ test("Axios protege el token y distingue 401 de 403", async () => {
     const { createProfile } = await server.ssrLoadModule(
       "/src/services/profileService.js",
     );
+    const { setDefaultProfile } = await server.ssrLoadModule(
+      "/src/services/profileService.js",
+    );
     let responseStatus = 200;
     let authorization;
     let lastRequest;
@@ -68,6 +71,20 @@ test("Axios protege el token y distingue 401 de 403", async () => {
       lastRequest.headers.get("Idempotency-Key"),
       "56c43d2d-2f96-4f82-9c2c-83b8bb8c662a",
     );
+
+    await setDefaultProfile("507f1f77bcf86cd799439011");
+    assert.equal(lastRequest.method, "patch");
+    assert.equal(lastRequest.url, "/auth/me/default-profile");
+    assert.deepEqual(JSON.parse(lastRequest.data), {
+      profileId: "507f1f77bcf86cd799439011",
+    });
+
+    await setDefaultProfile("507f1f77bcf86cd799439011");
+    assert.equal(lastRequest.method, "patch");
+    assert.equal(lastRequest.url, "/auth/me/default-profile");
+    assert.deepEqual(JSON.parse(lastRequest.data), {
+      profileId: "507f1f77bcf86cd799439011",
+    });
 
     await apiService.get("https://example.invalid/resource");
     assert.equal(authorization, undefined);

@@ -48,6 +48,8 @@ En PowerShell, configura `NODE_ENV` y `ALLOW_DESTRUCTIVE_SEED_RESET` para la ses
 - `POST /api/auth/register`: crea una cuenta CLIENT.
 - `POST /api/auth/login`: devuelve el usuario y un JWT.
 - `GET /api/auth/me`: devuelve el usuario asociado al token.
+- `PATCH /api/auth/me`: actualiza el nombre o correo del usuario autenticado.
+- `PATCH /api/auth/me/default-profile`: selecciona un perfil propio; `profileId: null` limpia la preferencia. `defaultProfile` se devuelve como ID string o `null` y no afecta a permisos ni a la identidad del JWT.
 - `PATCH /api/auth/me`: actualiza el nombre o correo del usuario autenticado; no permite cambiar el rol ni campos internos.
 - `PATCH /api/auth/me/default-profile`: selecciona un perfil propio o limpia la selección con `profileId: null`.
 - `POST /api/auth/logout`: revoca únicamente el JWT de la petición y devuelve `204` al confirmar la persistencia.

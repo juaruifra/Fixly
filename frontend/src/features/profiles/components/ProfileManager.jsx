@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { CircleUserRoundIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import ProfileFormModal from "@/features/profiles/components/ProfileFormModal";
@@ -12,19 +12,16 @@ export default function ProfileManager() {
   const creationKeyRef = useRef(null);
   const {
     profiles,
+    defaultProfileId,
     loading,
     submitting,
     error,
-    loadProfiles,
     createProfile,
     updateProfile,
     deleteProfile,
+    selectDefaultProfile,
     setProfileAvatar,
   } = useProfiles();
-
-  useEffect(() => {
-    void loadProfiles();
-  }, [loadProfiles]);
 
   function openNewProfile() {
     // Reutilizamos la clave si se cerró un alta cuya respuesta pudo perderse.
@@ -107,7 +104,20 @@ export default function ProfileManager() {
                 <CircleUserRoundIcon className="account-profile-avatar-placeholder" aria-hidden="true" />
               )}
               <span className="account-profile-name">{profile.name}</span>
+              {profile.id === defaultProfileId && (
+                <span className="account-profile-default">Predeterminado</span>
+              )}
               <div className="account-profile-actions">
+                {profile.id !== defaultProfileId && (
+                  <button
+                    className="button button-secondary"
+                    type="button"
+                    onClick={() => void selectDefaultProfile(profile.id)}
+                    disabled={isBusy}
+                  >
+                    Establecer como predeterminado
+                  </button>
+                )}
                 <button
                   className="button button-secondary"
                   type="button"

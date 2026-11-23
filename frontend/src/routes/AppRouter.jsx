@@ -4,6 +4,7 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
 import { PageLoader } from "@/components/common/PageLoader";
 import { AppProvider } from "@/providers/AppProvider";
+import { ProfilesProvider } from "@/providers/ProfilesProvider";
 import RequireAuth from "@/routes/RequireAuth";
 
 // Las pantallas se cargan cuando se visitan para no enviar todo al inicio.
@@ -39,12 +40,22 @@ function AdminDataProvider() {
   );
 }
 
+// La barra lateral y las páginas privadas comparten los perfiles de esta sesión.
+function ProfilesDataProvider() {
+  return (
+    <ProfilesProvider>
+      <Outlet />
+    </ProfilesProvider>
+  );
+}
+
 export function AppRouter() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireAuth />}>
+          <Route element={<ProfilesDataProvider />}>
           <Route element={<MainLayout />}>
             <Route path="/account" element={<Account />} />
             <Route path="/account/profiles" element={<AccountProfiles />} />
@@ -73,6 +84,7 @@ export function AppRouter() {
             </Route>
             <Route index element={<Navigate to="/account" replace />} />
             <Route path="*" element={<Navigate to="/account" replace />} />
+          </Route>
           </Route>
         </Route>
       </Routes>
