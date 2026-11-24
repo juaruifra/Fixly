@@ -601,6 +601,56 @@ h2 {
   border-bottom: 1px solid var(--border);
 }
 
+.account-summary-avatar {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.account-summary-content {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.account-details-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px 18px;
+}
+
+.account-details-form label {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  font-weight: 650;
+}
+
+.account-details-label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+
+.account-details-form > div:not(.account-details-actions) {
+  padding-top: 1px;
+}
+
+.account-details-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.account-edit-button {
+  margin-top: 16px;
+}
+
 .account-summary-icon,
 .account-shortcut-icon {
   flex: 0 0 48px;
@@ -884,6 +934,16 @@ h2 {
 
   .account-summary {
     gap: 12px;
+  }
+
+  .account-summary-avatar {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+  }
+
+  .account-details-form {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .account-profiles-header {

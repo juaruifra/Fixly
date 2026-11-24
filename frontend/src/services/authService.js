@@ -22,3 +22,8 @@ export async function changeOwnPassword(currentPassword, newPassword) {
 export async function logout() {
   await apiService.post("/auth/logout");
 }
+
+export async function updateOwnProfile(profileData) {
+  const { data } = await apiService.patch("/auth/me", profileData);
+  return data;
+}

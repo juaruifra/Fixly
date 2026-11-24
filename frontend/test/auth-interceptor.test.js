@@ -32,6 +32,9 @@ test("Axios protege el token y distingue 401 de 403", async () => {
     const { setDefaultProfile } = await server.ssrLoadModule(
       "/src/services/profileService.js",
     );
+    const { updateOwnProfile } = await server.ssrLoadModule(
+      "/src/services/authService.js",
+    );
     let responseStatus = 200;
     let authorization;
     let lastRequest;
@@ -79,18 +82,20 @@ test("Axios protege el token y distingue 401 de 403", async () => {
       profileId: "507f1f77bcf86cd799439011",
     });
 
-    await setDefaultProfile("507f1f77bcf86cd799439011");
-    assert.equal(lastRequest.method, "patch");
-    assert.equal(lastRequest.url, "/auth/me/default-profile");
-    assert.deepEqual(JSON.parse(lastRequest.data), {
-      profileId: "507f1f77bcf86cd799439011",
-    });
-
     await apiService.get("https://example.invalid/resource");
     assert.equal(authorization, undefined);
 
     await apiService.post("/auth/login", {});
     assert.equal(authorization, undefined);
+
+    await updateOwnProfile({ name: "Ana", email: "ana@example.invalid" });
+    assert.equal(lastRequest.method, "patch");
+    assert.equal(lastRequest.url, "/auth/me");
+    assert.deepEqual(JSON.parse(lastRequest.data), {
+      name: "Ana",
+      email: "ana@example.invalid",
+    });
+    assert.equal(authorization, "Bearer token-de-prueba");
 
     await logout();
     assert.equal(lastRequest.method, "post");

@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const requestId = useRef(0);
   const logoutPromise = useRef(null);
+  const currentUserId = useRef(null);
 
   const clearSession = useCallback((expectedToken) => {
     // Una respuesta vieja no debe borrar una sesión nueva iniciada en otra pestaña.
@@ -29,6 +30,7 @@ export function AuthProvider({ children }) {
       return false;
     }
     requestId.current += 1;
+    currentUserId.current = null;
     sessionStorage.removeItem(SESSION_TOKEN_KEY);
     setUser(null);
     setSessionError("");
@@ -73,6 +75,7 @@ export function AuthProvider({ children }) {
   const restoreSession = useCallback(async () => {
     const currentRequest = ++requestId.current;
     const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+    currentUserId.current = null;
     setUser(null);
     setSessionError("");
 
@@ -85,6 +88,7 @@ export function AuthProvider({ children }) {
     try {
       const currentUser = assertAllowedUser(await getCurrentUser(token));
       if (currentRequest !== requestId.current) return;
+      currentUserId.current = String(currentUser._id);
       setUser(currentUser);
       setStatus("authenticated");
     } catch (error) {
@@ -98,6 +102,20 @@ export function AuthProvider({ children }) {
         setStatus("unavailable");
       }
     }
+  }, []);
+
+  // Ignora respuestas de edición que pertenezcan a una sesión anterior.
+  const updateCurrentUser = useCallback((updatedUser, expectedUserId) => {
+    const activeUserId = currentUserId.current;
+    if (
+      !activeUserId ||
+      String(expectedUserId) !== activeUserId ||
+      String(updatedUser?._id) !== activeUserId
+    ) {
+      return false;
+    }
+    setUser(assertAllowedUser(updatedUser));
+    return true;
   }, []);
 
   useEffect(() => {
@@ -119,6 +137,7 @@ export function AuthProvider({ children }) {
     const currentUser = assertAllowedUser(await getCurrentUser(result.token));
     if (currentRequest !== requestId.current) return;
     sessionStorage.setItem(SESSION_TOKEN_KEY, result.token);
+    currentUserId.current = String(currentUser._id);
     setUser(currentUser);
     setSessionError("");
     setStatus("authenticated");
@@ -133,6 +152,7 @@ export function AuthProvider({ children }) {
       signIn,
       signOut,
       clearSession,
+      updateCurrentUser,
       restoreSession,
     }}>
       {children}
