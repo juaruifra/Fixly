@@ -21,6 +21,7 @@ import { useServices } from "@/hooks/useServices";
 const EMPTY_VALUES = {
   service: "",
   name: "",
+  description: "",
   sku: "",
   auto: true,
   price: "",
@@ -40,6 +41,7 @@ function getFormValues(values = {}) {
     ...EMPTY_VALUES,
     service: getServiceId(values.service),
     name: values.name ?? EMPTY_VALUES.name,
+    description: values.description ?? EMPTY_VALUES.description,
     sku: values.sku ?? EMPTY_VALUES.sku,
     auto: values.auto ?? EMPTY_VALUES.auto,
     price: values.price ?? EMPTY_VALUES.price,
@@ -171,6 +173,25 @@ export default function VariantForm({
             {...register("name")}
           />
           <FieldError id="variant-name-error" message={errors.name?.message} />
+        </label>
+
+        <label className="full-width" htmlFor="variant-description">
+          <span>Descripción</span>
+          <textarea
+            id="variant-description"
+            maxLength="500"
+            rows="4"
+            placeholder="Describe qué incluye esta modalidad..."
+            aria-invalid={Boolean(errors.description)}
+            aria-describedby={
+              errors.description ? "variant-description-error" : undefined
+            }
+            {...register("description")}
+          />
+          <FieldError
+            id="variant-description-error"
+            message={errors.description?.message}
+          />
         </label>
 
         <label htmlFor="variant-service">

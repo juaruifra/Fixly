@@ -79,6 +79,7 @@ test(
         const variant = await variantService.create({
           service: String(service._id),
           name: "Limpieza de 2 horas",
+          description: "  Limpieza profunda de vivienda ",
           sku: "CLIENTE-IGNORADO",
           price: 80,
           duration: 120,
@@ -89,6 +90,14 @@ test(
         assert.equal(variant.sku, "LIM-VIV-2H-001");
         assert.equal(variant.auto, true);
         assert.equal(variant.requiresBooking, true);
+        assert.equal(variant.description, "Limpieza profunda de vivienda");
+        assert.equal(variant.searchText, undefined);
+
+        const updatedDescription = await variantService.update(variant._id, {
+          description: "Limpieza detallada de vivienda",
+        });
+        assert.equal(updatedDescription.description, "Limpieza detallada de vivienda");
+        assert.equal(updatedDescription.searchText, undefined);
 
         const publicVariants = await variantService.listPublic(service._id);
         assert.ok(

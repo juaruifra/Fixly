@@ -14,4 +14,13 @@ export const homeService = {
    *   Datos mínimos para las tarjetas de categoría de Home.
    */
   listCategories: () => homeRepository.findAvailableCategories(),
+  /**
+   * Lista las mismas categorías elegibles sin recuperar imágenes.
+   *
+   * Shop Filters reutiliza esta regla, pero solo necesita nombres y slugs; no
+   * cargar galerías reduce trabajo innecesario al construir sus opciones.
+   *
+   * @returns {Promise<Array<{name: string, slug: string}>>} Categorías disponibles.
+   */
+  listCategoryOptions: () => homeRepository.findAvailableCategoryOptions(),
 };

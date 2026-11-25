@@ -110,12 +110,14 @@ const sampleVariants = [
   {
     serviceSlug: "montaje_de_muebles",
     name: "Montaje estándar",
+    description: "Montaje de muebles estándar y estanterías domésticas.",
     price: 35,
     duration: 60,
   },
   {
     serviceSlug: "instalacion_de_lamparas",
     name: "Instalación estándar",
+    description: "Instalación de una lámpara en un punto eléctrico existente.",
     price: 30,
     duration: 45,
     requiresBooking: true,
@@ -123,6 +125,7 @@ const sampleVariants = [
   {
     serviceSlug: "reparacion_de_grifos",
     name: "Reparación estándar",
+    description: "Reparación de fugas y sustitución de juntas del grifo.",
     price: 40,
     duration: 60,
     requiresBooking: true,
@@ -130,6 +133,7 @@ const sampleVariants = [
   {
     serviceSlug: "colgar_tv_en_pared",
     name: "Montaje con instalación",
+    description: "Montaje del soporte y fijación del televisor a la pared.",
     price: 55,
     duration: 75,
     requiresBooking: true,
@@ -137,6 +141,7 @@ const sampleVariants = [
   {
     serviceSlug: "pequenos_trabajos_de_pintura",
     name: "Retoque estándar",
+    description: "Retoque de pintura en una superficie interior pequeña.",
     price: 65,
     duration: 120,
   },

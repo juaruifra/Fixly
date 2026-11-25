@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import app from "../src/app.js";
 import { categoryService } from "../src/services/category.service.js";
 import { serviceService } from "../src/services/service.service.js";
+import { shopService } from "../src/services/shop.service.js";
 import { variantService } from "../src/services/variant.service.js";
 import { revokedTokenRepository } from "../src/repositories/revoked-token.repository.js";
 import { userRepository } from "../src/repositories/user.repository.js";
@@ -32,6 +33,8 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
     [serviceService, "create"],
     [serviceService, "update"],
     [serviceService, "remove"],
+    [shopService, "listServices"],
+    [shopService, "getFilterOptions"],
     [variantService, "listPublic"],
     [variantService, "list"],
     [variantService, "create"],
@@ -56,6 +59,15 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
   serviceService.listPublic = async () => [];
   serviceService.getPublicBySlug = async () => ({ name: "Test" });
   serviceService.list = async () => [];
+  let shopServiceCalls = 0;
+  shopService.listServices = async () => {
+    shopServiceCalls += 1;
+    return { items: [], total: 0, limit: 12, offset: 0 };
+  };
+  shopService.getFilterOptions = async () => ({
+    categories: [],
+    priceRange: { min: null, max: null },
+  });
   variantService.listPublic = async () => [];
   variantService.list = async () => [];
   for (const service of [categoryService, serviceService, variantService]) {
@@ -80,9 +92,23 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
       "/services/public",
       "/services/slug/test",
       "/variants/public",
+      "/shop/services",
+      "/shop/filters",
     ]) {
       assert.equal((await fetch(`${baseUrl}${path}`)).status, 200, path);
     }
+
+    shopServiceCalls = 0;
+    assert.equal(
+      (await fetch(`${baseUrl}/shop/services?minPrice=20&maxPrice=19`)).status,
+      400,
+    );
+    assert.equal(shopServiceCalls, 0, "Routes debe rechazar el rango antes del controlador");
+    assert.equal(
+      (await fetch(`${baseUrl}/shop/services?minPrice=10&maxPrice=20`)).status,
+      200,
+    );
+    assert.equal(shopServiceCalls, 1);
 
     for (const path of ["/categories", "/services", "/variants"]) {
       assert.equal((await fetch(`${baseUrl}${path}`)).status, 401, path);
@@ -97,7 +123,13 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
     const createPayloads = [
       ["/categories", { name: "Categoría" }],
       ["/services", { name: "Servicio", category: id }],
-      ["/variants", { name: "Variante", service: id, price: 10, duration: 30 }],
+      ["/variants", {
+        name: "Variante",
+        description: "Modalidad de prueba.",
+        service: id,
+        price: 10,
+        duration: 30,
+      }],
     ];
     for (const [path, body] of createPayloads) {
       assert.equal((await fetch(`${baseUrl}${path}`, {
@@ -115,6 +147,25 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
         headers: adminHeaders,
       })).status, 204, path);
     }
+
+    const variantDescriptionResponse = await fetch(`${baseUrl}/variants/${id}`, {
+      method: "PATCH",
+      headers: adminJsonHeaders,
+      body: JSON.stringify({ description: "Descripción actualizada." }),
+    });
+    assert.equal(variantDescriptionResponse.status, 200);
+    const invalidVariantDescription = await fetch(`${baseUrl}/variants`, {
+      method: "POST",
+      headers: adminJsonHeaders,
+      body: JSON.stringify({
+        service: id,
+        name: "Variante inválida",
+        description: "x".repeat(501),
+        price: 10,
+        duration: 30,
+      }),
+    });
+    assert.equal(invalidVariantDescription.status, 400);
 
     for (const field of ["price", "duration"]) {
       const fieldValue = field === "price" ? 10 : 30;

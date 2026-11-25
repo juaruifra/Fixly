@@ -35,6 +35,14 @@ const createValidation = [
     .withMessage("name cannot be empty")
     .isLength({ max: 120 })
     .withMessage("name must be at most 120 characters"),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("description must be a string")
+    .bail()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("description must be at most 500 characters"),
   body("price")
     .exists({ values: "null" })
     .withMessage("price is required")
@@ -90,6 +98,14 @@ const updateValidation = [
     .withMessage("name cannot be empty")
     .isLength({ max: 120 })
     .withMessage("name must be at most 120 characters"),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("description must be a string")
+    .bail()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage("description must be at most 500 characters"),
   body("price")
     .optional()
     .isFloat({ min: 0 })

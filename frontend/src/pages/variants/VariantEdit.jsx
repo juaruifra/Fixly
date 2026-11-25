@@ -11,6 +11,7 @@ function hasVariantChanges(data, variant) {
   return (
     data.service !== currentServiceId ||
     data.name !== variant.name ||
+    data.description !== (variant.description ?? "") ||
     data.auto !== variant.auto ||
     (!data.auto && data.sku !== variant.sku) ||
     data.price !== variant.price ||

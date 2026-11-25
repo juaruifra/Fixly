@@ -16,6 +16,10 @@ export const variantSchema = z
       .trim()
       .min(1, "El nombre es obligatorio.")
       .max(120, "El nombre admite un máximo de 120 caracteres."),
+    description: z
+      .string()
+      .trim()
+      .max(500, "La descripción admite un máximo de 500 caracteres."),
     sku: z.string().trim(),
     auto: z.boolean(),
     price: z

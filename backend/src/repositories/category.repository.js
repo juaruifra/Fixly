@@ -48,7 +48,11 @@ export const categoryRepository = {
     Service.countDocuments({ category: categoryId }),
   // Permite comprobar si el slug ya pertenece a otra categoría.
   existsBySlug: (slug) => Category.exists({ slug }),
-  create: (data) => Category.create(data),
+  create: async (data) => {
+    const category = await Category.create(data);
+    // Vuelve a leer con `lean()` para respetar la exclusión de searchText.
+    return Category.findById(category._id).lean();
+  },
   // Las categorías eliminadas deben restaurarse antes de poder editarlas.
   updateById: (id, data) =>
     Category.findOneAndUpdate(

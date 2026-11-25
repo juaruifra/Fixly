@@ -4,6 +4,7 @@ import { categoryRepository } from "../repositories/category.repository.js";
 import { variantRepository } from "../repositories/variant.repository.js";
 import { AppError } from "../utils/app-error.js";
 import { generateSlug } from "../utils/slug.util.js";
+import { normalizeCatalogSearchText } from "../utils/catalog-search.util.js";
 
 const allowedStatuses = ["draft", "published", "paused", "discontinued"];
 
@@ -187,6 +188,12 @@ export const serviceService = {
       throw new AppError(
         "Cannot edit a deleted service. Restore it before editing.",
         409,
+      );
+    }
+    if (updates.name !== undefined || updates.description !== undefined) {
+      updates.searchText = normalizeCatalogSearchText(
+        updates.name ?? existing.name,
+        updates.description ?? existing.description,
       );
     }
     if (updates.category !== undefined) {

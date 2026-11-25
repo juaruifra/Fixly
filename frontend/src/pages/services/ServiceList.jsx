@@ -263,7 +263,7 @@ export default function ServiceList() {
   );
 
   const tableContent = loading ? (
-    <TableSkeleton rows={6} columns={8} />
+    <TableSkeleton rows={6} columns={6} />
   ) : error ? (
     <ErrorState message={error} onRetry={retryServices} />
   ) : (
@@ -274,7 +274,7 @@ export default function ServiceList() {
       emptyMessage="No hay servicios que coincidan."
       searchLabel="Buscar servicios"
       searchPlaceholder="Buscar servicios…"
-      searchDescription="Busca por nombre, categoría, precio, duración o estado. Los filtros superiores acotan por registro y estado."
+      searchDescription="Busca por nombre, categoría o estado. Los filtros superiores acotan por registro y estado."
       getRowClassName={getServiceRowClassName}
     />
   );

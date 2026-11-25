@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { categoryRepository } from "../repositories/category.repository.js";
 import { AppError } from "../utils/app-error.js";
 import { generateSlug } from "../utils/slug.util.js";
+import { normalizeCatalogSearchText } from "../utils/catalog-search.util.js";
 
 // Rechaza identificadores mal formados antes de consultar MongoDB.
 function validateId(id) {
@@ -111,6 +112,9 @@ export const categoryService = {
   async update(id, data) {
     validateId(id);
     const updates = sanitizeInput(data);
+    if (updates.name !== undefined) {
+      updates.searchText = normalizeCatalogSearchText(updates.name);
+    }
     const category = await categoryRepository.updateById(id, updates);
     if (category) return category;
 

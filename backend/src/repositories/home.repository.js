@@ -2,6 +2,11 @@ import { Category } from "../models/category.model.js";
 import { Image } from "../models/image.model.js";
 import { Service } from "../models/service.model.js";
 import { Variant } from "../models/variant.model.js";
+import {
+  categoryAvailabilityFilter,
+  serviceAvailabilityFilter,
+  variantAvailabilityFilter,
+} from "../utils/catalog-availability.util.js";
 
 /**
  * Construye la consulta que determina qué categorías pueden aparecer en Home.
@@ -14,15 +19,11 @@ import { Variant } from "../models/variant.model.js";
  *
  * @returns {Array<Object>} Etapas de agregación para `Service.aggregate()`.
  */
-function buildHomeCategoriesPipeline() {
-  return [
+function buildHomeCategoriesPipeline({ includeImages = true } = {}) {
+  const pipeline = [
     // Partimos de servicios vendibles para recorrerlos una sola vez.
     {
-      $match: {
-        active: true,
-        status: "published",
-        deletedAt: null,
-      },
+      $match: serviceAvailabilityFilter(),
     },
     {
       $lookup: {
@@ -32,9 +33,7 @@ function buildHomeCategoriesPipeline() {
           // La igualdad por service aprovecha el índice compuesto de Variant.
           {
             $match: {
-              active: true,
-              status: "published",
-              deletedAt: null,
+              ...variantAvailabilityFilter(),
               $expr: { $eq: ["$service", "$$serviceId"] },
             },
           },
@@ -59,8 +58,11 @@ function buildHomeCategoriesPipeline() {
     // Si la categoría fue borrada físicamente, se descarta al no tener relación.
     { $unwind: "$category" },
     // Su propio estado se evalúa después de comprobar que existen ofertas.
-    { $match: { "category.active": true, "category.deletedAt": null } },
-    {
+    { $match: categoryAvailabilityFilter("category.") },
+  ];
+
+  if (includeImages) {
+    pipeline.push({
       $lookup: {
         from: Image.collection.name,
         let: { categoryId: "$category._id" },
@@ -78,9 +80,9 @@ function buildHomeCategoriesPipeline() {
         ],
         as: "firstImage",
       },
-    },
+    });
     // No exponemos ObjectId, estado, fechas ni datos de servicios o variantes.
-    {
+    pipeline.push({
       $project: {
         _id: 0,
         name: "$category.name",
@@ -89,16 +91,26 @@ function buildHomeCategoriesPipeline() {
           $ifNull: [{ $arrayElemAt: ["$firstImage", 0] }, null],
         },
       },
-    },
-    // El orden alfabético ofrece una respuesta estable para la página de inicio.
-    { $sort: { name: 1, slug: 1 } },
-  ];
+    });
+  } else {
+    // Shop solo necesita opciones de categoría, no descargar la galería.
+    pipeline.push({
+      $project: {
+        _id: 0,
+        name: "$category.name",
+        slug: "$category.slug",
+      },
+    });
+  }
+
+  // El orden alfabético ofrece una respuesta estable para Home y Shop filters.
+  pipeline.push({ $sort: { name: 1, slug: 1 } });
+  return pipeline;
 }
 
 export const homeRepository = {
   /**
    * Recupera las categorías que cumplen todas las reglas de Home.
-   *
   * `$lookup` correlaciona cada servicio con sus variantes. `$group` reúne los
   * servicios elegibles por categoría antes de unir la categoría. El límite del
   * lookup de variantes solo comprueba existencia; `$project` deja únicamente
@@ -109,4 +121,6 @@ export const homeRepository = {
    */
   findAvailableCategories: () =>
     Service.aggregate(buildHomeCategoriesPipeline()).exec(),
+  findAvailableCategoryOptions: () =>
+    Service.aggregate(buildHomeCategoriesPipeline({ includeImages: false })).exec(),
 };

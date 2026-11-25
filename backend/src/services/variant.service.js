@@ -4,6 +4,7 @@ import { serviceRepository } from "../repositories/service.repository.js";
 import { variantRepository } from "../repositories/variant.repository.js";
 import { AppError } from "../utils/app-error.js";
 import { getVariantSkuPrefix } from "../utils/variant-sku.util.js";
+import { normalizeCatalogSearchText } from "../utils/catalog-search.util.js";
 
 const allowedStatuses = ["draft", "published", "paused", "discontinued"];
 const maxSkuAttempts = 20;
@@ -41,6 +42,7 @@ function sanitizeInput(data, { creating = false } = {}) {
   const allowed = [
     "service",
     "name",
+    "description",
     "sku",
     "auto",
     "price",
@@ -75,6 +77,16 @@ function sanitizeInput(data, { creating = false } = {}) {
     if (!variantData.name) throw new AppError("name cannot be empty", 400);
     if (variantData.name.length > 120) {
       throw new AppError("name must be at most 120 characters", 400);
+    }
+  }
+
+  if (Object.hasOwn(variantData, "description")) {
+    if (typeof variantData.description !== "string") {
+      throw new AppError("description must be a string", 400);
+    }
+    variantData.description = variantData.description.trim();
+    if (variantData.description.length > 500) {
+      throw new AppError("description must be at most 500 characters", 400);
     }
   }
 
@@ -234,6 +246,12 @@ export const variantService = {
     const current = await getVariantOrThrow(id);
     if (current.deletedAt != null) {
       throw new AppError("Cannot edit a deleted variant. Restore it first.", 409);
+    }
+    if (updates.name !== undefined || updates.description !== undefined) {
+      updates.searchText = normalizeCatalogSearchText(
+        updates.name ?? current.name,
+        updates.description ?? current.description,
+      );
     }
 
     const currentServiceId = String(current.service?._id ?? current.service);

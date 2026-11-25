@@ -23,6 +23,13 @@ const router = Router();
  *             schema:
  *               type: array
  *               items: { $ref: '#/components/schemas/HomeCategory' }
+ *             example:
+ *               - name: "Fontanería"
+ *                 slug: "fontaneria"
+ *                 image: { url: "https://example.invalid/fontaneria.jpg", alt: "Reparación de un grifo" }
+ *               - name: "Jardinería"
+ *                 slug: "jardineria"
+ *                 image: null
  *       500: { description: Error inesperado }
  */
 router.get("/categories", homeController.listCategories);

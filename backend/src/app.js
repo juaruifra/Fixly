@@ -16,6 +16,7 @@ import orderRoutes from "./routes/order.routes.js";
 import imageRoutes from "./routes/image.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import homeRoutes from "./routes/home.routes.js";
+import shopRoutes from "./routes/shop.routes.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -32,6 +33,7 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/health", (_req, res) => res.json({ ok: true, app: "Fixly API" }));
 // Home ofrece solo datos comerciales públicos y no altera los guards existentes.
 app.use("/api/home", homeRoutes);
+app.use("/api/shop", shopRoutes);
 app.use("/api/services", serviceRoutes);
 // Todas las rutas de categorías comparten el prefijo /api/categories.
 app.use("/api/categories", categoryRoutes);

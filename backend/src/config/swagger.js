@@ -191,6 +191,11 @@ const options = {
             _id: { type: "string" },
             service: { $ref: "#/components/schemas/Service" },
             name: { type: "string", example: "Limpieza de 2 horas" },
+            description: {
+              type: "string",
+              maxLength: 500,
+              example: "Limpieza completa de cocina y baño.",
+            },
             sku: { type: "string", example: "LIM-VIV-2H-001" },
             auto: { type: "boolean", example: true },
             price: { type: "number", minimum: 0, example: 80 },
@@ -216,6 +221,11 @@ const options = {
           properties: {
             service: { type: "string", format: "objectid" },
             name: { type: "string", example: "Limpieza de 2 horas" },
+            description: {
+              type: "string",
+              maxLength: 500,
+              example: "Limpieza completa de cocina y baño.",
+            },
             sku: {
               type: "string",
               description: "Se ignora cuando auto es true.",
@@ -447,6 +457,79 @@ const options = {
             },
           },
         },
+        ShopCategoryOption: {
+          type: "object",
+          required: ["name", "slug"],
+          properties: {
+            name: { type: "string", example: "Fontanería" },
+            slug: { type: "string", example: "fontaneria" },
+          },
+        },
+        ShopServiceImage: {
+          type: "object",
+          nullable: true,
+          required: ["url", "alt"],
+          properties: {
+            url: { type: "string", format: "uri", maxLength: 2048 },
+            alt: { type: "string", maxLength: 250 },
+          },
+        },
+        ShopServiceCategory: {
+          type: "object",
+          required: ["name", "slug"],
+          properties: {
+            name: { type: "string", example: "Limpieza" },
+            slug: { type: "string", example: "limpieza" },
+          },
+        },
+        ShopServiceCard: {
+          type: "object",
+          required: ["name", "slug", "description", "category", "image", "priceFrom"],
+          properties: {
+            name: { type: "string", example: "Limpieza de hogar" },
+            slug: { type: "string", example: "limpieza_de_hogar" },
+            description: {
+              type: "string",
+              nullable: true,
+              example: "Limpieza de espacios domésticos.",
+            },
+            category: { $ref: "#/components/schemas/ShopServiceCategory" },
+            image: { $ref: "#/components/schemas/ShopServiceImage" },
+            priceFrom: { type: "number", minimum: 0, example: 25 },
+          },
+        },
+        ShopServicesPage: {
+          type: "object",
+          required: ["items", "total", "limit", "offset"],
+          properties: {
+            items: {
+              type: "array",
+              items: { $ref: "#/components/schemas/ShopServiceCard" },
+            },
+            total: { type: "integer", minimum: 0, example: 24 },
+            limit: { type: "integer", minimum: 1, maximum: 50, example: 12 },
+            offset: { type: "integer", minimum: 0, example: 0 },
+          },
+        },
+        ShopFilterOptions: {
+          type: "object",
+          required: ["categories", "priceRange"],
+          properties: {
+            categories: {
+              type: "array",
+              description: "Todas las categorías elegibles, independientes de los filtros recibidos.",
+              items: { $ref: "#/components/schemas/ShopCategoryOption" },
+            },
+            priceRange: {
+              type: "object",
+              required: ["min", "max"],
+              properties: {
+                min: { type: "number", minimum: 0, nullable: true, example: 15 },
+                max: { type: "number", minimum: 0, nullable: true, example: 200 },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -458,6 +541,8 @@ export const swaggerSpec = swaggerJSDoc(options);
 // Los endpoints públicos se mantienen abiertos; el resto de rutas del catálogo requieren ADMIN.
 const publicCatalogPaths = new Set([
   "/api/home/categories",
+  "/api/shop/filters",
+  "/api/shop/services",
   "/api/categories/available",
   "/api/categories/slug/{slug}",
   "/api/services/public",
@@ -467,7 +552,7 @@ const publicCatalogPaths = new Set([
 ]);
 
 for (const [path, pathItem] of Object.entries(swaggerSpec.paths || {})) {
-  if (!/^\/api\/(home|categories|services|variants|images)(\/|$)/.test(path)) continue;
+  if (!/^\/api\/(home|shop|categories|services|variants|images)(\/|$)/.test(path)) continue;
   if (publicCatalogPaths.has(path)) continue;
 
   for (const method of ["get", "post", "patch", "delete"]) {
