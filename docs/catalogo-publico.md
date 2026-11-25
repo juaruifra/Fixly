@@ -1,4 +1,4 @@
-# Catálogo público: fases 1 a 7
+# Catálogo público: fases 1 a 8
 
 ## Alcance de esta fase
 
@@ -14,8 +14,9 @@ fase 6 añade Shop List pública y la fase 7 su detalle visual.
 
 La fase 3.1 consolida la forma de construir los filtros, el flujo
 `rawParams → queryParams → repository`, la validación compartida y la
-documentación, sin cambiar contratos. La revisión integral corresponde a la
-fase siguiente.
+documentación, sin cambiar contratos. La fase 8 comprueba la regresión del
+backend y frontend, incluyendo carrito y pedidos en la base aislada de pruebas,
+además del build y los diagnósticos. No conecta Shop Detail al carrito.
 
 ## Fase 2: categorías para Home
 
