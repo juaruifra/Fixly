@@ -351,44 +351,93 @@ El dry-run es el modo predeterminado. Lee colecciones con cursor, no llama a
 `updatedAt`. Informa por colección documentos examinados, sin `searchText`, con
 valor obsoleto, correctos, previstos para update y errores de normalización.
 
-Para simular sin tocar la base de desarrollo, desde `backend` toma la URI de
-`MONGODB_TEST_URI` de `.env`, valida el host/nombre y asígnala temporalmente a
-`MONGODB_URI`. Este script no imprime la cadena:
+#### Simulación sobre una base de pruebas
+
+Para comprobar el script sin leer ni tocar la base de desarrollo, desde
+`backend` toma la URI de `MONGODB_TEST_URI` de `.env`. El siguiente bloque
+comprueba el destino, no imprime la URI y restaura las variables de entorno
+al terminar, incluso si se produce un error:
 
 ```powershell
-$testUriLine = Get-Content .env | Where-Object { $_ -match '^\s*MONGODB_TEST_URI\s*=' } | Select-Object -First 1
-if (-not $testUriLine) { throw "Falta MONGODB_TEST_URI en .env" }
-$env:MONGODB_URI = ($testUriLine -split '=', 2)[1].Trim().Trim('"').Trim("'")
-$parsedUri = [uri]$env:MONGODB_URI
-$databaseName = [uri]::UnescapeDataString($parsedUri.AbsolutePath).Trim('/')
-if ($parsedUri.Host -notin @('localhost', '127.0.0.1', '[::1]') -or $databaseName -notmatch '^fixly_test_[a-z0-9_]+$') { throw "Destino no permitido para simulación: usa una base local fixly_test_*" }
-$env:CATALOG_SEARCH_BACKFILL_DB_NAME = $databaseName
+$previousUri = $env:MONGODB_URI
+$previousDb = $env:CATALOG_SEARCH_BACKFILL_DB_NAME
+try {
+    $testUriLine = Get-Content .env | Where-Object { $_ -match '^\s*MONGODB_TEST_URI\s*=' } | Select-Object -First 1
+    if (-not $testUriLine) { throw "Falta MONGODB_TEST_URI en .env" }
+    $testUri = ($testUriLine -split '=', 2)[1].Trim().Trim('"').Trim("'")
+    $parsedUri = [uri]$testUri
+    $databaseName = [uri]::UnescapeDataString($parsedUri.AbsolutePath).Trim('/')
+    if ($parsedUri.Host -notin @('localhost', '127.0.0.1', '[::1]') -or $databaseName -notmatch '^fixly_test_[a-z0-9_]+$') { throw "Destino no permitido: usa una base local fixly_test_*" }
+    $env:MONGODB_URI = $testUri
+    $env:CATALOG_SEARCH_BACKFILL_DB_NAME = $databaseName
+    npm run migrate:catalog-search-text -- --dry-run
+    if ($LASTEXITCODE -ne 0) { throw "Error en la simulación" }
+} finally {
+    $env:MONGODB_URI = $previousUri
+    $env:CATALOG_SEARCH_BACKFILL_DB_NAME = $previousDb
+}
+```
+
+Una base de pruebas vacía puede devolver cero documentos. Este resultado no
+permite conocer cuántos documentos de desarrollo necesitan actualizarse.
+
+#### Simulación sobre la base de desarrollo
+
+Para obtener ese diagnóstico, revisar localmente la URI `MONGODB_URI` de `.env`
+y confirmar el servidor y el nombre exacto de la base de desarrollo. Usar una
+terminal nueva de PowerShell, desde `backend`, sin una URI heredada de pruebas.
+El siguiente comando utiliza la configuración de desarrollo de `.env`:
+
+```powershell
+Remove-Item Env:MONGODB_URI -ErrorAction SilentlyContinue
+Remove-Item Env:ALLOW_CATALOG_SEARCH_BACKFILL -ErrorAction SilentlyContinue
+$env:CATALOG_SEARCH_BACKFILL_DB_NAME = "<nombre exacto revisado>"
 npm run migrate:catalog-search-text -- --dry-run
 ```
 
-Interpreta `wouldUpdate` como la cantidad que se modificaría y revisa que el
-informe indique el nombre de base esperado. Si `errors` es distinto de cero,
-detén el proceso y examina el esquema/dato afectado antes de aplicar nada.
-Compara `documentsExamined` con el volumen esperado y verifica que documentos
-ya correctos aparezcan en `alreadyCorrect`.
+Sustituir el marcador por el nombre comprobado antes de ejecutar. No utilizar
+`--apply` durante esta comprobación. Cerrar la terminal dedicada al finalizar.
+
+#### Interpretación del informe
+
+Revisar `mode`, `database`, `documentsExamined`, `missingSearchText`,
+`staleSearchText`, `alreadyCorrect`, `wouldUpdate`, `modified` y `errors` por
+colección. Confirmar que el destino es el esperado y que `modified` es cero.
+`wouldUpdate` indica la cantidad que se modificaría. Si `errors` es distinto
+de cero, detener el proceso y examinar el esquema o dato afectado antes de
+aplicar nada. Comparar `documentsExamined` con el volumen esperado.
+
+#### Aplicación real y verificación posterior
 
 El apply real **no forma parte de esta fase y no se ejecutó**. Solo después de
-una autorización expresa, una copia de seguridad y confirmar que no hay cambios
-administrativos concurrentes, se configuraría la URI de destino revisada (sin
-mostrarla en logs), el nombre exacto de su base y la bandera:
+una autorización expresa, una copia de seguridad, una simulación sobre el mismo
+destino y confirmar que no hay cambios administrativos concurrentes, se puede
+configurar la URI autorizada localmente en una terminal dedicada, sin mostrarla
+en logs, y ejecutar:
 
 ```powershell
 $env:MONGODB_URI = "<URI del destino autorizado, introducida localmente>"
-$env:ALLOW_CATALOG_SEARCH_BACKFILL = "true"
 $env:CATALOG_SEARCH_BACKFILL_DB_NAME = "<nombre exacto revisado>"
+$env:ALLOW_CATALOG_SEARCH_BACKFILL = "true"
 npm run migrate:catalog-search-text -- --apply
 ```
 
 `--apply` comprueba el nombre de la URI y de la conexión; la actualización
 incluye el snapshot de los campos fuente para saltar cambios concurrentes.
 `bulkWrite` usa `timestamps:false`, así solo cambia `searchText`. Si hay
-`skippedConcurrentChanges`, vuelve a simular y repite después de revisar los
-cambios; no ejecutes esta operación real sin autorización específica.
+`skippedConcurrentChanges`, volver a simular y revisar antes de repetir.
+
+Tras una aplicación correcta, retirar la autorización de escritura y volver a
+simular sobre el mismo destino:
+
+```powershell
+Remove-Item Env:ALLOW_CATALOG_SEARCH_BACKFILL -ErrorAction SilentlyContinue
+npm run migrate:catalog-search-text -- --dry-run
+```
+
+Comprobar que `wouldUpdate`, `modified` y `errors` son cero. Si no lo son,
+investigar antes de continuar. Cerrar la terminal dedicada para no reutilizar
+accidentalmente las variables de conexión o autorización.
 
 ### Orden recomendado de lectura
 
@@ -460,24 +509,8 @@ modo dry-run; `--apply` exige la confirmación adicional
 `ALLOW_CATALOG_SEARCH_BACKFILL=true`. **No se ha ejecutado sobre datos de
 desarrollo.**
 
-Antes de aplicarlo, revisar `MONGODB_URI` y el destino real de la base. La
-simulación requiere confirmar el nombre de la base en
-`CATALOG_SEARCH_BACKFILL_DB_NAME` y se ejecuta con:
-
-```powershell
-$env:CATALOG_SEARCH_BACKFILL_DB_NAME = "<nombre exacto revisado>"
-npm run migrate:catalog-search-text -- --dry-run
-```
-
-La aplicación real se reserva para una autorización posterior, después de
-revisar la simulación y disponer de una copia de seguridad:
-
-```powershell
-$env:ALLOW_CATALOG_SEARCH_BACKFILL = "true"
-$env:CATALOG_SEARCH_BACKFILL_DB_NAME = "<nombre exacto revisado>"
-npm run migrate:catalog-search-text -- --apply
-```
-
+El procedimiento de simulación, autorización, aplicación y verificación se
+centraliza en [Ejemplo 7: simulación de migración](#ejemplo-7-simulación-de-migración).
 El informe no imprime host ni credenciales. Mongoose se conecta con
 `autoIndex:false` y `autoCreate:false`; el script no llama a `connectDB()` ni
 crea índices. Los lotes limitan el uso de memoria. El filtro de cada escritura
@@ -495,17 +528,12 @@ reporta para volver a revisar. `timestamps:false` evita tocar `updatedAt`.
   `categoryService.update`, `serviceService.update` y `variantService.update`
   calculan el campo derivado explícitamente. En actualizaciones parciales leen
   el documento actual y conservan la propiedad no enviada antes de normalizar.
-  los recalculan.
-  o Variant. Mongoose no ejecuta necesariamente los mismos middlewares en esa
-  API; cualquier futura escritura masiva deberá calcular `searchText`
-  explícitamente. `bulkWrite()` tampoco ejecuta el middleware de documento; el
-  backfill escribe directamente el valor calculado.
- En el código productivo actual no se usa `insertMany()` para Category, Service
- o Variant. En Mongoose 8.18, `insertMany()` instancia y valida documentos por
- defecto, por lo que ejecuta `pre("validate")`; su opción `lean:true` omite esa
- validación y, en tal caso, el llamador debe calcular el campo explícitamente.
- `bulkWrite()` no ejecuta middleware de documento; la migración calcula el
- derivado antes de construir cada operación.
+- En el código productivo actual no se usa `insertMany()` para Category, Service
+  o Variant. En Mongoose 8.18, `insertMany()` instancia y valida documentos por
+  defecto, por lo que ejecuta `pre("validate")`; su opción `lean:true` omite esa
+  validación y, en tal caso, el llamador debe calcular el campo explícitamente.
+- `bulkWrite()` no ejecuta middleware de documento; la migración calcula el
+  derivado antes de construir cada operación.
 - `select:false` oculta el campo en consultas documentales normales. La
   agregación de Shop lo proyecta explícitamente solo dentro de su pipeline para
   comparar texto, y la proyección final lo excluye de la respuesta pública.
@@ -553,18 +581,11 @@ comprueba finitud, no negatividad, rangos y seguridad de enteros.
 
 ### searchText y rutas de escritura
 
-Los hooks `pre("validate")` derivan el valor durante `Model.create()` y
-`document.save()`. Category solo combina nombre; Service y Variant combinan
-nombre y descripción. Las altas de Service/Variant no lo calculan otra vez en
-el servicio, evitando duplicar la regla.
-
-Los PATCH de nombre/descripción usan `findOneAndUpdate`, que no ejecuta el
-middleware de documento. Por eso cada servicio lee la entidad actual y calcula
-`searchText` con el campo enviado y el no enviado. Las rutas de estado, activación
-y soft-delete no modifican texto fuente. En el código productivo no hay
-`insertMany()` de estos modelos; si se añade, deberá pasar por `Model.create()`
-o calcular el derivado explícitamente. `bulkWrite()` tampoco dispara validación
-de documento: la migración incluye el valor ya calculado.
+Las altas de Service/Variant no calculan de nuevo el derivado en el servicio,
+evitando así duplicar la regla del modelo. Las rutas de estado, activación y
+soft-delete no modifican el texto fuente. Para el detalle de los middlewares,
+las actualizaciones parciales y las escrituras masivas, consultar
+[Sincronización de searchText](#sincronización-de-searchtext).
 
 ### Endpoints públicos anteriores
 
@@ -582,22 +603,8 @@ columnas; el skeleton ahora también usa seis. La ayuda del buscador indica solo
 nombre, categoría y estado, que son los valores accesibles para el filtro global
 de DataTable; los filtros superiores siguen limitando registro y estado.
 
-### Guía de lectura
-
-1. Empieza por `src/routes/shop.routes.js` para ver la whitelist, `checkExact` y
-  los parsers HTTP compartidos.
-2. Sigue `shopController.listServices` en `src/controllers/shop.controller.js`.
-3. En `src/services/shop.service.js`, observa `rawParams` → `queryParams` y la
-  coordinación con Home en las opciones adaptativas.
-4. Lee `parseShopListFilters` y `parseShopFilterOptions` en
-  `src/utils/shop-filters.util.js` antes de entrar al repositorio.
-5. Estudia `buildShopCandidateStages`, `findServices` y
-  `findAdaptivePriceRange` en `src/repositories/shop.repository.js`.
-6. Contrasta cada etapa de disponibilidad con
-  `src/utils/catalog-availability.util.js`, y la normalización con
-  `src/utils/catalog-search.util.js`.
-7. Termina con `src/migrate-catalog-search-text.js` y
-  `test/catalog-search-migration.integration.test.js` para la migración.
+Para estudiar el código, seguir el apartado
+[Orden recomendado de lectura](#orden-recomendado-de-lectura).
 
 La prueba del frontend administrativo se ejecuta desde `frontend` con
 `node --test test/service-card.render.test.js`. Las pruebas de migración se
@@ -634,34 +641,8 @@ Todas las consultas siguientes son públicas y se envían sin header
 8. En `/api/docs`, confirma que Home, Shop y las rutas antiguas están marcadas
   como públicas; las rutas administrativas siguen requiriendo Bearer.
 
-Para simular sin leer ni tocar la base de desarrollo, se toma la URI de
-`MONGODB_TEST_URI` de `.env`, se comprueba que sea local y que su base empiece
-por `fixly_test_`, y se reutiliza temporalmente como `MONGODB_URI`. El comando no
-imprime la cadena de conexión:
-
-```powershell
-$testUriLine = Get-Content .env | Where-Object { $_ -match '^\s*MONGODB_TEST_URI\s*=' } | Select-Object -First 1
-if (-not $testUriLine) { throw "Falta MONGODB_TEST_URI en .env" }
-$env:MONGODB_URI = ($testUriLine -split '=', 2)[1].Trim().Trim('"').Trim("'")
-$parsedUri = [uri]$env:MONGODB_URI
-$databaseName = [uri]::UnescapeDataString($parsedUri.AbsolutePath).Trim('/')
-if ($parsedUri.Host -notin @('localhost', '127.0.0.1', '[::1]') -or $databaseName -notmatch '^fixly_test_[a-z0-9_]+$') { throw "Destino no permitido para simulación: usa una base local fixly_test_*" }
-$env:CATALOG_SEARCH_BACKFILL_DB_NAME = $databaseName
-npm run migrate:catalog-search-text -- --dry-run
-```
-
-Revisa `mode`, `database`, `documentsExamined`, `missingSearchText`,
-`staleSearchText`, `alreadyCorrect`, `wouldUpdate` y `errors` por colección.
-La migración real no se ejecuta en esta fase. Solo después de autorización,
-copia de seguridad y revisión de que no hay cambios concurrentes, se puede
-introducir localmente la URI aprobada y ejecutar:
-
-```powershell
-$env:MONGODB_URI = "<URI del destino autorizado, introducida localmente>"
-$env:CATALOG_SEARCH_BACKFILL_DB_NAME = "<nombre exacto de la base revisada>"
-$env:ALLOW_CATALOG_SEARCH_BACKFILL = "true"
-npm run migrate:catalog-search-text -- --apply
-```
+Para las comprobaciones manuales de la migración, seguir el procedimiento del
+apartado [Ejemplo 7: simulación de migración](#ejemplo-7-simulación-de-migración).
 
 ## Modelo y contratos
 
@@ -809,8 +790,13 @@ Las comprobaciones sin MongoDB de esta fase son:
 node --test --test-reporter=tap test/catalog-authorization.test.js
 node --test --test-reporter=tap test/service-contract.test.js
 node --test --test-reporter=tap test/catalog-search.util.test.js test/shop-filters.util.test.js
-node --env-file=.env --test --test-reporter=tap test/shop.integration.test.js
 npm --prefix ..\frontend run build
+```
+
+Las pruebas de integración requieren MongoDB. Por ejemplo, desde `backend`:
+
+```powershell
+node --env-file=.env --test --test-reporter=tap test/shop.integration.test.js
 ```
 
 Las pruebas de integración de imágenes, variantes, carrito/pedidos y Shop
