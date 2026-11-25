@@ -78,9 +78,16 @@ Si el logout termina con un error de red, el frontend conserva el token para pod
 
 En Postman, inicia sesión dos veces y conserva ambos tokens. Envía `POST /api/auth/logout` con uno en `Authorization: Bearer <token>`: debe devolver `204`; ese token debe recibir `401` en `/api/auth/me`, mientras el segundo sigue funcionando. Después cambia la contraseña con el endpoint indicado y comprueba que ambos tokens anteriores reciben `401`; inicia sesión otra vez para obtener una sesión válida.
 
-El catálogo público incluye `GET /api/home/categories`, `GET /api/shop/filters`, `GET /api/shop/services`, `/api/categories/available`, `/api/categories/slug/:slug`, `/api/services/public`, `/api/services/slug/:slug` y `/api/variants/public`, todos sin autenticación. Home devuelve categorías activas/no eliminadas con al menos un servicio y una variante disponibles. Shop aplica filtros por categoría, búsqueda y precio con orden y paginación. Para consultar imágenes públicas, usa `GET /api/images/public/entity/:entityType/:entityId`; devuelve `404` si la entidad no es visible en el catálogo. La ruta anterior `/api/images/entity/:entityType/:entityId` queda reservada a ADMIN.
+El catálogo público incluye `GET /api/home/categories`, `GET /api/shop/filters`, `GET /api/shop/services`, `GET /api/shopDetail/services/:slug`, `GET /api/shopDetail/services/:slug/variants`, `/api/categories/available`, `/api/categories/slug/:slug`, `/api/services/public`, `/api/services/slug/:slug` y `/api/variants/public`, todos sin autenticación. Home devuelve categorías activas/no eliminadas con al menos un servicio y una variante disponibles. Shop aplica filtros por categoría, búsqueda y precio con orden y paginación; Shop Detail solo muestra servicios y variantes comercialmente disponibles. Para consultar imágenes públicas, usa `GET /api/images/public/entity/:entityType/:entityId`; devuelve `404` si la entidad no es visible en el catálogo. La ruta anterior `/api/images/entity/:entityType/:entityId` queda reservada a ADMIN.
 
 La guía técnica de los contratos y consultas está en [la documentación del catálogo](../docs/catalogo-publico.md). Para la simulación utiliza `MONGODB_TEST_URI` local `fixly_test_*`, confirma `CATALOG_SEARCH_BACKFILL_DB_NAME` y ejecuta `npm run migrate:catalog-search-text -- --dry-run`. La aplicación real está bloqueada salvo `--apply` y `ALLOW_CATALOG_SEARCH_BACKFILL=true`; requiere autorización, volver a revisar la URI y disponer de una copia de seguridad. El backfill no se ha ejecutado contra la base de desarrollo.
+
+Shop List usa `/api/shop` y Shop Detail usa `/api/shopDetail`, con módulos
+independientes. Detail está dividido en `src/routes/shop-detail.routes.js`,
+`src/controllers/shop-detail.controller.js`,
+`src/services/shop-detail.service.js` y
+`src/repositories/shop-detail.repository.js`; `app.js` monta cada router en su
+propio prefijo. Las respuestas públicas mantienen su formato.
 
 Los avatares de perfiles no forman parte del catálogo público ni de los endpoints genéricos de administración de imágenes. `Image.entityId` contiene el ID del perfil y la propiedad se comprueba mediante `Profile.owner`. Se guardan como URLs HTTP(S); si la URL externa es pública, la API no puede volverla privada. Al eliminar un perfil se intenta borrar su avatar antes que el documento; MongoDB standalone no garantiza atomicidad entre ambas colecciones.
 

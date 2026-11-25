@@ -1,4 +1,4 @@
-# Catálogo público: fases 1, 2, 3 y 3.1
+# Catálogo público: fases 1, 2, 3, 3.1 y 4
 
 ## Alcance de esta fase
 
@@ -8,12 +8,13 @@ Por eso, el nombre, la categoría y la descripción pertenecen a Service; el
 precio y la duración pertenecen a cada Variant.
 
 La fase 1 realizó ese cambio de modelo y administración. La fase 2 añade el
-endpoint backend de categorías para Home. La fase 3 añade los endpoints backend
-de Shop List; Shop Detail y el frontend público siguen pendientes.
+endpoint backend de categorías para Home. La fase 3 añade Shop List y la fase 4
+añade Shop Detail en el backend. El frontend público sigue pendiente.
 
 La fase 3.1 consolida la forma de construir los filtros, el flujo
 `rawParams → queryParams → repository`, la validación compartida y la
-documentación. No cambia los contratos de Home o Shop ni comienza Shop Detail.
+documentación, sin cambiar contratos. La fase 4 añade Shop Detail backend.
+El frontend público sigue pendiente.
 
 ## Fase 2: categorías para Home
 
@@ -611,6 +612,144 @@ La prueba del frontend administrativo se ejecuta desde `frontend` con
 ejecutan solo con `MONGODB_TEST_URI` local `fixly_test_*`; no requieren ejecutar
 el backfill contra la base de desarrollo.
 
+## Fase 4: Shop Detail
+
+Shop Detail tiene dos endpoints públicos independientes:
+
+- `GET /api/shopDetail/services/:slug` devuelve datos públicos del servicio, Category,
+  todas las imágenes y el precio inicial `priceFrom`.
+- `GET /api/shopDetail/services/:slug/variants` devuelve las variantes disponibles
+  con precio, duración, descripción opcional y primera imagen.
+
+Ejemplo de detalle:
+
+```http
+GET /api/shopDetail/services/limpieza_de_hogar
+```
+
+```json
+{
+  "name": "Limpieza de hogar",
+  "slug": "limpieza_de_hogar",
+  "description": "Limpieza de espacios domésticos.",
+  "category": { "name": "Limpieza", "slug": "limpieza" },
+  "images": [
+    {
+      "url": "https://example.invalid/limpieza-1.jpg",
+      "alt": "Limpieza de una vivienda"
+    },
+    {
+      "url": "https://example.invalid/limpieza-2.jpg",
+      "alt": "Detalle de cocina limpia"
+    }
+  ],
+  "priceFrom": 25
+}
+```
+
+Ejemplo de variantes:
+
+```http
+GET /api/shopDetail/services/limpieza_de_hogar/variants
+```
+
+```json
+[
+  {
+    "name": "Limpieza básica",
+    "description": null,
+    "duration": 60,
+    "price": 25,
+    "image": null
+  },
+  {
+    "name": "Limpieza profunda",
+    "description": "Eliminación de suciedad incrustada.",
+    "duration": 180,
+    "price": 125,
+    "image": {
+      "url": "https://example.invalid/profunda.jpg",
+      "alt": "Limpieza en profundidad"
+    }
+  }
+]
+```
+
+Las respuestas no incluyen ObjectId, SKU, estado ni campos administrativos.
+El detalle calcula `priceFrom` con todas las variantes disponibles del servicio,
+sin arrastrar filtros de precio o búsqueda de Shop List. La lista de variantes
+mantiene el orden de creación descendente y desempata por `_id` descendente.
+
+### Disponibilidad y consulta
+
+`shopDetailRepository.findServiceDetailBySlug` y
+`shopDetailRepository.findAvailableVariantsByServiceSlug` comparten
+`buildAvailableServiceBySlugStages`: Service debe estar activo, publicado y no
+eliminado; `$lookup` recupera Category y la disponibilidad propia de esta se
+comprueba por separado. Después, cada consulta hace un `$lookup` de Variant que
+exige active, published y `deletedAt: null`. Un `$match` de existencia descarta
+un servicio sin variantes comerciales; por eso ambas rutas devuelven 404 ante
+un servicio oculto, aunque tenga una variante pausada.
+
+El endpoint de detalle une las imágenes de Service completas y ordenadas por
+`createdAt` ascendente y `_id` ascendente para desempatar. Calcula el precio
+inicial con `$min` sobre los precios de todas sus variantes disponibles. El
+endpoint de variantes recupera, para cada una, su primera imagen con el mismo
+orden estable y proyecta solo nombre, descripción, duración, precio e imagen.
+Ambas consultas se hacen en MongoDB y no emiten una consulta por cada imagen.
+
+El slug inválido responde HTTP 400. Un slug bien formado que no identifica un
+Service disponible responde HTTP 404. La comprobación de Category impide
+recuperar detalle/variantes cuando la categoría se desactiva; no se hacen
+cambios en cascada. Estas rutas usan `/api/shopDetail` y no alteran
+`GET /api/services/public` ni `GET /api/services/slug/:slug`.
+
+### Frontera de módulos (fase 4.1)
+
+Shop List usa el prefijo `/api/shop` y Shop Detail usa `/api/shopDetail`. Sus
+cuatro capas están separadas para que cada funcionalidad tenga un punto de entrada propio:
+
+- `src/routes/shop-detail.routes.js`: valida el slug, declara las dos rutas y
+  sus contratos OpenAPI.
+- `src/controllers/shop-detail.controller.js`: traduce la petición HTTP y
+  delega las operaciones.
+- `src/services/shop-detail.service.js`: orquesta consultas y convierte la
+  ausencia de una oferta visible en HTTP 404.
+- `src/repositories/shop-detail.repository.js`: construye las agregaciones de
+  detalle y variantes.
+
+`app.js` monta `shop.routes.js` en `/api/shop` y `shop-detail.routes.js` en
+`/api/shopDetail`. Las URLs anteriores de Detail bajo `/api/shop` dejan de estar
+disponibles; las respuestas, validaciones y reglas de disponibilidad se mantienen. Shop List
+conserva sus filtros y consultas en `shop.routes.js` y `shop.repository.js`;
+las rutas históricas `/api/services/public` y `/api/services/slug/:slug` tampoco
+se modifican.
+
+### Pruebas manuales de API
+
+Usa Postman o Swagger sin añadir `Authorization`:
+
+1. `GET /api/shopDetail/services/<slug-disponible>` debe devolver `200`, galería
+   completa y `priceFrom` igual al menor precio de sus variantes disponibles.
+2. `GET /api/shopDetail/services/<slug-disponible>/variants` debe devolver únicamente
+   variantes activas/publicadas/no eliminadas, con precio y duración y sin SKU.
+3. Usa un slug inexistente, un Service draft/inactivo/eliminado, una Category
+   inactiva/eliminada y un Service sin variantes activas/publicadas. Ambos
+   endpoints deben responder `404` en cada caso.
+4. Usa `GET /api/shopDetail/services/slug-invalido!`; debe responder `400`.
+5. Comprueba el orden de imágenes del servicio y que la variante sin imágenes
+   devuelve `image: null`.
+6. Repite las peticiones sin Bearer JWT para confirmar que son públicas.
+
+La integración `shop-detail.integration.test.js` crea todas estas relaciones en
+la base local `fixly_test_*`; elimina solo esa base al terminar.
+
+Para repetirla desde `backend` usando el `.env` del paquete y la URI de test:
+
+```powershell
+node --env-file=.env --test --test-reporter=tap test/shop-detail.integration.test.js
+```
+
 ### Comprobaciones manuales
 
 Todas las consultas siguientes son públicas y se envían sin header
@@ -781,6 +920,11 @@ de variantes.
   `src/models/order.model.js`.
 - Shop List: `src/routes/shop.routes.js`, `src/utils/shop-filters.util.js`,
   `src/repositories/shop.repository.js` y `test/shop.integration.test.js`.
+- Shop Detail: `src/routes/shop-detail.routes.js`,
+  `src/controllers/shop-detail.controller.js`,
+  `src/services/shop-detail.service.js`,
+  `src/repositories/shop-detail.repository.js` y
+  `test/shop-detail.integration.test.js`.
 
 ## Verificación
 
@@ -810,4 +954,4 @@ terminar; nunca se deben apuntar a la base de desarrollo.
 - No se crean variantes para servicios que no las tengan.
 - No se eliminan físicamente campos de MongoDB ni se cambian snapshots de Order.
 - No se crea un índice para `searchText` sin medir primero las consultas reales.
-- No se implementan aún Shop Detail ni el frontend público.
+- El frontend público sigue pendiente.

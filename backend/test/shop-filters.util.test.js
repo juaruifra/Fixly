@@ -13,6 +13,7 @@ test("Swagger publica los contratos Shop sin requisito de token", () => {
   for (const [path, schema] of [
     ["/api/shop/services", "ShopServicesPage"],
     ["/api/shop/filters", "ShopFilterOptions"],
+    ["/api/shopDetail/services/{slug}", "ShopServiceDetail"],
   ]) {
     const operation = swaggerSpec.paths[path]?.get;
     assert.ok(operation, `${path} must be documented`);
@@ -22,6 +23,24 @@ test("Swagger publica los contratos Shop sin requisito de token", () => {
       `#/components/schemas/${schema}`,
     );
   }
+
+  const variantsOperation =
+    swaggerSpec.paths["/api/shopDetail/services/{slug}/variants"]?.get;
+  assert.ok(variantsOperation);
+  assert.deepEqual(swaggerSpec.paths["/api/shopDetail/services/{slug}"].get.tags, ["Shop Detail"]);
+  assert.deepEqual(variantsOperation.tags, ["Shop Detail"]);
+  assert.equal(variantsOperation.security, undefined);
+  assert.equal(
+    variantsOperation.responses["200"].content["application/json"].schema.items.$ref,
+    "#/components/schemas/ShopVariantOption",
+  );
+  assert.ok(variantsOperation.responses["400"]);
+  assert.ok(variantsOperation.responses["404"]);
+  assert.ok(swaggerSpec.components.schemas.ShopGalleryImage);
+  assert.ok(swaggerSpec.components.schemas.ShopServiceDetail);
+  assert.ok(swaggerSpec.components.schemas.ShopVariantOption);
+  assert.equal(swaggerSpec.paths["/api/shop/services/{slug}"], undefined);
+  assert.equal(swaggerSpec.paths["/api/shop/services/{slug}/variants"], undefined);
 });
 
 test("aplica defaults, deduplica categorías y normaliza filtros", () => {

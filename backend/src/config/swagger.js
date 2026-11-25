@@ -498,6 +498,49 @@ const options = {
             priceFrom: { type: "number", minimum: 0, example: 25 },
           },
         },
+        ShopGalleryImage: {
+          type: "object",
+          required: ["url", "alt"],
+          properties: {
+            url: { type: "string", format: "uri", maxLength: 2048 },
+            alt: { type: "string", maxLength: 250 },
+          },
+        },
+        ShopServiceDetail: {
+          type: "object",
+          required: ["name", "slug", "description", "category", "images", "priceFrom"],
+          properties: {
+            name: { type: "string", example: "Limpieza de hogar" },
+            slug: { type: "string", example: "limpieza_de_hogar" },
+            description: {
+              type: "string",
+              nullable: true,
+              example: "Limpieza de espacios domésticos.",
+            },
+            category: { $ref: "#/components/schemas/ShopServiceCategory" },
+            images: {
+              type: "array",
+              items: { $ref: "#/components/schemas/ShopGalleryImage" },
+            },
+            priceFrom: { type: "number", minimum: 0, example: 25 },
+          },
+        },
+        ShopVariantOption: {
+          type: "object",
+          required: ["name", "description", "duration", "price", "image"],
+          properties: {
+            name: { type: "string", example: "Limpieza profunda" },
+            description: {
+              type: "string",
+              nullable: true,
+              maxLength: 500,
+              example: "Eliminación de suciedad incrustada.",
+            },
+            duration: { type: "integer", minimum: 1, example: 180 },
+            price: { type: "number", minimum: 0, example: 125 },
+            image: { $ref: "#/components/schemas/ShopServiceImage" },
+          },
+        },
         ShopServicesPage: {
           type: "object",
           required: ["items", "total", "limit", "offset"],
@@ -543,6 +586,8 @@ const publicCatalogPaths = new Set([
   "/api/home/categories",
   "/api/shop/filters",
   "/api/shop/services",
+  "/api/shopDetail/services/{slug}",
+  "/api/shopDetail/services/{slug}/variants",
   "/api/categories/available",
   "/api/categories/slug/{slug}",
   "/api/services/public",
@@ -552,7 +597,7 @@ const publicCatalogPaths = new Set([
 ]);
 
 for (const [path, pathItem] of Object.entries(swaggerSpec.paths || {})) {
-  if (!/^\/api\/(home|shop|categories|services|variants|images)(\/|$)/.test(path)) continue;
+  if (!/^\/api\/(home|shop|shopDetail|categories|services|variants|images)(\/|$)/.test(path)) continue;
   if (publicCatalogPaths.has(path)) continue;
 
   for (const method of ["get", "post", "patch", "delete"]) {
