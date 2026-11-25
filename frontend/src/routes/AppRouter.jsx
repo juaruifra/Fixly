@@ -30,6 +30,7 @@ const WorkerEdit = lazy(() => import("@/pages/workers/WorkerEdit"));
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Home = lazy(() => import("@/pages/public/Home"));
 const ShopList = lazy(() => import("@/pages/public/ShopList"));
+const ShopDetail = lazy(() => import("@/pages/public/ShopDetail"));
 const Account = lazy(() => import("@/pages/auth/Account"));
 const AccountProfiles = lazy(() => import("@/pages/auth/AccountProfiles"));
 const AccountPassword = lazy(() => import("@/pages/auth/AccountPassword"));
@@ -60,6 +61,7 @@ export function AppRouter() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<ShopList />} />
+          <Route path="/shop/:slug" element={<ShopDetail />} />
         </Route>
         <Route element={<RequireAuth />}>
           <Route element={<ProfilesDataProvider />}>

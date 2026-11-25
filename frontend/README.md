@@ -38,9 +38,20 @@ botones de navegación del navegador. Los límites de precio se adaptan a las
 categorías y la búsqueda; se aplican mediante el botón de precio. Una URL
 inválida muestra un error y permite limpiar los filtros sin corregirla sola.
 
-El detalle visual de los servicios y la selección de variantes pertenecen a la
-fase siguiente. Para ejecutar las pruebas de Shop desde `frontend`:
+Cada tarjeta enlaza a su detalle y conserva los filtros en la dirección. Para
+ejecutar las pruebas de Shop desde `frontend`:
 
 ```powershell
 node --test test/shop-query.test.js test/shop-list.render.test.js
 ```
+
+## Shop Detail
+
+`/shop/:slug` consulta detalle y variantes públicas, muestra la galería y permite
+seleccionar una modalidad en la pantalla. La selección es temporal: el contrato
+público no incluye IDs de variantes y no se conecta al carrito. Al volver al
+listado se conservan los filtros y la página incluidos en la dirección.
+
+Desde `frontend`, `node --test test/shop-detail.render.test.js` comprueba las
+consultas y el renderizado. Prueba también en el navegador la galería, la
+selección, el retorno, errores y presentación móvil.

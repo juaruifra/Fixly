@@ -1,4 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 import CatalogImage from "@/components/common/CatalogImage";
 import ErrorState from "@/components/common/ErrorState";
@@ -7,6 +8,7 @@ import { SHOP_SORT_OPTIONS } from "@/features/shop/shopQuery";
 const currency = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
 
 export default function ShopResults({ filters, list, update, retryList }) {
+  const location = useLocation();
   const page = list.data;
   const canGoBack = filters.offset > 0;
   const canGoForward = page && filters.offset + filters.limit < page.total;
@@ -36,7 +38,7 @@ export default function ShopResults({ filters, list, update, retryList }) {
               <div className="shop-service-image"><CatalogImage image={service.image} /></div>
               <div className="shop-service-content">
                 <p className="shop-service-category">{service.category.name}</p>
-                <h3>{service.name}</h3>
+                <h3><Link to={{ pathname: `/shop/${encodeURIComponent(service.slug)}`, search: location.search }} className="shop-service-link">{service.name}</Link></h3>
                 {service.description && <p className="shop-service-description">{service.description}</p>}
                 <p className="shop-service-price"><span>Desde</span> {currency.format(service.priceFrom)}</p>
               </div>

@@ -1,4 +1,4 @@
-# Catálogo público: fases 1 a 6
+# Catálogo público: fases 1 a 7
 
 ## Alcance de esta fase
 
@@ -10,12 +10,12 @@ precio y la duración pertenecen a cada Variant.
 La fase 1 realizó ese cambio de modelo y administración. La fase 2 añade el
 endpoint backend de categorías para Home. La fase 3 añade Shop List y la fase 4
 añade Shop Detail en el backend. La fase 5 incorpora Home pública en React y la
-fase 6 añade Shop List pública.
+fase 6 añade Shop List pública y la fase 7 su detalle visual.
 
 La fase 3.1 consolida la forma de construir los filtros, el flujo
 `rawParams → queryParams → repository`, la validación compartida y la
-documentación, sin cambiar contratos. Shop Detail visual sigue pendiente para
-la fase siguiente.
+documentación, sin cambiar contratos. La revisión integral corresponde a la
+fase siguiente.
 
 ## Fase 2: categorías para Home
 
@@ -939,7 +939,7 @@ navegador.
 `/shop` está fuera de los guards y usa el layout público. Home enlaza cada
 categoría mediante `categories`; la navegación superior permite abrir la lista
 sin filtros. Las tarjetas muestran datos devueltos por la API, primera imagen
-o alternativa y `priceFrom`. No enlazan todavía al detalle de la fase 7.
+o alternativa y `priceFrom`. Enlazan al detalle conservando la consulta actual.
 
 La URL es la fuente de filtros aplicados: `categories`, `search`, `minPrice`,
 `maxPrice`, `sort`, `limit` y `offset`. Cambiar un filtro o el orden reinicia
@@ -960,7 +960,33 @@ Las pruebas `shop-query.test.js` y `shop-list.render.test.js` comprueban la
 interpretación de URL, los parámetros enviados, estados y renderizado. Para
 revisar la interacción, prueba las categorías de Home, búsqueda, precios,
 orden, paginación, atrás/adelante, URL inválida y estados de error en escritorio
-y móvil. Shop Detail y carrito no se implementan en esta fase.
+y móvil. La conexión con el carrito queda fuera de esta fase.
+
+## Fase 7: Shop Detail público
+
+`/shop/:slug` está en el layout público. Cada tarjeta de Shop List enlaza al
+detalle con la query original; el enlace de regreso la conserva también al
+recargar o abrir directamente la URL. Los filtros de lista no se envían a las
+consultas de detalle ni limitan sus variantes o su precio inicial.
+
+`shopDetailService.js` solicita `/shopDetail/services/:slug` y su ruta
+`/variants`. `useShopDetail` espera ambas respuestas, cancela solicitudes al
+cambiar de slug o desmontar y descarta resultados tardíos. Un 404 muestra el
+servicio como no disponible; otros errores ofrecen reintento. Esto también
+contempla que la disponibilidad cambie entre las dos peticiones.
+
+La galería presenta las imágenes de Service con controles cuando hay varias y
+una alternativa si faltan o fallan. Las variantes muestran nombre, descripción
+opcional, duración, precio y primera imagen. Se pueden seleccionar mediante
+radios y el precio mostrado refleja la elección; sin selección se muestra
+`priceFrom`. La selección es local y se reinicia al cambiar de servicio o
+recargar. El contrato público no devuelve ID ni SKU, por lo que la selección no
+se conecta al carrito ni representa una contratación.
+
+`shop-detail.render.test.js` comprueba los endpoints, estados y renderizado; el
+test de Shop List verifica el enlace con filtros. La interacción del carrusel,
+la selección, el retorno por historial, errores y vistas móvil/escritorio deben
+comprobarse también en navegador. No se modifican autenticación ni backend.
 
 ## Archivos que conviene estudiar
 
@@ -1009,4 +1035,4 @@ terminar; nunca se deben apuntar a la base de desarrollo.
 - No se crean variantes para servicios que no las tengan.
 - No se eliminan físicamente campos de MongoDB ni se cambian snapshots de Order.
 - No se crea un índice para `searchText` sin medir primero las consultas reales.
-- Shop Detail visual sigue pendiente.
+- La conexión del detalle con el carrito no forma parte de estas fases.

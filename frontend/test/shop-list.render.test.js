@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import { createServer } from "vite";
 
 test("Shop muestra filtros y resultados públicos", async (context) => {
@@ -15,7 +16,7 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
     const { getShopFilters, getShopServices } = await server.ssrLoadModule("/src/services/shopService.js");
     const { apiService } = await server.ssrLoadModule("/src/services/apiService.js");
     const filters = { categories: ["limpieza"], search: "hogar", minPrice: 0, maxPrice: 50, sort: "price-asc", limit: 12, offset: 0 };
-    const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+    const render = (component, props) => renderToStaticMarkup(createElement(MemoryRouter, { initialEntries: ["/shop?categories=limpieza&offset=12"] }, createElement(component, props)));
 
     await context.test("muestra categorías, rango adaptativo y valores aplicados", () => {
       const markup = render(ShopFilters, {
@@ -47,6 +48,7 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
         list: { status: "ready", data: { total: 13, items: [{ slug: "limpieza_hogar", name: "Limpieza de hogar", description: "Limpieza completa", category: { name: "Limpieza" }, image: null, priceFrom: 25 }] } },
       });
       assert.match(markup, /Limpieza de hogar/);
+      assert.match(markup, /href="\/shop\/limpieza_hogar\?categories=limpieza&amp;offset=12"/);
       assert.match(markup, /Limpieza completa/);
       assert.match(markup, /25,00/);
       assert.match(markup, /Sin imagen disponible/);
