@@ -1,4 +1,4 @@
-# Catálogo público: fases 1 a 5
+# Catálogo público: fases 1 a 6
 
 ## Alcance de esta fase
 
@@ -9,12 +9,13 @@ precio y la duración pertenecen a cada Variant.
 
 La fase 1 realizó ese cambio de modelo y administración. La fase 2 añade el
 endpoint backend de categorías para Home. La fase 3 añade Shop List y la fase 4
-añade Shop Detail en el backend. La fase 5 incorpora Home pública en React.
+añade Shop Detail en el backend. La fase 5 incorpora Home pública en React y la
+fase 6 añade Shop List pública.
 
 La fase 3.1 consolida la forma de construir los filtros, el flujo
 `rawParams → queryParams → repository`, la validación compartida y la
-documentación, sin cambiar contratos. Shop List y Shop Detail visuales siguen
-pendientes para fases posteriores.
+documentación, sin cambiar contratos. Shop Detail visual sigue pendiente para
+la fase siguiente.
 
 ## Fase 2: categorías para Home
 
@@ -923,7 +924,7 @@ si la revocación falla, se conserva la sesión y se muestra el error existente.
 `useHomeCategories` gestiona carga, error y reintento, y cancela peticiones al
 desmontar o repetir. Home presenta las categorías recibidas sin consultar datos
 administrativos. `CatalogImage` muestra una alternativa cuando la imagen falta
-o falla. Las categorías aún no enlazan a Shop List, pendiente de la fase 6.
+o falla. Las categorías enlazan a `/shop` con su slug seleccionado.
 
 Para validar manualmente, visita `/` sin sesión, prueba login correcto e
 incorrecto para ambos roles, abre cuenta y perfiles, verifica que CLIENT no
@@ -932,6 +933,34 @@ disponible, imágenes ausentes y la presentación en móvil. El test
 `frontend/test/home-public.render.test.js` cubre el renderizado por estado y rol,
 los destinos de login y la llamada al servicio; no sustituye la interacción en
 navegador.
+
+## Fase 6: Shop List pública
+
+`/shop` está fuera de los guards y usa el layout público. Home enlaza cada
+categoría mediante `categories`; la navegación superior permite abrir la lista
+sin filtros. Las tarjetas muestran datos devueltos por la API, primera imagen
+o alternativa y `priceFrom`. No enlazan todavía al detalle de la fase 7.
+
+La URL es la fuente de filtros aplicados: `categories`, `search`, `minPrice`,
+`maxPrice`, `sort`, `limit` y `offset`. Cambiar un filtro o el orden reinicia
+`offset`; paginar conserva los demás parámetros. El historial del navegador
+recupera estados anteriores. Una URL desconocida, repetida o inválida muestra
+un error con la opción explícita de limpiar; un offset fuera del total muestra
+una página vacía con opción de volver, sin cambiar la URL automáticamente.
+
+`shopQuery.js` valida y prepara parámetros de acuerdo con el contrato backend.
+`useShop.js` realiza dos peticiones independientes y cancela las anteriores al
+cambiar los parámetros. El listado recibe todos los filtros; las opciones
+adaptativas solo reciben categorías y búsqueda. Cambiar precio u orden no vuelve
+a solicitar las opciones. Los controles de precio permiten introducir valores o
+ajustar los deslizadores dentro del rango disponible y se aplican expresamente;
+un cambio de rango no modifica silenciosamente los precios ya seleccionados.
+
+Las pruebas `shop-query.test.js` y `shop-list.render.test.js` comprueban la
+interpretación de URL, los parámetros enviados, estados y renderizado. Para
+revisar la interacción, prueba las categorías de Home, búsqueda, precios,
+orden, paginación, atrás/adelante, URL inválida y estados de error en escritorio
+y móvil. Shop Detail y carrito no se implementan en esta fase.
 
 ## Archivos que conviene estudiar
 
@@ -980,4 +1009,4 @@ terminar; nunca se deben apuntar a la base de desarrollo.
 - No se crean variantes para servicios que no las tengan.
 - No se eliminan físicamente campos de MongoDB ni se cambian snapshots de Order.
 - No se crea un índice para `searchText` sin medir primero las consultas reales.
-- Shop List y Shop Detail visuales siguen pendientes.
+- Shop Detail visual sigue pendiente.

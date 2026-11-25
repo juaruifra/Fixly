@@ -10,6 +10,7 @@ export function PublicNavigation({ user, status, isLoggingOut, onSignOut }) {
 
   return (
     <nav className="public-nav" aria-label="Navegación principal">
+      <Link to="/shop">Servicios</Link>
       {authenticated && user?.role?.name === "ADMIN" && (
         <Link to="/services"><PanelsTopLeftIcon aria-hidden="true" /> Administración</Link>
       )}

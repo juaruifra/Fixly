@@ -1,4 +1,5 @@
 import { ArrowDownIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import CatalogImage from "@/components/common/CatalogImage";
 import ErrorState from "@/components/common/ErrorState";
@@ -29,13 +30,13 @@ export function HomeContent({ categories, status, error, retry }) {
         {status === "ready" && categories.length > 0 && (
           <div className="home-category-grid">
             {categories.map((category, index) => (
-              <article className="home-category" key={category.slug}>
+              <Link className="home-category" key={category.slug} to={`/shop?${new URLSearchParams({ categories: category.slug })}`}>
                 <div className="home-category-image"><CatalogImage image={category.image} /></div>
                 <div className="home-category-label">
                   <h3>{category.name}</h3>
                   <span>{String(index + 1).padStart(2, "0")}</span>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         )}

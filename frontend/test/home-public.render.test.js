@@ -21,7 +21,7 @@ test("Home pública y navegación respetan estados y roles", async (context) => 
     const { apiService } = await server.ssrLoadModule("/src/services/apiService.js");
 
     await context.test("renderiza categorías, imágenes y estados", () => {
-      const render = (props) => renderToStaticMarkup(createElement(HomeContent, props));
+      const render = (props) => renderToStaticMarkup(createElement(MemoryRouter, null, createElement(HomeContent, props)));
       assert.match(render({ status: "loading", categories: [] }), /Cargando categorías/);
       assert.match(render({ status: "error", categories: [], error: "Sin conexión", retry() {} }), /Sin conexión/);
       assert.match(render({ status: "ready", categories: [] }), /No hay categorías disponibles/);
@@ -35,6 +35,7 @@ test("Home pública y navegación respetan estados y roles", async (context) => 
       assert.match(markup, /Limpieza/);
       assert.match(markup, /Imagen de limpieza/);
       assert.match(markup, /Sin imagen disponible/);
+      assert.match(markup, /href="\/shop\?categories=limpieza"/);
     });
 
     await context.test("expone solo las opciones correspondientes al rol", () => {

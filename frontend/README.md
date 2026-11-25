@@ -21,11 +21,26 @@ imagen o con una imagen inaccesible muestran una alternativa.
 
 Tras iniciar sesión, CLIENT vuelve a `/` y ADMIN accede a `/services`. Desde la
 navegación pública, ambos pueden abrir su cuenta y perfiles; ADMIN también puede
-volver al panel. El cierre de sesión confirmado regresa a `/`. Shop List y
-Shop Detail visuales corresponden a fases posteriores.
+volver al panel. El cierre de sesión confirmado regresa a `/`. Las categorías
+enlazan a Shop List con la categoría seleccionada.
 
 Para probar el renderizado de Home y la navegación por rol desde `frontend`:
 
 ```powershell
 node --test test/home-public.render.test.js
+```
+
+## Shop List
+
+`/shop` muestra servicios públicos y permite filtrar por categorías, búsqueda y
+precio, ordenar y paginar. Los filtros aplicados viven en la URL y admiten los
+botones de navegación del navegador. Los límites de precio se adaptan a las
+categorías y la búsqueda; se aplican mediante el botón de precio. Una URL
+inválida muestra un error y permite limpiar los filtros sin corregirla sola.
+
+El detalle visual de los servicios y la selección de variantes pertenecen a la
+fase siguiente. Para ejecutar las pruebas de Shop desde `frontend`:
+
+```powershell
+node --test test/shop-query.test.js test/shop-list.render.test.js
 ```
