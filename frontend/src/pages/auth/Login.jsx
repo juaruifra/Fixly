@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { WrenchIcon } from "lucide-react";
 
 import ThemeSelector from "@/components/ThemeSelector";
 import { PageLoader } from "@/components/common/PageLoader";
 import { loginSchema } from "@/pages/auth/loginSchema";
 import { useAuth } from "@/providers/AuthProvider";
+
+export function loginDestination(user) {
+  return user?.role?.name === "ADMIN" ? "/services" : "/";
+}
 
 // El formulario delega la verificación y conservación de la sesión al contexto.
 export default function Login() {
@@ -46,7 +50,7 @@ export default function Login() {
 
   if (status === "checking") return <PageLoader />;
   if (status === "authenticated") {
-    return <Navigate to="/account" replace />;
+    return <Navigate to={loginDestination(user)} replace />;
   }
 
   return (
@@ -66,6 +70,7 @@ export default function Login() {
         </div>
         <div className="login-heading">
           <h1>Iniciar sesión</h1>
+          <Link to="/">Volver al catálogo</Link>
         </div>
         {location.state?.passwordChanged && (
           <p role="status">Contraseña actualizada. Inicia sesión de nuevo.</p>

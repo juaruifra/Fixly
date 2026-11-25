@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   BriefcaseIcon,
   CircleUserRoundIcon,
   KeyRoundIcon,
   LayersIcon,
   LogOutIcon,
+  StoreIcon,
   ShieldCheckIcon,
   SunIcon,
   TagIcon,
@@ -28,12 +29,14 @@ import {
 
 export default function AdminSidebar() {
   const { user, signOut, isLoggingOut } = useAuth();
+  const navigate = useNavigate();
   // Las opciones de administración solo se muestran a este rol.
   const isAdmin = user?.role?.name === "ADMIN";
 
   async function handleSignOut() {
     try {
       await signOut();
+      navigate("/", { replace: true });
     } catch (error) {
       await showApiErrorAlert(error, "No se pudo cerrar la sesión en el servidor");
     }
@@ -54,6 +57,9 @@ export default function AdminSidebar() {
         <section className="admin-nav-group" aria-labelledby="personal-nav-heading">
           <h2 className="admin-nav-heading" id="personal-nav-heading">Mi espacio</h2>
           <SidebarMenu aria-label="Mi espacio">
+            <SidebarMenuLink end icon={<StoreIcon aria-hidden="true" />} to="/">
+              Catálogo público
+            </SidebarMenuLink>
             <SidebarMenuLink end icon={<CircleUserRoundIcon aria-hidden="true" />} to="/account">
               Mi cuenta
             </SidebarMenuLink>

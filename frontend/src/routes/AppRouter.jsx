@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import MainLayout from "@/layouts/MainLayout";
+import PublicLayout from "@/layouts/PublicLayout";
 import { PageLoader } from "@/components/common/PageLoader";
 import { AppProvider } from "@/providers/AppProvider";
 import { ProfilesProvider } from "@/providers/ProfilesProvider";
@@ -27,6 +28,7 @@ const WorkerList = lazy(() => import("@/pages/workers/WorkerList"));
 const WorkerCreate = lazy(() => import("@/pages/workers/WorkerCreate"));
 const WorkerEdit = lazy(() => import("@/pages/workers/WorkerEdit"));
 const Login = lazy(() => import("@/pages/auth/Login"));
+const Home = lazy(() => import("@/pages/public/Home"));
 const Account = lazy(() => import("@/pages/auth/Account"));
 const AccountProfiles = lazy(() => import("@/pages/auth/AccountProfiles"));
 const AccountPassword = lazy(() => import("@/pages/auth/AccountPassword"));
@@ -54,6 +56,9 @@ export function AppRouter() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+        </Route>
         <Route element={<RequireAuth />}>
           <Route element={<ProfilesDataProvider />}>
           <Route element={<MainLayout />}>
@@ -82,7 +87,6 @@ export function AppRouter() {
                 <Route path="/workers/:id/edit" element={<WorkerEdit />} />
               </Route>
             </Route>
-            <Route index element={<Navigate to="/account" replace />} />
             <Route path="*" element={<Navigate to="/account" replace />} />
           </Route>
           </Route>

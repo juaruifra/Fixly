@@ -1,4 +1,4 @@
-# Catálogo público: fases 1, 2, 3, 3.1 y 4
+# Catálogo público: fases 1 a 5
 
 ## Alcance de esta fase
 
@@ -9,12 +9,12 @@ precio y la duración pertenecen a cada Variant.
 
 La fase 1 realizó ese cambio de modelo y administración. La fase 2 añade el
 endpoint backend de categorías para Home. La fase 3 añade Shop List y la fase 4
-añade Shop Detail en el backend. El frontend público sigue pendiente.
+añade Shop Detail en el backend. La fase 5 incorpora Home pública en React.
 
 La fase 3.1 consolida la forma de construir los filtros, el flujo
 `rawParams → queryParams → repository`, la validación compartida y la
-documentación, sin cambiar contratos. La fase 4 añade Shop Detail backend.
-El frontend público sigue pendiente.
+documentación, sin cambiar contratos. Shop List y Shop Detail visuales siguen
+pendientes para fases posteriores.
 
 ## Fase 2: categorías para Home
 
@@ -907,6 +907,32 @@ no presenta un precio o una duración genéricos que podrían contradecir las
 variantes del servicio. El precio y tiempo se siguen editando desde la gestión
 de variantes.
 
+## Fase 5: Home pública
+
+La ruta `/` queda fuera de `RequireAuth` y es accesible para visitantes, CLIENT
+y ADMIN. `PublicLayout` muestra la navegación adecuada a cada sesión y mantiene
+el selector de tema. ADMIN puede entrar al panel mediante `/services`; ambos
+roles pueden acceder a `/account` y `/account/profiles`. El guard existente
+continúa protegiendo las rutas administrativas.
+
+Tras autenticarse, CLIENT vuelve a `/` y ADMIN a `/services`. La misma regla se
+aplica si una sesión activa visita `/login`. El logout confirmado vuelve a `/`;
+si la revocación falla, se conserva la sesión y se muestra el error existente.
+
+`homeService.js` solicita `/home/categories` mediante Axios. El hook
+`useHomeCategories` gestiona carga, error y reintento, y cancela peticiones al
+desmontar o repetir. Home presenta las categorías recibidas sin consultar datos
+administrativos. `CatalogImage` muestra una alternativa cuando la imagen falta
+o falla. Las categorías aún no enlazan a Shop List, pendiente de la fase 6.
+
+Para validar manualmente, visita `/` sin sesión, prueba login correcto e
+incorrecto para ambos roles, abre cuenta y perfiles, verifica que CLIENT no
+accede al panel y comprueba el logout. Prueba también el reintento con la API no
+disponible, imágenes ausentes y la presentación en móvil. El test
+`frontend/test/home-public.render.test.js` cubre el renderizado por estado y rol,
+los destinos de login y la llamada al servicio; no sustituye la interacción en
+navegador.
+
 ## Archivos que conviene estudiar
 
 - Backend: `src/models/service.model.js`, `src/services/service.service.js`,
@@ -954,4 +980,4 @@ terminar; nunca se deben apuntar a la base de desarrollo.
 - No se crean variantes para servicios que no las tengan.
 - No se eliminan físicamente campos de MongoDB ni se cambian snapshots de Order.
 - No se crea un índice para `searchText` sin medir primero las consultas reales.
-- El frontend público sigue pendiente.
+- Shop List y Shop Detail visuales siguen pendientes.
