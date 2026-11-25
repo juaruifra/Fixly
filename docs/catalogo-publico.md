@@ -1,4 +1,4 @@
-# Catálogo público: fase 1
+# Catálogo público: fases 1 y 2
 
 ## Alcance de esta fase
 
@@ -7,8 +7,93 @@ Esta entrega separa el servicio genérico de sus modalidades de contratación.
 Por eso, el nombre, la categoría y la descripción pertenecen a Service; el
 precio y la duración pertenecen a cada Variant.
 
-En esta fase solo se ha realizado ese cambio de modelo y administración. Home,
-Shop List, Shop Detail y sus nuevos endpoints todavía no están implementados.
+La fase 1 realizó ese cambio de modelo y administración. La fase 2 añade el
+endpoint backend de categorías para Home; la página React y los endpoints de
+Shop List y Shop Detail todavía no están implementados.
+
+## Fase 2: categorías para Home
+
+`GET /api/home/categories` es una operación pública de solo lectura y no
+requiere Bearer JWT. Devuelve únicamente los campos necesarios para las tarjetas
+de inicio: nombre, slug para navegación y primera imagen (o `null`). No devuelve
+IDs internos, estados ni documentos completos de categoría, servicio o variante.
+
+Ejemplo de petición:
+
+```http
+GET /api/home/categories
+```
+
+Respuesta ilustrativa:
+
+```json
+[
+  {
+   "name": "Fontanería",
+   "slug": "fontaneria",
+   "image": {
+    "url": "https://example.invalid/fontaneria.jpg",
+    "alt": "Reparación de un grifo"
+   }
+  },
+  {
+   "name": "Jardinería",
+   "slug": "jardineria",
+   "image": null
+  }
+]
+```
+
+La respuesta real es un array; una categoría sin imágenes mantiene su lugar y
+recibe `image: null`. Las categorías se ordenan por nombre y slug.
+
+### Consulta y disponibilidad
+
+La ruta `home.routes.js` no monta autenticación. `home.controller.js` delega en
+`home.service.js`, que llama a `home.repository.js`; allí se ejecuta una sola
+agregación desde la colección Service. Sus etapas implementan estas reglas:
+
+1. `$match` descarta servicios inactivos, no publicados o eliminados. Category
+  no tiene estado de publicación.
+2. `$lookup` busca para cada servicio una variante activa, publicada y no
+  eliminada. La correlación por `service` usa el prefijo del índice existente
+  `{service, active, status, deletedAt}` de Variant. `$limit: 1` evita cargar
+  variantes completas: solo hace falta saber que existe al menos una.
+3. `$match` elimina servicios sin variantes elegibles.
+4. `$group` reúne los servicios restantes por ID de categoría. Si tres servicios
+  de la misma categoría son elegibles, el grupo conserva una sola categoría.
+5. `$lookup` recupera Category por su `_id`; `$unwind` elimina relaciones
+  inexistentes y otro `$match` exige categoría activa y no eliminada. Esta
+  comprobación ocurre después de la disponibilidad propia de Service/Variant,
+  no cambia los estados en cascada.
+6. `$lookup` encuentra imágenes `entityType: "category"` de esa categoría,
+  ordena por `createdAt` ascendente y `_id` como desempate estable, y limita la
+  relación a una imagen. Ese es el criterio de “primera imagen”; coincide con
+  el orden temporal de la galería.
+7. `$project` convierte la primera coincidencia en `image` y expone solamente
+  `name`, `slug` e imagen. Si el array de imágenes está vacío, `$ifNull`
+  produce `null`. `$sort` final ordena las tarjetas por nombre y slug.
+
+El pipeline no usa `$unwind` sobre servicios ni variantes: junto con `$group`,
+esto evita duplicar una categoría por tener múltiples ofertas. Las relaciones
+se consultan dentro de la agregación, no mediante una consulta por cada tarjeta,
+por lo que no se genera el patrón N+1.
+
+El índice de Variant cubre la búsqueda correlacionada por servicio, filtros de
+estado y soft delete. Images ya dispone de `{entityType, entityId, createdAt}`.
+No se añadió ningún índice en Service: el pipeline recorre esa colección una
+vez y el tamaño real de producción no está disponible. Antes de añadir un índice
+para ese filtro se debería medir `explain("executionStats")` con datos
+representativos y valorar su coste de escritura, almacenamiento y despliegue.
+
+### Pruebas y documentación
+
+`home-public.test.js` comprueba el acceso sin token, las condiciones del pipeline,
+el agrupamiento y el orden de imagen. `home.integration.test.js` prepara casos
+reales para categorías y ofertas no disponibles, varias ofertas por categoría
+y orden de imágenes. Esta integración solo se ejecuta con
+`MONGODB_TEST_URI` local y nombre `fixly_test_*`; elimina esa base al terminar.
+Swagger describe el endpoint y los campos de su respuesta.
 
 ## Modelo y contratos
 
@@ -166,4 +251,4 @@ confirmar que la URI apunta a una base de pruebas aislada.
 - No se crean variantes para servicios que no las tengan.
 - No se elimina físicamente ningún campo de MongoDB.
 - No se modifican campos ni snapshots de Variant, Cart u Order.
-- No se implementan aún búsquedas, precios calculados ni endpoints del catálogo.
+- No se implementan aún Shop List, Shop Detail, búsquedas ni precios calculados.

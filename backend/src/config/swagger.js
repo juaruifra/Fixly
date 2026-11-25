@@ -429,6 +429,24 @@ const options = {
             message: { type: "string" },
           },
         },
+        HomeCategory: {
+          type: "object",
+          required: ["name", "slug", "image"],
+          properties: {
+            name: { type: "string", example: "Fontanería" },
+            slug: { type: "string", example: "fontaneria" },
+            image: {
+              type: "object",
+              nullable: true,
+              description: "Primera imagen de la categoría o null si no tiene.",
+              required: ["url", "alt"],
+              properties: {
+                url: { type: "string", format: "uri", maxLength: 2048 },
+                alt: { type: "string", maxLength: 250 },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -439,6 +457,7 @@ export const swaggerSpec = swaggerJSDoc(options);
 
 // Los endpoints públicos se mantienen abiertos; el resto de rutas del catálogo requieren ADMIN.
 const publicCatalogPaths = new Set([
+  "/api/home/categories",
   "/api/categories/available",
   "/api/categories/slug/{slug}",
   "/api/services/public",
@@ -448,7 +467,7 @@ const publicCatalogPaths = new Set([
 ]);
 
 for (const [path, pathItem] of Object.entries(swaggerSpec.paths || {})) {
-  if (!/^\/api\/(categories|services|variants|images)(\/|$)/.test(path)) continue;
+  if (!/^\/api\/(home|categories|services|variants|images)(\/|$)/.test(path)) continue;
   if (publicCatalogPaths.has(path)) continue;
 
   for (const method of ["get", "post", "patch", "delete"]) {
