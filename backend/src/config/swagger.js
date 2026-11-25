@@ -129,8 +129,6 @@ const options = {
             _id: { type: "string" },
             name: { type: "string", example: "Montaje de muebles" },
             category: { $ref: "#/components/schemas/Category" },
-            price: { type: "number", example: 35 },
-            duration: { type: "integer", example: 60 },
             description: {
               type: "string",
               example: "Montaje de muebles y estanterías a domicilio.",
@@ -156,7 +154,7 @@ const options = {
           type: "object",
           description:
             "Campos editables del servicio, incluido status. category recibe el ObjectId de una categoría. El slug se genera desde name y deletedAt lo gestiona la API. Para actualizar únicamente status puede usarse PATCH /api/services/{id}/status.",
-          required: ["name", "category", "price", "duration"],
+          required: ["name", "category"],
           properties: {
             name: { type: "string", example: "Instalación de lámparas" },
             category: {
@@ -164,8 +162,6 @@ const options = {
               format: "objectid",
               example: "65a1b2c3d4e5f67890123456",
             },
-            price: { type: "number", minimum: 0, example: 30 },
-            duration: { type: "integer", minimum: 15, example: 45 },
             description: {
               type: "string",
               example: "Instalación o sustitución de lámparas de techo.",

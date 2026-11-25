@@ -74,8 +74,6 @@ test(
       const service = await Service.create({
         name: `Servicio ${suffix}`,
         category: category._id,
-        price: 99,
-        duration: 60,
         slug: `servicio_${suffix}`,
       });
       const variant = await Variant.create({

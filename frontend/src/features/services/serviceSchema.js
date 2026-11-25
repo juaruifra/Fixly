@@ -7,6 +7,10 @@ export const SERVICE_STATUS_OPTIONS = [
   { value: "discontinued", label: "Retirado" },
 ];
 
+/**
+ * Valida solo propiedades propias de Service.
+ * El precio y la duración se editan en cada Variant, no en esta entidad.
+ */
 export const serviceSchema = z
   .object({
     name: z
@@ -18,14 +22,6 @@ export const serviceSchema = z
     category: z
       .string()
       .regex(/^[a-f\d]{24}$/i, "Selecciona una categoría válida."),
-    price: z
-      .number({ invalid_type_error: "Indica un precio válido." })
-      .finite("Indica un precio válido.")
-      .min(0, "El precio debe ser mayor o igual que 0."),
-    duration: z
-      .number({ invalid_type_error: "Indica una duración válida." })
-      .int("La duración debe ser un número entero.")
-      .min(15, "La duración mínima es 15 minutos."),
     description: z
       .string()
       .max(500, "La descripción admite un máximo de 500 caracteres."),

@@ -59,8 +59,6 @@ const sampleServices = [
   {
     name: "Montaje de muebles",
     categorySlug: "montaje",
-    price: 35,
-    duration: 60,
     description:
       "Montaje de muebles, estanterías y pequeños elementos del hogar.",
     active: true,
@@ -71,8 +69,6 @@ const sampleServices = [
   {
     name: "Instalación de lámparas",
     categorySlug: "electricidad",
-    price: 30,
-    duration: 45,
     description: "Instalación o sustitución de lámparas y plafones de techo.",
     active: true,
     deletedAt: null,
@@ -82,8 +78,6 @@ const sampleServices = [
   {
     name: "Reparación de grifos",
     categorySlug: "fontaneria",
-    price: 40,
-    duration: 60,
     description:
       "Reparación de fugas sencillas y sustitución de grifos domésticos.",
     active: true,
@@ -94,8 +88,6 @@ const sampleServices = [
   {
     name: "Colgar TV en pared",
     categorySlug: "instalacion",
-    price: 55,
-    duration: 75,
     description: "Instalación de soporte y montaje de televisor en pared.",
     active: true,
     deletedAt: null,
@@ -105,8 +97,6 @@ const sampleServices = [
   {
     name: "Pequeños trabajos de pintura",
     categorySlug: "pintura",
-    price: 65,
-    duration: 120,
     description:
       "Retoques de pintura y reparación de pequeñas zonas interiores.",
     active: true,

@@ -67,8 +67,6 @@ test(
       const service = await Service.create({
         name: `Limpieza de vivienda ${suffix}`,
         category: category._id,
-        price: 80,
-        duration: 120,
         slug: `limpieza_de_vivienda_${suffix}`,
       });
       server = app.listen(0, "127.0.0.1");

@@ -2,6 +2,9 @@
 
 Frontend React + Vite para gestionar el catálogo de servicios de Fixly.
 
+El contrato de Service y la explicación de los cambios de la fase 1 están en
+[la documentación del catálogo](../docs/catalogo-publico.md).
+
 ## Arranque
 1. Arranca primero `fixly-api` en el puerto 3000.
 2. `npm install`

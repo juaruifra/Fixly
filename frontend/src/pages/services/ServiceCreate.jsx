@@ -34,8 +34,6 @@ export default function ServiceCreate() {
       const hasServiceChanges =
         data.name !== service.name ||
         data.category !== String(service.category?._id ?? service.category ?? "") ||
-        data.price !== service.price ||
-        data.duration !== service.duration ||
         data.description !== (service.description ?? "") ||
         data.active !== service.active ||
         data.status !== service.status;

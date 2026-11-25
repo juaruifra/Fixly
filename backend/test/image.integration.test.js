@@ -88,8 +88,6 @@ test(
       const service = await Service.create({
         name: `Servicio ${suffix}`,
         category: category._id,
-        price: 25,
-        duration: 30,
         slug: `servicio_${suffix}`,
       });
       const variant = await Variant.create({

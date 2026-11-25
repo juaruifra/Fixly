@@ -14,18 +14,36 @@ function validateId(id) {
   }
 }
 
+/**
+ * Valida y reduce el body a los campos que pertenecen al modelo Service.
+ *
+ * `price` y `duration` se rechazan deliberadamente: describen una modalidad
+ * de contratación y deben enviarse al CRUD de Variant. La función vuelve a
+ * validar fuera de la ruta para proteger llamadas internas al servicio.
+ *
+ * @param {Object} data - Datos recibidos para crear o actualizar un servicio.
+ * @param {Object} [options] - Opciones de validación.
+ * @param {boolean} [options.creating=false] - Exige nombre y categoría al crear.
+ * @returns {Object} Campos editables de Service, normalizados y validados.
+ * @throws {AppError} Si la entrada es inválida o contiene campos retirados.
+ */
 function sanitizeInput(data, { creating = false } = {}) {
   // El servicio también valida su entrada por si se llama sin pasar por HTTP.
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     throw new AppError("Service data must be an object", 400);
   }
 
+  // Precio y duración describen una modalidad de contratación, no el servicio.
+  for (const field of ["price", "duration"]) {
+    if (Object.hasOwn(data, field)) {
+      throw new AppError(`${field} is no longer a service field`, 400);
+    }
+  }
+
   // Solo guardamos campos editables; el slug se genera dentro del servicio.
   const allowed = [
     "name",
     "category",
-    "price",
-    "duration",
     "description",
     "active",
     "status",
@@ -35,8 +53,8 @@ function sanitizeInput(data, { creating = false } = {}) {
   );
 
   if (creating) {
-    // Un servicio nuevo necesita estos cuatro datos para quedar completo.
-    for (const field of ["name", "category", "price", "duration"]) {
+    // Los precios y duraciones se definirán en variantes independientes.
+    for (const field of ["name", "category"]) {
       if (!Object.hasOwn(serviceData, field)) {
         throw new AppError(`${field} is required`, 400);
       }
@@ -52,30 +70,6 @@ function sanitizeInput(data, { creating = false } = {}) {
     if (!serviceData.name) throw new AppError("name cannot be empty", 400);
     if (serviceData.name.length > 120) {
       throw new AppError("name must be at most 120 characters", 400);
-    }
-  }
-
-  // El precio debe ser un número real y no puede ser negativo.
-  if (Object.hasOwn(serviceData, "price")) {
-    if (
-      typeof serviceData.price !== "number" ||
-      !Number.isFinite(serviceData.price) ||
-      serviceData.price < 0
-    ) {
-      throw new AppError(
-        "price must be a number greater than or equal to 0",
-        400,
-      );
-    }
-  }
-
-  // La duración se expresa en minutos enteros y no puede ser menor de 15.
-  if (Object.hasOwn(serviceData, "duration")) {
-    if (!Number.isInteger(serviceData.duration) || serviceData.duration < 15) {
-      throw new AppError(
-        "duration must be an integer greater than or equal to 15",
-        400,
-      );
     }
   }
 

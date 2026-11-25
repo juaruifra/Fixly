@@ -171,20 +171,6 @@ export default function ServiceList() {
         ),
       },
       {
-        accessorKey: "price",
-        header: "Precio",
-        cell: ({ getValue }) =>
-          Number(getValue()).toLocaleString("es-ES", {
-            style: "currency",
-            currency: "EUR",
-          }),
-      },
-      {
-        accessorKey: "duration",
-        header: "Duración",
-        cell: ({ getValue }) => `${getValue()} min`,
-      },
-      {
         id: "status",
         // La búsqueda usa el nombre visible del estado, no su código interno.
         accessorFn: (service) =>

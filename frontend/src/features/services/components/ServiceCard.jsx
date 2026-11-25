@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import {
-	ClockIcon,
 	EllipsisIcon,
 	PencilIcon,
 	Trash2Icon,
@@ -12,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
@@ -24,11 +22,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function ServiceCard({ service, onDelete }) {
-	const formattedPrice = Number(service.price).toLocaleString("es-ES", {
-		style: "currency",
-		currency: "EUR",
-	});
-
 	return (
 		<Card className="gap-0 overflow-hidden py-0">
 			<CardHeader className="flex flex-row items-start gap-4 p-5">
@@ -42,10 +35,6 @@ export default function ServiceCard({ service, onDelete }) {
 						<Badge variant="secondary">
 							{service.category?.name ?? service.category ?? "Categoría"}
 						</Badge>
-						<span className="flex items-center gap-1 text-xs text-muted-foreground">
-							<ClockIcon className="size-3.5" />
-							{service.duration} min
-						</span>
 					</div>
 					<CardTitle className="text-lg">{service.name}</CardTitle>
 				</div>
@@ -87,9 +76,6 @@ export default function ServiceCard({ service, onDelete }) {
 				</p>
 			</CardContent>
 
-			<CardFooter className="flex border-t px-5 py-4">
-				<strong className="text-lg">{formattedPrice}</strong>
-			</CardFooter>
 		</Card>
 	);
 }

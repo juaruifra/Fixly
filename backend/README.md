@@ -2,6 +2,9 @@
 
 API REST de Fixly para gestionar servicios, usuarios y reservas.
 
+La separación entre servicios y variantes y el tratamiento de los campos
+históricos se explica en [la documentación del catálogo](../docs/catalogo-publico.md).
+
 ## Arranque
 1. Tener MongoDB en ejecución.
 2. `npm install`

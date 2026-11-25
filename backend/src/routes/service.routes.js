@@ -20,6 +20,13 @@ const slugValidation = [
   param("slug").isString().trim().notEmpty().withMessage("slug is required"),
   validateRequest,
 ];
+// Rechaza los campos aunque su valor sea null; no deben volver al contrato.
+const removedCommercialFieldsValidation = ["price", "duration"].map(
+  (field) =>
+    body(field)
+      .custom((_value, { req }) => !Object.hasOwn(req.body ?? {}, field))
+      .withMessage(`${field} is no longer a service field`),
+);
 const listValidation = [
   query("active")
     .optional()
@@ -54,20 +61,7 @@ const createValidation = [
     .bail()
     .isMongoId()
     .withMessage("category must be a valid category id"),
-  body("price")
-    .exists({ values: "null" })
-    .withMessage("price is required")
-    .bail()
-    .isFloat({ min: 0 })
-    .withMessage("price must be a number greater than or equal to 0")
-    .toFloat(),
-  body("duration")
-    .exists({ values: "null" })
-    .withMessage("duration is required")
-    .bail()
-    .isInt({ min: 15 })
-    .withMessage("duration must be an integer greater than or equal to 15")
-    .toInt(),
+  ...removedCommercialFieldsValidation,
   body("description")
     .optional()
     .isString()
@@ -100,16 +94,7 @@ const updateValidation = [
     .optional()
     .isMongoId()
     .withMessage("category must be a valid category id"),
-  body("price")
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage("price must be a number greater than or equal to 0")
-    .toFloat(),
-  body("duration")
-    .optional()
-    .isInt({ min: 15 })
-    .withMessage("duration must be an integer greater than or equal to 15")
-    .toInt(),
+  ...removedCommercialFieldsValidation,
   body("description")
     .optional()
     .isString()

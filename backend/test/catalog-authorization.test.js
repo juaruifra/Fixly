@@ -96,7 +96,7 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
     const adminJsonHeaders = { ...adminHeaders, "Content-Type": "application/json" };
     const createPayloads = [
       ["/categories", { name: "Categoría" }],
-      ["/services", { name: "Servicio", category: id, price: 10, duration: 30 }],
+      ["/services", { name: "Servicio", category: id }],
       ["/variants", { name: "Variante", service: id, price: 10, duration: 30 }],
     ];
     for (const [path, body] of createPayloads) {
@@ -114,6 +114,27 @@ test("El catálogo público sigue abierto y la administración exige ADMIN", asy
         method: "DELETE",
         headers: adminHeaders,
       })).status, 204, path);
+    }
+
+    for (const field of ["price", "duration"]) {
+      const fieldValue = field === "price" ? 10 : 30;
+      const createResponse = await fetch(`${baseUrl}/services`, {
+        method: "POST",
+        headers: adminJsonHeaders,
+        body: JSON.stringify({
+          name: "Servicio inválido",
+          category: id,
+          [field]: fieldValue,
+        }),
+      });
+      assert.equal(createResponse.status, 400, `POST /services rejects ${field}`);
+
+      const updateResponse = await fetch(`${baseUrl}/services/${id}`, {
+        method: "PATCH",
+        headers: adminJsonHeaders,
+        body: JSON.stringify({ [field]: fieldValue }),
+      });
+      assert.equal(updateResponse.status, 400, `PATCH /services rejects ${field}`);
     }
 
     const protectedOperations = [

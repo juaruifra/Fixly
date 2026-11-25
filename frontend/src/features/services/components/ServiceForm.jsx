@@ -22,8 +22,6 @@ import {
 const EMPTY_VALUES = {
   name: "",
   category: "",
-  price: "",
-  duration: "",
   description: "",
   active: true,
   status: "published",
@@ -34,8 +32,6 @@ function getFormValues(values) {
     ...EMPTY_VALUES,
     name: values.name ?? EMPTY_VALUES.name,
     category: getCategoryId(values.category),
-    price: values.price ?? EMPTY_VALUES.price,
-    duration: values.duration ?? EMPTY_VALUES.duration,
     description: values.description ?? EMPTY_VALUES.description,
     active: values.active ?? EMPTY_VALUES.active,
     status: values.status ?? EMPTY_VALUES.status,
@@ -69,6 +65,22 @@ function FieldError({ id, message }) {
   );
 }
 
+/**
+ * Formulario administrativo de los datos descriptivos y de estado de Service.
+ * Las galerías se coordinan mediante `useEntityImages`; los campos comerciales
+ * se excluyen porque precio y duración se administran en cada Variant.
+ *
+ * @param {Object} props - Valores iniciales, estado de guardado y callbacks.
+ * @param {Object} [props.initialValues] - Servicio existente o valores vacíos.
+ * @param {(data: Object, imageManager: Object) => Promise<void>} props.onSubmit
+ *   Guarda el servicio y coordina la sincronización de sus imágenes.
+ * @param {string} [props.submitLabel] - Texto del botón principal.
+ * @param {boolean} [props.submitting] - Indica una operación en curso.
+ * @param {string} [props.entityId] - ID de un servicio que ya existe.
+ * @param {string} [props.savedEntityId] - ID creado antes de guardar imágenes.
+ * @param {boolean} [props.submissionBlocked] - Impide reintentos inciertos.
+ * @returns {JSX.Element} Formulario de alta o edición de Service.
+ */
 export default function ServiceForm({
   initialValues = EMPTY_VALUES,
   onSubmit,
@@ -223,39 +235,6 @@ export default function ServiceForm({
               {categoriesError}
             </small>
           )}
-        </label>
-
-        <label htmlFor="service-price">
-          <span>Precio (€) *</span>
-          <input
-            id="service-price"
-            type="number"
-            min="0"
-            step="0.01"
-            aria-invalid={Boolean(errors.price)}
-            aria-describedby={errors.price ? "service-price-error" : undefined}
-            {...register("price", { valueAsNumber: true })}
-          />
-          <FieldError id="service-price-error" message={errors.price?.message} />
-        </label>
-
-        <label htmlFor="service-duration">
-          <span>Duración (minutos) *</span>
-          <input
-            id="service-duration"
-            type="number"
-            min="15"
-            step="15"
-            aria-invalid={Boolean(errors.duration)}
-            aria-describedby={
-              errors.duration ? "service-duration-error" : undefined
-            }
-            {...register("duration", { valueAsNumber: true })}
-          />
-          <FieldError
-            id="service-duration-error"
-            message={errors.duration?.message}
-          />
         </label>
 
         <label htmlFor="service-status">

@@ -29,8 +29,6 @@ export default function ServiceEdit() {
     const hasServiceChanges =
       data.name !== service.name ||
       data.category !== currentCategoryId ||
-      data.price !== service.price ||
-      data.duration !== service.duration ||
       data.description !== (service.description ?? "") ||
       data.active !== service.active ||
       data.status !== service.status;
