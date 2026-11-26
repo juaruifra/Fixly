@@ -4,8 +4,7 @@ import { Link } from "react-router-dom";
 
 import CatalogImage from "@/components/common/CatalogImage";
 import ShopGallery from "@/features/shop-detail/ShopGallery";
-
-const currency = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
+import { formatCurrency } from "@/utils/formatCurrency";
 
 export default function ShopDetailContent({ detail, variants, search }) {
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -21,7 +20,7 @@ export default function ShopDetailContent({ detail, variants, search }) {
           <p className="detail-category">{detail.category.name}</p>
           <h1 id="detail-title">{detail.name}</h1>
           {detail.description && <p className="detail-description">{detail.description}</p>}
-          <p className="detail-price"><span>{selected ? "Precio" : "Desde"}</span> {currency.format(selected ? selected.price : detail.priceFrom)}</p>
+          <p className="detail-price"><span>{selected ? "Precio" : "Desde"}</span> {formatCurrency(selected ? selected.price : detail.priceFrom)}</p>
           <fieldset className="detail-variants">
             <legend>Elige una modalidad</legend>
             {variants.length === 0 && <p>No hay modalidades disponibles en este momento.</p>}
@@ -34,7 +33,7 @@ export default function ShopDetailContent({ detail, variants, search }) {
                   {variant.description && <span>{variant.description}</span>}
                   <span className="detail-variant-duration"><Clock3Icon aria-hidden="true" /> {variant.duration} min</span>
                 </span>
-                <strong className="detail-variant-price">{currency.format(variant.price)}</strong>
+                <strong className="detail-variant-price">{formatCurrency(variant.price)}</strong>
               </label>
             ))}
           </fieldset>

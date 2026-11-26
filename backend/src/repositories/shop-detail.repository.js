@@ -15,31 +15,46 @@ import {
  * La elegibilidad propia de Category se comprueba por separado y no depende de
  * cambios de estado en cascada.
  *
- * @param {string} slug - Slug exacto del Service solicitado.
- * @returns {Array<Object>} Filtros y lookup de la categoría elegible.
+ * El slug y la disponibilidad propia de Service se comprueban antes de unir
+ * Category. Ambas operaciones completan luego estas etapas con su propio lookup
+ * de variantes, según necesiten solo precios o los datos de cada modalidad.
+ *
+ * @param {string} slug - Slug exacto del Service solicitado, validado en la ruta.
+ * @returns {Array<Object>} Etapas para Service con `category` como objeto público.
  */
 function buildAvailableServiceBySlugStages(slug) {
+  // La fábrica crea un objeto nuevo; JavaScript añade el slug sin alterar un
+  // filtro compartido entre peticiones.
   const serviceFilter = serviceAvailabilityFilter();
   serviceFilter.slug = slug;
 
   return [
+    // Service.aggregate parte de servicios. $match exige slug, active,
+    // published y ausencia de borrado antes de buscar la categoría.
     { $match: serviceFilter },
     {
       $lookup: {
+        // `let` toma $category del Service exterior y lo expone como
+        // $$categoryId dentro del pipeline que recorre documentos Category.
         from: Category.collection.name,
         let: { categoryId: "$category" },
         pipeline: [
           {
             $match: {
+              // `...` añade la disponibilidad propia de Category. $expr/$eq
+              // comparan su $_id con la variable $$categoryId del servicio.
               ...categoryAvailabilityFilter(),
               $expr: { $eq: ["$_id", "$$categoryId"] },
             },
           },
+          // $project conserva solo los campos que consume el detalle público.
           { $project: { _id: 0, name: 1, slug: 1 } },
         ],
         as: "category",
       },
     },
+    // $lookup produce un array. $unwind lo convierte en objeto y descarta el
+    // servicio si no hay categoría disponible; no cambia estados en cascada.
     { $unwind: "$category" },
   ];
 }
@@ -55,6 +70,8 @@ function buildAvailableServiceBySlugStages(slug) {
 function buildServiceImagesLookup() {
   return {
     $lookup: {
+      // $$serviceId guarda el _id del servicio exterior. Dentro del pipeline
+      // $entityId pertenece a Image; $expr/$eq relacionan ambos valores.
       from: Image.collection.name,
       let: { serviceId: "$_id" },
       pipeline: [
@@ -64,6 +81,8 @@ function buildServiceImagesLookup() {
             $expr: { $eq: ["$entityId", "$$serviceId"] },
           },
         },
+        // $sort ordena toda la galería y usa _id como desempate; $project
+        // conserva URL y alt, sin reducir el array a una sola imagen.
         { $sort: { createdAt: 1, _id: 1 } },
         { $project: { _id: 0, url: 1, alt: 1 } },
       ],
@@ -80,13 +99,16 @@ function buildServiceImagesLookup() {
  * el lookup de Image y conserva únicamente sus campos públicos.
  *
  * @param {Object} options - Controla si cada variante incluye imagen.
- * @param {boolean} options.includeImages - Añade el lookup de imagen para variantes.
- * @returns {Object} Etapa `$lookup` correlacionada por ID de Service.
+ * @param {boolean} options.includeImages - Si true añade la primera imagen;
+ *   si false solo proyecta precios. No hay valor predeterminado en esta función.
+ * @returns {Object} Etapa `$lookup` que crea `availableVariants` en Service.
  */
 function buildAvailableVariantsLookup({ includeImages }) {
   const pipeline = [
     {
       $match: {
+        // Cada documento interior es Variant. `...` aplica su disponibilidad y
+        // $expr/$eq la relacionan con $$serviceId del Service exterior.
         ...variantAvailabilityFilter(),
         $expr: { $eq: ["$service", "$$serviceId"] },
       },
@@ -94,6 +116,8 @@ function buildAvailableVariantsLookup({ includeImages }) {
   ];
 
   if (includeImages) {
+    // JavaScript añade este lookup únicamente para el endpoint de variantes.
+    // Su `let` toma el _id de la Variant actual, no el del Service exterior.
     pipeline.push({
       $lookup: {
         from: Image.collection.name,
@@ -105,7 +129,8 @@ function buildAvailableVariantsLookup({ includeImages }) {
               $expr: { $eq: ["$entityId", "$$variantId"] },
             },
           },
-          // La primera imagen se ordena igual que en el resto del catálogo.
+          // $sort y $limit escogen la primera imagen estable; $project limita
+          // su contenido. El array vacío no descarta la variante.
           { $sort: { createdAt: 1, _id: 1 } },
           { $limit: 1 },
           { $project: { _id: 0, url: 1, alt: 1 } },
@@ -121,10 +146,13 @@ function buildAvailableVariantsLookup({ includeImages }) {
         duration: 1,
         price: 1,
         createdAt: 1,
+        // $arrayElemAt toma la imagen del array y $ifNull conserva null cuando
+        // falta; también normaliza la descripción opcional a null.
         image: { $ifNull: [{ $arrayElemAt: ["$firstImage", 0] }, null] },
       },
     });
   } else {
+    // El detalle necesita únicamente los precios para calcular su mínimo.
     pipeline.push({ $project: { _id: 0, price: 1 } });
   }
 
@@ -133,6 +161,7 @@ function buildAvailableVariantsLookup({ includeImages }) {
       from: Variant.collection.name,
       let: { serviceId: "$_id" },
       pipeline,
+      // Mongo añade un array por servicio; no genera una fila por variante.
       as: "availableVariants",
     },
   };
@@ -148,16 +177,24 @@ function buildAvailableVariantsLookup({ includeImages }) {
  * y estados internos.
  *
  * @param {string} slug - Slug exacto del servicio.
- * @returns {Promise<Object|null>} Detalle público o null si no hay oferta visible.
+ * @returns {Promise<Object|null>} `{name, slug, description, category, images,
+ *   priceFrom}` o null si no existe una oferta visible. El service convierte
+ *   ese null en HTTP 404; el repositorio no genera respuestas HTTP.
  */
 async function findServiceDetailBySlug(slug) {
   const pipeline = buildAvailableServiceBySlugStages(slug);
   pipeline.push(buildAvailableVariantsLookup({ includeImages: false }));
+  // $exists sobre la posición 0 requiere al menos una variante elegible; sin
+  // ella el servicio no es comercialmente visible en ninguna de las dos rutas.
   pipeline.push({ $match: { "availableVariants.0": { $exists: true } } });
   pipeline.push(buildServiceImagesLookup());
+  // $addFields mantiene el servicio y $min calcula el precio inicial usando
+  // todas sus variantes disponibles, sin los filtros de precio de Shop List.
   pipeline.push({
     $addFields: { priceFrom: { $min: "$availableVariants.price" } },
   });
+  // $project define el contrato público; $ifNull transforma una descripción
+  // ausente en null y mantiene `images` como array, incluso si está vacío.
   pipeline.push({
     $project: {
       _id: 0,
@@ -182,20 +219,27 @@ async function findServiceDetailBySlug(slug) {
  * lista resultante se ordena por fecha descendente y no expone SKU ni IDs.
  *
  * @param {string} slug - Slug exacto del servicio padre.
- * @returns {Promise<Array<Object>>} Variantes públicas disponibles.
+ * @returns {Promise<Array<Object>>} `{name, description, duration, price,
+ *   image}` por variante; array vacío si no hay servicio o variantes elegibles.
+ *   El service traduce el array vacío a HTTP 404.
  */
 async function findAvailableVariantsByServiceSlug(slug) {
   const pipeline = buildAvailableServiceBySlugStages(slug);
   pipeline.push(buildAvailableVariantsLookup({ includeImages: true }));
   pipeline.push({ $match: { "availableVariants.0": { $exists: true } } });
+  // $unwind convierte el array en una fila por Variant para ordenarlas; a
+  // diferencia del listado de servicios, aquí cada fila será una modalidad.
   pipeline.push({ $unwind: "$availableVariants" });
+  // $sort ordena por creación descendente y desempata por _id descendente.
   pipeline.push({
     $sort: {
       "availableVariants.createdAt": -1,
       "availableVariants._id": -1,
     },
   });
+  // $replaceRoot sustituye el Service exterior por la Variant de cada fila.
   pipeline.push({ $replaceRoot: { newRoot: "$availableVariants" } });
+  // $project elimina identificadores y datos internos antes de devolverla.
   pipeline.push({
     $project: {
       _id: 0,

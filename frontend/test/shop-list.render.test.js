@@ -12,7 +12,7 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
 
   try {
     const { default: ShopFilters } = await server.ssrLoadModule("/src/features/shop/ShopFilters.jsx");
-    const { default: ShopResults } = await server.ssrLoadModule("/src/features/shop/ShopResults.jsx");
+    const { default: ShopResults, ShopPagination } = await server.ssrLoadModule("/src/features/shop/ShopResults.jsx");
     const { getShopFilters, getShopServices } = await server.ssrLoadModule("/src/services/shopService.js");
     const { apiService } = await server.ssrLoadModule("/src/services/apiService.js");
     const filters = { categories: ["limpieza"], search: "hogar", minPrice: 0, maxPrice: 50, sort: "price-asc", limit: 12, offset: 0 };
@@ -38,8 +38,32 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
       assert.match(render(ShopResults, { ...props, list: { status: "error", error: "Sin conexión" } }), /Sin conexión/);
       assert.match(render(ShopResults, { ...props, list: { status: "ready", data: { items: [], total: 0 } } }), /No hay servicios para estos filtros/);
       const outOfRange = render(ShopResults, { ...props, filters: { ...filters, offset: 24 }, list: { status: "ready", data: { items: [], total: 2 } } });
-      assert.match(outOfRange, /Fuera de los 2 resultados/);
-      assert.match(outOfRange, /Página anterior/);
+      assert.match(outOfRange, /No hay servicios en esta página/);
+      assert.match(outOfRange, /Volver a la página anterior/);
+    });
+
+    await context.test("página actual, números y navegación respetan offset", () => {
+      const updates = [];
+      const page = { total: 58, items: Array.from({ length: 12 }, () => ({})) };
+      const pagination = ShopPagination({ page, filters: { ...filters, offset: 24 }, update: (value) => updates.push(value) });
+      const controls = pagination.props.children[0].props.children;
+      const buttons = controls.flat(Infinity).filter((child) => child?.type === "button");
+      const current = buttons.find((button) => button.props["aria-current"] === "page");
+      assert.equal(current.props["aria-label"], "Página 3");
+      assert.match(render(ShopPagination, { page, filters: { ...filters, offset: 24 }, update() {} }), /aria-current="page"/);
+      current.props.onClick();
+      assert.deepEqual(updates, []);
+      buttons.find((button) => button.props["aria-label"] === "Página 5").props.onClick();
+      buttons.find((button) => button.props["aria-label"] === "Página anterior").props.onClick();
+      buttons.find((button) => button.props["aria-label"] === "Página siguiente").props.onClick();
+      assert.deepEqual(updates, [{ offset: 48 }, { offset: 12 }, { offset: 36 }]);
+
+      const first = ShopPagination({ page, filters: { ...filters, offset: 0 }, update() {} });
+      assert.equal(first.props.children[0].props.children[0].props.disabled, true);
+      const last = ShopPagination({ page, filters: { ...filters, offset: 48 }, update() {} });
+      assert.equal(last.props.children[0].props.children[2].props.disabled, true);
+      assert.equal(ShopPagination({ page: { total: 12, items: [{}] }, filters, update() {} }), null);
+      assert.equal(ShopPagination({ page: { total: 0, items: [] }, filters, update() {} }), null);
     });
 
     await context.test("renderiza datos del servicio y alternativas de imagen", () => {
@@ -53,6 +77,11 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
       assert.match(markup, /25,00/);
       assert.match(markup, /Sin imagen disponible/);
       assert.match(markup, /Página siguiente/);
+      const freeMarkup = render(ShopResults, {
+        filters, update() {}, retryList() {},
+        list: { status: "ready", data: { total: 1, items: [{ slug: "gratuito", name: "Servicio gratuito", description: null, category: { name: "Limpieza" }, image: null, priceFrom: 0 }] } },
+      });
+      assert.match(freeMarkup, /0,00/);
     });
 
     await context.test("ambas consultas respetan sus parámetros y cancelación", async () => {

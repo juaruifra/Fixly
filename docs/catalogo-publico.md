@@ -949,6 +949,14 @@ recupera estados anteriores. Una URL desconocida, repetida o inválida muestra
 un error con la opción explícita de limpiar; un offset fuera del total muestra
 una página vacía con opción de volver, sin cambiar la URL automáticamente.
 
+La paginación calcula `totalPages = ceil(total / limit)` y
+`currentPage = floor(offset / limit) + 1`; seleccionar una página envía
+`offset = (page - 1) * limit`, sin añadir `page` a la API. Muestra números
+acotados con puntos suspensivos y señala la página activa; con cero resultados o
+una sola página no muestra el control numerado. Para un offset fuera de rango
+se conserva una acción de regreso. La consulta de opciones adaptativas no
+depende del offset, así que paginar no debe repetirla.
+
 `shopQuery.js` valida y prepara parámetros de acuerdo con el contrato backend.
 `useShop.js` realiza dos peticiones independientes y cancela las anteriores al
 cambiar los parámetros. El listado recibe todos los filtros; las opciones
@@ -956,6 +964,8 @@ adaptativas solo reciben categorías y búsqueda. Cambiar precio u orden no vuel
 a solicitar las opciones. Los controles de precio permiten introducir valores o
 ajustar los deslizadores dentro del rango disponible y se aplican expresamente;
 un cambio de rango no modifica silenciosamente los precios ya seleccionados.
+Listado y detalle comparten `frontend/src/utils/formatCurrency.js`, que usa
+`Intl.NumberFormat` con `es-ES` y EUR sin cambiar el cálculo de `priceFrom`.
 
 Las pruebas `shop-query.test.js` y `shop-list.render.test.js` comprueban la
 interpretación de URL, los parámetros enviados, estados y renderizado. Para
@@ -1001,7 +1011,9 @@ comprobarse también en navegador. No se modifican autenticación ni backend.
   `src/services/variant.service.js`, `src/services/cart.service.js` y
   `src/models/order.model.js`.
 - Shop List: `src/routes/shop.routes.js`, `src/utils/shop-filters.util.js`,
-  `src/repositories/shop.repository.js` y `test/shop.integration.test.js`.
+  `src/repositories/shop.repository.js` y `test/shop.integration.test.js` del
+  backend; `frontend/src/features/shop/useShop.js`, `shopQuery.js` y
+  `shopPagination.js` explican el flujo de URL y la paginación de la interfaz.
 - Shop Detail: `src/routes/shop-detail.routes.js`,
   `src/controllers/shop-detail.controller.js`,
   `src/services/shop-detail.service.js`,

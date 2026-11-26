@@ -68,6 +68,11 @@ test("Shop Detail presenta galería, variantes y estados", async (context) => {
       assert.equal((markup.match(/type="radio"/g) || []).length, 2);
       assert.doesNotMatch(markup, /checked=""/);
       assert.doesNotMatch(markup, /Añadir al carrito/);
+      const freeMarkup = render(ShopDetailView, {
+        slug: "gratuito", search: "",
+        state: { status: "ready", detail: { name: "Gratis", category: { name: "Limpieza" }, description: null, priceFrom: 0, images: [] }, variants: [{ name: "Básica", description: null, duration: 30, price: 0, image: null }] },
+      });
+      assert.equal((freeMarkup.match(/0,00/g) || []).length, 2);
     });
 
     await context.test("presenta la galería vacía y los controles solo cuando hay varias imágenes", () => {

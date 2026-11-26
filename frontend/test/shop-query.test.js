@@ -32,7 +32,7 @@ test("las opciones adaptativas solo reciben categoría y búsqueda", () => {
 });
 
 test("cambiar filtros reinicia la página y paginar conserva los filtros", () => {
-  const current = new URLSearchParams("categories=limpieza&search=hogar&minPrice=0&offset=12");
+  const current = new URLSearchParams("categories=limpieza&search=hogar&minPrice=0&maxPrice=50&sort=price-desc&limit=12&offset=12");
   const changed = updateShopQuery(current, { categories: ["limpieza", "pintura"] });
   assert.equal(changed.get("offset"), null);
   assert.equal(changed.get("categories"), "limpieza,pintura");
@@ -40,5 +40,17 @@ test("cambiar filtros reinicia la página y paginar conserva los filtros", () =>
   const paged = updateShopQuery(changed, { offset: 24 });
   assert.equal(paged.get("offset"), "24");
   assert.equal(paged.get("search"), "hogar");
+  assert.equal(paged.get("maxPrice"), "50");
+  assert.equal(paged.get("sort"), "price-desc");
+  assert.equal(paged.get("limit"), "12");
+  assert.equal(paged.get("minPrice"), "0");
   assert.equal(current.get("offset"), "12");
+  assert.equal(
+    buildShopRequestParams(parseShopQuery(changed), true).toString(),
+    buildShopRequestParams(parseShopQuery(paged), true).toString(),
+  );
+  assert.notEqual(
+    buildShopRequestParams(parseShopQuery(changed)).toString(),
+    buildShopRequestParams(parseShopQuery(paged)).toString(),
+  );
 });
