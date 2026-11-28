@@ -2,7 +2,9 @@ import { ArrowDownIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import CatalogImage from "@/components/common/CatalogImage";
+import Carousel from "@/components/common/Carousel";
 import ErrorState from "@/components/common/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useHomeCategories } from "@/hooks/useHomeCategories";
 
 export function HomeContent({ categories, status, error, retry }) {
@@ -24,11 +26,28 @@ export function HomeContent({ categories, status, error, retry }) {
           </div>
           {status === "ready" && <span className="home-category-count">{categories.length} categorías</span>}
         </div>
-        {status === "loading" && <p className="home-status" role="status">Cargando categorías...</p>}
+        {status === "loading" && (
+          <div className="carousel home-carousel-skeleton" role="status" aria-label="Cargando categorías">
+            <div className="carousel-viewport">
+              <div className="carousel-track">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div className="home-category home-category-skeleton" key={index}>
+                    <Skeleton className="home-category-skeleton-image" />
+                    <div className="home-category-skeleton-label">
+                      <Skeleton className="home-category-skeleton-name" />
+                      <Skeleton className="home-category-skeleton-number" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <span className="sr-only">Cargando categorías...</span>
+          </div>
+        )}
         {status === "error" && <ErrorState title="No se pudieron cargar las categorías" message={error} onRetry={retry} />}
         {status === "ready" && categories.length === 0 && <p className="home-status">No hay categorías disponibles en este momento.</p>}
         {status === "ready" && categories.length > 0 && (
-          <div className="home-category-grid">
+          <Carousel label="Categorías de servicios" itemsPerView={{ desktop: 4, tablet: 3, mobile: 1.2 }}>
             {categories.map((category, index) => (
               <Link className="home-category" key={category.slug} to={`/shop?${new URLSearchParams({ categories: category.slug })}`}>
                 <div className="home-category-image"><CatalogImage image={category.image} /></div>
@@ -38,7 +57,7 @@ export function HomeContent({ categories, status, error, retry }) {
                 </div>
               </Link>
             ))}
-          </div>
+          </Carousel>
         )}
       </section>
     </>

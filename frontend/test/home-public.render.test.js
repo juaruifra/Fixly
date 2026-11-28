@@ -24,6 +24,10 @@ test("Home pública y navegación respetan estados y roles", async (context) => 
       const render = (props) => renderToStaticMarkup(createElement(MemoryRouter, null, createElement(HomeContent, props)));
       assert.match(render({ status: "loading", categories: [] }), /Cargando categorías/);
       assert.match(render({ status: "error", categories: [], error: "Sin conexión", retry() {} }), /Sin conexión/);
+      const loadingMarkup = render({ status: "loading", categories: [] });
+      assert.match(loadingMarkup, /Cargando categorías/);
+      assert.match(loadingMarkup, /home-category-skeleton/);
+      assert.doesNotMatch(loadingMarkup, /Desplazar elementos/);
       assert.match(render({ status: "ready", categories: [] }), /No hay categorías disponibles/);
       const markup = render({
         status: "ready",
@@ -36,6 +40,7 @@ test("Home pública y navegación respetan estados y roles", async (context) => 
       assert.match(markup, /Imagen de limpieza/);
       assert.match(markup, /Sin imagen disponible/);
       assert.match(markup, /href="\/shop\?categories=limpieza"/);
+      assert.match(markup, /role="region" aria-label="Categorías de servicios"/);
     });
 
     await context.test("expone solo las opciones correspondientes al rol", () => {
