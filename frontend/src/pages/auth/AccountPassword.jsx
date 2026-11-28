@@ -40,7 +40,7 @@ export default function AccountPassword() {
   }
 
   return (
-    <main className="account-page">
+    <div className="account-page">
       <header className="account-page-header">
         <h1>Contraseña</h1>
       </header>
@@ -103,6 +103,6 @@ export default function AccountPassword() {
           {isSubmitting ? "Guardando…" : "Cambiar contraseña"}
         </button>
       </form>
-    </main>
+    </div>
   );
 }

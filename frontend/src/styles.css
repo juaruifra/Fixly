@@ -139,6 +139,30 @@ body {
 .public-signout svg { width: 17px; height: 17px; }
 .public-signout { border: 0; padding: 0; background: none; cursor: pointer; }
 .public-signout:disabled { opacity: 0.6; cursor: wait; }
+.navbar-profile-trigger {
+  width: auto;
+  max-width: 220px;
+  min-height: 48px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  color: var(--foreground);
+}
+.navbar-profile-trigger:hover { border-color: var(--border); background: var(--muted); }
+.navbar-profile-menu { width: 280px; max-width: calc(100vw - 24px); }
+.navbar-profile-menu [data-slot="dropdown-menu-item"] { min-height: 38px; }
+.navbar-profile-menu .sidebar-profile-error { margin: 8px 6px 4px; }
+.navbar-profile-trigger .sidebar-profile-copy { max-width: 130px; }
+.navbar-profile-trigger .sidebar-profile-avatar,
+.navbar-profile-trigger .sidebar-profile-avatar-placeholder {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+}
 .public-main { flex: 1; }
 
 .home-intro {

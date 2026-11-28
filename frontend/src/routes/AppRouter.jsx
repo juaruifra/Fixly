@@ -1,11 +1,9 @@
-import { Suspense, lazy } from "react";
+import { lazy } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import MainLayout from "@/layouts/MainLayout";
 import PublicLayout from "@/layouts/PublicLayout";
-import { PageLoader } from "@/components/common/PageLoader";
 import { AppProvider } from "@/providers/AppProvider";
-import { ProfilesProvider } from "@/providers/ProfilesProvider";
 import RequireAuth from "@/routes/RequireAuth";
 
 // Las pantallas se cargan cuando se visitan para no enviar todo al inicio.
@@ -44,58 +42,45 @@ function AdminDataProvider() {
   );
 }
 
-// La barra lateral y las páginas privadas comparten los perfiles de esta sesión.
-function ProfilesDataProvider() {
-  return (
-    <ProfilesProvider>
-      <Outlet />
-    </ProfilesProvider>
-  );
-}
-
 export function AppRouter() {
   return (
-    <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/login" element={<Login />} />
         <Route element={<PublicLayout />}>
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<ShopList />} />
           <Route path="/shop/:slug" element={<ShopDetail />} />
-        </Route>
-        <Route element={<RequireAuth />}>
-          <Route element={<ProfilesDataProvider />}>
-          <Route element={<MainLayout />}>
+          <Route element={<RequireAuth />}>
             <Route path="/account" element={<Account />} />
             <Route path="/account/profiles" element={<AccountProfiles />} />
             <Route path="/account/password" element={<AccountPassword />} />
-            <Route element={<RequireAuth adminOnly />}>
-              <Route element={<AdminDataProvider />}>
-                <Route path="/services" element={<ServiceList />} />
-                <Route path="/services/new" element={<ServiceCreate />} />
-                <Route path="/services/:id/edit" element={<ServiceEdit />} />
-                <Route path="/categories" element={<CategoryList />} />
-                <Route path="/categories/new" element={<CategoryCreate />} />
-                <Route path="/categories/:id/edit" element={<CategoryEdit />} />
-                <Route path="/variants" element={<VariantList />} />
-                <Route path="/variants/new" element={<VariantCreate />} />
-                <Route path="/variants/:id/edit" element={<VariantEdit />} />
-                <Route path="/roles" element={<RoleList />} />
-                <Route path="/roles/new" element={<RoleCreate />} />
-                <Route path="/roles/:id/edit" element={<RoleEdit />} />
-                <Route path="/users" element={<UserList />} />
-                <Route path="/users/new" element={<UserCreate />} />
-                <Route path="/users/:id/edit" element={<UserEdit />} />
-                <Route path="/workers" element={<WorkerList />} />
-                <Route path="/workers/new" element={<WorkerCreate />} />
-                <Route path="/workers/:id/edit" element={<WorkerEdit />} />
-              </Route>
-            </Route>
-            <Route path="*" element={<Navigate to="/account" replace />} />
-          </Route>
           </Route>
         </Route>
+        <Route element={<RequireAuth adminOnly />}>
+          <Route element={<MainLayout />}>
+            <Route element={<AdminDataProvider />}>
+              <Route path="/services" element={<ServiceList />} />
+              <Route path="/services/new" element={<ServiceCreate />} />
+              <Route path="/services/:id/edit" element={<ServiceEdit />} />
+              <Route path="/categories" element={<CategoryList />} />
+              <Route path="/categories/new" element={<CategoryCreate />} />
+              <Route path="/categories/:id/edit" element={<CategoryEdit />} />
+              <Route path="/variants" element={<VariantList />} />
+              <Route path="/variants/new" element={<VariantCreate />} />
+              <Route path="/variants/:id/edit" element={<VariantEdit />} />
+              <Route path="/roles" element={<RoleList />} />
+              <Route path="/roles/new" element={<RoleCreate />} />
+              <Route path="/roles/:id/edit" element={<RoleEdit />} />
+              <Route path="/users" element={<UserList />} />
+              <Route path="/users/new" element={<UserCreate />} />
+              <Route path="/users/:id/edit" element={<UserEdit />} />
+              <Route path="/workers" element={<WorkerList />} />
+              <Route path="/workers/new" element={<WorkerCreate />} />
+              <Route path="/workers/:id/edit" element={<WorkerEdit />} />
+            </Route>
+          </Route>
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckIcon, ChevronDownIcon, CircleUserRoundIcon } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { CheckIcon, ChevronDownIcon, CircleUserRoundIcon, KeyRoundIcon, LogOutIcon, UsersIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +14,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/providers/AuthProvider";
 import { useProfiles } from "@/hooks/useProfiles";
+import { showApiErrorAlert } from "@/utils/errorHandler";
 
 // Permite cambiar la preferencia del usuario sin convertir el perfil en otra cuenta.
 export default function ProfileSelector() {
-  const { user } = useAuth();
+  const { user, signOut, isLoggingOut } = useAuth();
+  const navigate = useNavigate();
   const {
     profiles,
     defaultProfileId,
@@ -28,6 +30,16 @@ export default function ProfileSelector() {
   } = useProfiles();
   const [open, setOpen] = useState(false);
   const selectedProfile = profiles.find((profile) => profile.id === defaultProfileId);
+
+  async function handleSignOut() {
+    setOpen(false);
+    try {
+      await signOut();
+      navigate("/", { replace: true });
+    } catch (error) {
+      await showApiErrorAlert(error, "No se pudo cerrar la sesión en el servidor");
+    }
+  }
 
   async function selectProfile(profileId) {
     const saved = await selectDefaultProfile(profileId);
@@ -51,10 +63,9 @@ export default function ProfileSelector() {
       <DropdownMenuTrigger
         render={
           <Button
-            className="sidebar-profile-trigger"
+            className="navbar-profile-trigger"
             variant="ghost"
-            disabled={loading}
-            aria-label="Seleccionar perfil predeterminado"
+            aria-label="Abrir menú personal"
           />
         }
       >
@@ -67,13 +78,19 @@ export default function ProfileSelector() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="sidebar-profile-menu"
-        side="top"
-        align="start"
+        className="navbar-profile-menu"
+        side="bottom"
+        align="end"
         sideOffset={8}
       >
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Perfiles</DropdownMenuLabel>
+          <DropdownMenuItem render={<Link to="/account" />}>Mi cuenta</DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/account/profiles" />}><UsersIcon aria-hidden="true" /> Mis perfiles</DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/account/password" />}><KeyRoundIcon aria-hidden="true" /> Contraseña</DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Perfil predeterminado</DropdownMenuLabel>
           {loading ? (
             <DropdownMenuItem disabled>Cargando perfiles…</DropdownMenuItem>
           ) : profiles.length === 0 ? (
@@ -108,8 +125,9 @@ export default function ProfileSelector() {
         </DropdownMenuItem>
         {error && <p className="sidebar-profile-error" role="alert">{error}</p>}
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link to="/account/profiles" />}>
-          Gestionar perfiles
+        <DropdownMenuItem disabled={isLoggingOut} onClick={handleSignOut}>
+          <LogOutIcon aria-hidden="true" />
+          {isLoggingOut ? "Cerrando sesión…" : "Cerrar sesión"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

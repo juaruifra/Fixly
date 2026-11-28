@@ -2,9 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, Navigate, useLocation } from "react-router-dom";
-import { WrenchIcon } from "lucide-react";
-
-import ThemeSelector from "@/components/ThemeSelector";
 import { PageLoader } from "@/components/common/PageLoader";
 import { loginSchema } from "@/pages/auth/loginSchema";
 import { useAuth } from "@/providers/AuthProvider";
@@ -54,20 +51,8 @@ export default function Login() {
   }
 
   return (
-    <main className="login-page">
+    <div className="login-page">
       <section className="card login-content">
-        <div className="login-header">
-          <div className="login-brand">
-            <span className="login-brand-icon">
-              <WrenchIcon aria-hidden="true" />
-            </span>
-            <span className="login-brand-copy">
-              <strong>Fixly</strong>
-              <small>Gestión de servicios</small>
-            </span>
-          </div>
-          <ThemeSelector />
-        </div>
         <div className="login-heading">
           <h1>Iniciar sesión</h1>
           <Link to="/">Volver al catálogo</Link>
@@ -122,6 +107,6 @@ export default function Login() {
           </button>
         </form>
       </section>
-    </main>
+    </div>
   );
 }

@@ -76,7 +76,7 @@ export default function Account() {
   }
 
   return (
-    <main className="account-page">
+    <div className="account-page">
       <header className="account-page-header">
         <h1>Mi cuenta</h1>
       </header>
@@ -176,6 +176,6 @@ export default function Account() {
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

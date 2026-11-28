@@ -10,7 +10,7 @@ export default function RequireAuth({ adminOnly = false }) {
   if (status === "checking") return <PageLoader />;
   if (status === "unavailable") {
     return (
-      <main className="login-page">
+      <div className="login-page">
         <div className="login-content">
           <h1>Sesión no disponible</h1>
           <p role="alert">{sessionError}</p>
@@ -18,7 +18,7 @@ export default function RequireAuth({ adminOnly = false }) {
             Reintentar
           </button>
         </div>
-      </main>
+      </div>
     );
   }
   if (status !== "authenticated") return <Navigate to="/login" replace />;

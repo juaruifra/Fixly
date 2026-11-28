@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
+import { Fragment, createElement } from "react";
+import { Link, MemoryRouter } from "react-router-dom";
 import { createServer } from "vite";
 
 test("Home pública y navegación respetan estados y roles", async (context) => {
@@ -14,11 +14,12 @@ test("Home pública y navegación respetan estados y roles", async (context) => 
 
   try {
     const { HomeContent } = await server.ssrLoadModule("/src/pages/public/Home.jsx");
-    const { PublicNavigation } = await server.ssrLoadModule("/src/layouts/PublicLayout.jsx");
+    const { FixlyNavbarNavigation } = await server.ssrLoadModule("/src/layouts/PublicLayout.jsx");
     const { loginDestination } = await server.ssrLoadModule("/src/pages/auth/Login.jsx");
     const { ThemeProvider } = await server.ssrLoadModule("/src/providers/ThemeProvider.jsx");
     const { getHomeCategories } = await server.ssrLoadModule("/src/services/homeService.js");
     const { apiService } = await server.ssrLoadModule("/src/services/apiService.js");
+    const { default: AdminSidebar } = await server.ssrLoadModule("/src/components/layout/AdminSidebar.jsx");
 
     await context.test("renderiza categorías, imágenes y estados", () => {
       const render = (props) => renderToStaticMarkup(createElement(MemoryRouter, null, createElement(HomeContent, props)));
@@ -44,11 +45,20 @@ test("Home pública y navegación respetan estados y roles", async (context) => 
     });
 
     await context.test("expone solo las opciones correspondientes al rol", () => {
-      const renderNav = (props) => renderToStaticMarkup(createElement(
-        MemoryRouter,
-        null,
-        createElement(ThemeProvider, null, createElement(PublicNavigation, props)),
-      ));
+      const renderNav = (props) => {
+        const personalMenu = props.status === "authenticated"
+          ? createElement(Fragment, null,
+              createElement(Link, { to: "/account" }, "Mi cuenta"),
+              createElement(Link, { to: "/account/profiles" }, "Mis perfiles"),
+              createElement("button", { type: "button" }, "Cerrar sesión"),
+            )
+          : null;
+        return renderToStaticMarkup(createElement(
+          MemoryRouter,
+          null,
+          createElement(ThemeProvider, null, createElement(FixlyNavbarNavigation, { ...props, personalMenu })),
+        ));
+      };
       const anonymous = renderNav({ status: "anonymous" });
       assert.match(anonymous, /href="\/login"/);
       assert.doesNotMatch(anonymous, /href="\/services"|href="\/account"/);
@@ -61,6 +71,18 @@ test("Home pública y navegación respetan estados y roles", async (context) => 
       assert.match(admin, /href="\/services"/);
       assert.match(admin, /href="\/account\/profiles"/);
       assert.match(renderNav({ status: "unavailable" }), /Comprobar sesión/);
+    });
+
+    await context.test("la sidebar contiene solo navegación administrativa", () => {
+      const markup = renderToStaticMarkup(createElement(
+        MemoryRouter,
+        null,
+        createElement(AdminSidebar),
+      ));
+      for (const label of ["Servicios", "Variantes", "Categorías", "Usuarios", "Roles", "Trabajadores"]) {
+        assert.match(markup, new RegExp(label));
+      }
+      assert.doesNotMatch(markup, /Mi cuenta|Mis perfiles|Cerrar sesión|Apariencia|Catálogo público/);
     });
 
     await context.test("el destino del login depende del rol", () => {
