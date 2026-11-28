@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildShopRequestParams, parseShopQuery, updateShopQuery } from "../src/features/shop/shopQuery.js";
+import { buildShopRequestParams, countAppliedShopFilters, parseShopQuery, updateShopQuery } from "../src/features/shop/shopQuery.js";
 
 test("Shop interpreta filtros y valores predeterminados de la URL", () => {
   assert.deepEqual(parseShopQuery(new URLSearchParams()), {
@@ -22,6 +22,15 @@ test("Shop rechaza parámetros inválidos sin corregir la URL", () => {
   ]) {
     assert.throws(() => parseShopQuery(new URLSearchParams(query)), query);
   }
+});
+
+test("cuenta categorías, búsqueda y rango sin contar orden ni paginación", () => {
+  assert.equal(countAppliedShopFilters(parseShopQuery(new URLSearchParams())), 0);
+  assert.equal(countAppliedShopFilters(parseShopQuery(new URLSearchParams("categories=limpieza"))), 1);
+  assert.equal(countAppliedShopFilters(parseShopQuery(new URLSearchParams("categories=limpieza,pintura&search=hogar"))), 3);
+  assert.equal(countAppliedShopFilters(parseShopQuery(new URLSearchParams("categories=limpieza,pintura&search=hogar&minPrice=0&sort=price-desc&offset=12&limit=4"))), 4);
+  assert.equal(countAppliedShopFilters(parseShopQuery(new URLSearchParams("maxPrice=0"))), 1);
+  assert.equal(countAppliedShopFilters(parseShopQuery(new URLSearchParams("sort=price-desc&limit=24&offset=48"))), 0);
 });
 
 test("las opciones adaptativas solo reciben categoría y búsqueda", () => {

@@ -241,6 +241,18 @@ body {
 .shop-filters { min-width: 0; }
 .shop-filter-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .shop-filter-heading h2, .shop-results-toolbar h2 { margin: 0; font-size: 1.1rem; letter-spacing: 0; }
+.shop-filter-count {
+  display: inline-grid;
+  min-width: 22px;
+  height: 22px;
+  margin-left: 5px;
+  place-items: center;
+  border-radius: 50%;
+  background: #186c5d;
+  color: #fff;
+  font-size: 0.72rem;
+  vertical-align: middle;
+}
 .shop-text-button { padding: 0; border: 0; background: none; color: #258a75; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
 .shop-search { margin-top: 25px; }
 .shop-search > label, .shop-filter-group legend, .shop-filter-group h3 { display: block; margin: 0 0 12px; font-size: 0.9rem; font-weight: 700; }

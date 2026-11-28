@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { SearchIcon } from "lucide-react";
 
 import ErrorState from "@/components/common/ErrorState";
-import { parseShopQuery } from "@/features/shop/shopQuery";
+import { countAppliedShopFilters, parseShopQuery } from "@/features/shop/shopQuery";
 
 function sliderValue(value, minimum, maximum, fallback) {
   if (value === "" || !Number.isFinite(Number(value))) return fallback;
@@ -66,10 +66,14 @@ export default function ShopFilters({ filters, options, update, clear, retryOpti
   const range = options.data?.priceRange;
   const hasRange = Number.isFinite(range?.min) && Number.isFinite(range?.max);
   const sliderDisabled = !hasRange || range.min === range.max;
+  const appliedFilterCount = countAppliedShopFilters(filters);
 
   return (
     <aside className="shop-filters" aria-label="Filtros de servicios">
-      <div className="shop-filter-heading"><h2>Filtros</h2><button type="button" className="shop-text-button" onClick={clearFilters}>Limpiar</button></div>
+      <div className="shop-filter-heading">
+        <h2>Filtros <span className="shop-filter-count" aria-label={`${appliedFilterCount} filtros aplicados`}>{appliedFilterCount}</span></h2>
+        <button type="button" className="shop-text-button" onClick={clearFilters}>Limpiar</button>
+      </div>
       <form className="shop-search" onSubmit={submitSearch}>
         <label htmlFor="shop-search">Buscar</label>
         <div className="shop-search-control">

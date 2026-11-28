@@ -30,6 +30,7 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
       assert.match(markup, /value="0"/);
       assert.match(markup, /value="50"/);
       assert.match(markup, /Aplicar precio/);
+      assert.match(markup, /Filtros\s*<span[^>]*aria-label="3 filtros aplicados"/);
     });
 
     await context.test("maneja carga, error, resultados vacíos y páginas fuera de rango", () => {

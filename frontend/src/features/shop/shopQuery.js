@@ -137,6 +137,27 @@ export function buildShopRequestParams(filters, optionsOnly = false) {
  * @example updateShopQuery(new URLSearchParams("search=hogar&offset=12"), {offset: 24})
  * // Conserva search=hogar y cambia offset a 24.
  */
+/**
+ * Cuenta los filtros comerciales efectivamente aplicados en Shop List.
+ * Las categorías se cuentan individualmente, la búsqueda una sola vez y
+ * el rango de precios una vez aunque contenga uno o ambos límites.
+ *
+ * @param {Object} filters - Filtros normalizados obtenidos de la URL.
+ * @param {string[]} filters.categories - Categorías seleccionadas.
+ * @param {string} filters.search - Búsqueda aplicada ya normalizada.
+ * @param {number|undefined} filters.minPrice - Precio mínimo aplicado.
+ * @param {number|undefined} filters.maxPrice - Precio máximo aplicado.
+ * @returns {number} Cantidad de filtros activos; cero no cuenta como ausente.
+ * @example countAppliedShopFilters({categories:["limpieza","pintura"],search:"hogar",minPrice:0,maxPrice:undefined})
+ * // Devuelve 4.
+ */
+export function countAppliedShopFilters(filters) {
+  const categoryCount = filters.categories?.length ?? 0;
+  const searchCount = filters.search?.trim() ? 1 : 0;
+  const priceCount = filters.minPrice !== undefined || filters.maxPrice !== undefined ? 1 : 0;
+  return categoryCount + searchCount + priceCount;
+}
+
 export function updateShopQuery(current, changes) {
   const next = new URLSearchParams(current);
   if (!Object.hasOwn(changes, "offset")) next.delete("offset");
