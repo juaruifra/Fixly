@@ -1,50 +1,11 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import CatalogImage from "@/components/common/CatalogImage";
 import ErrorState from "@/components/common/ErrorState";
-import { getPageOffset, getPaginationState, getVisiblePages } from "@/features/shop/shopPagination";
+import Pagination from "@/components/common/Pagination";
+import PageSizeSelector from "@/components/common/PageSizeSelector";
 import { SHOP_SORT_OPTIONS } from "@/features/shop/shopQuery";
 import { formatCurrency } from "@/utils/formatCurrency";
-
-export function ShopPagination({ page, filters, update }) {
-  const { totalPages, currentPage } = getPaginationState(page.total, filters.limit, filters.offset);
-  const canGoBack = filters.offset > 0;
-  const canGoForward = filters.offset + filters.limit < page.total;
-
-  // Fuera de rango se conserva la vuelta anterior, incluso con cero o una página.
-  if (totalPages <= 1) {
-    return canGoBack ? (
-      <div className="shop-pagination-recovery">
-        <span>Fuera de los {page.total} resultados</span>
-        <button type="button" onClick={() => update({ offset: Math.max(0, filters.offset - filters.limit) })}>Volver a la página anterior</button>
-      </div>
-    ) : null;
-  }
-
-  return (
-    <nav className="shop-pagination" aria-label="Páginas de servicios">
-      <div className="shop-pagination-controls">
-        <button type="button" onClick={() => update({ offset: Math.max(0, filters.offset - filters.limit) })} disabled={!canGoBack} aria-label="Página anterior" title="Página anterior"><ChevronLeftIcon aria-hidden="true" /></button>
-        {getVisiblePages(totalPages, currentPage).map((pageNumber, index) => (
-          pageNumber === "ellipsis" ? <span className="shop-pagination-ellipsis" aria-hidden="true" key={`ellipsis-${index}`}>…</span> : (
-            <button
-              type="button"
-              key={pageNumber}
-              aria-label={`Página ${pageNumber}`}
-              aria-current={pageNumber === currentPage ? "page" : undefined}
-              onClick={() => {
-                if (pageNumber !== currentPage) update({ offset: getPageOffset(pageNumber, filters.limit) });
-              }}
-            >{pageNumber}</button>
-          )
-        ))}
-        <button type="button" onClick={() => update({ offset: filters.offset + filters.limit })} disabled={!canGoForward} aria-label="Página siguiente" title="Página siguiente"><ChevronRightIcon aria-hidden="true" /></button>
-      </div>
-      <span>{page.items.length ? `${filters.offset + 1}–${filters.offset + page.items.length} de ${page.total}` : `Fuera de los ${page.total} resultados`}</span>
-    </nav>
-  );
-}
 
 export default function ShopResults({ filters, list, update, retryList }) {
   const location = useLocation();
@@ -58,11 +19,17 @@ export default function ShopResults({ filters, list, update, retryList }) {
           <h2 id="shop-results-heading">Servicios disponibles</h2>
           {list.status === "ready" && <p>{page.total} {page.total === 1 ? "servicio" : "servicios"}</p>}
         </div>
-        <label className="shop-sort">Ordenar
-          <select value={filters.sort} onChange={(event) => update({ sort: event.target.value })}>
-            {SHOP_SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </label>
+        <div className="shop-results-options">
+          <label className="shop-sort">Ordenar
+            <select value={filters.sort} onChange={(event) => update({ sort: event.target.value })}>
+              {SHOP_SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <PageSizeSelector
+            value={filters.limit}
+            onChange={(limit) => update({ limit, offset: 0 })}
+          />
+        </div>
       </div>
       {list.status === "loading" && <p className="shop-message" role="status">Cargando servicios...</p>}
       {list.status === "error" && <ErrorState title="No se pudieron cargar los servicios" message={list.error} onRetry={retryList} />}
@@ -84,7 +51,16 @@ export default function ShopResults({ filters, list, update, retryList }) {
           ))}
         </div>
       )}
-      {list.status === "ready" && <ShopPagination page={page} filters={filters} update={update} />}
+      {list.status === "ready" && (
+        <Pagination
+          total={page.total}
+          limit={filters.limit}
+          offset={filters.offset}
+          visibleCount={page.items.length}
+          onOffsetChange={(offset) => update({ offset })}
+          ariaLabel="Páginas de servicios"
+        />
+      )}
     </section>
   );
 }

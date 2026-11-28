@@ -12,7 +12,9 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
 
   try {
     const { default: ShopFilters } = await server.ssrLoadModule("/src/features/shop/ShopFilters.jsx");
-    const { default: ShopResults, ShopPagination } = await server.ssrLoadModule("/src/features/shop/ShopResults.jsx");
+    const { default: ShopResults } = await server.ssrLoadModule("/src/features/shop/ShopResults.jsx");
+    const { default: Pagination } = await server.ssrLoadModule("/src/components/common/Pagination.jsx");
+    const { default: PageSizeSelector } = await server.ssrLoadModule("/src/components/common/PageSizeSelector.jsx");
     const { getShopFilters, getShopServices } = await server.ssrLoadModule("/src/services/shopService.js");
     const { apiService } = await server.ssrLoadModule("/src/services/apiService.js");
     const filters = { categories: ["limpieza"], search: "hogar", minPrice: 0, maxPrice: 50, sort: "price-asc", limit: 12, offset: 0 };
@@ -46,12 +48,12 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
     await context.test("página actual, números y navegación respetan offset", () => {
       const updates = [];
       const page = { total: 58, items: Array.from({ length: 12 }, () => ({})) };
-      const pagination = ShopPagination({ page, filters: { ...filters, offset: 24 }, update: (value) => updates.push(value) });
+      const pagination = Pagination({ total: page.total, limit: filters.limit, offset: 24, visibleCount: page.items.length, onOffsetChange: (value) => updates.push({ offset: value }) });
       const controls = pagination.props.children[0].props.children;
       const buttons = controls.flat(Infinity).filter((child) => child?.type === "button");
       const current = buttons.find((button) => button.props["aria-current"] === "page");
       assert.equal(current.props["aria-label"], "Página 3");
-      assert.match(render(ShopPagination, { page, filters: { ...filters, offset: 24 }, update() {} }), /aria-current="page"/);
+      assert.match(render(Pagination, { total: page.total, limit: filters.limit, offset: 24, visibleCount: page.items.length, onOffsetChange() {} }), /aria-current="page"/);
       current.props.onClick();
       assert.deepEqual(updates, []);
       buttons.find((button) => button.props["aria-label"] === "Página 5").props.onClick();
@@ -59,12 +61,15 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
       buttons.find((button) => button.props["aria-label"] === "Página siguiente").props.onClick();
       assert.deepEqual(updates, [{ offset: 48 }, { offset: 12 }, { offset: 36 }]);
 
-      const first = ShopPagination({ page, filters: { ...filters, offset: 0 }, update() {} });
+      const first = Pagination({ total: page.total, limit: filters.limit, offset: 0, visibleCount: page.items.length, onOffsetChange() {} });
       assert.equal(first.props.children[0].props.children[0].props.disabled, true);
-      const last = ShopPagination({ page, filters: { ...filters, offset: 48 }, update() {} });
+      const last = Pagination({ total: page.total, limit: filters.limit, offset: 48, visibleCount: page.items.length, onOffsetChange() {} });
       assert.equal(last.props.children[0].props.children[2].props.disabled, true);
-      assert.equal(ShopPagination({ page: { total: 12, items: [{}] }, filters, update() {} }), null);
-      assert.equal(ShopPagination({ page: { total: 0, items: [] }, filters, update() {} }), null);
+      assert.equal(Pagination({ total: 12, limit: filters.limit, offset: 0, visibleCount: 1, onOffsetChange() {} }), null);
+      assert.equal(Pagination({ total: 0, limit: filters.limit, offset: 0, visibleCount: 0, onOffsetChange() {} }), null);
+      const sizeMarkup = render(PageSizeSelector, { value: 6, onChange() {} });
+      assert.match(sizeMarkup, /Por página/);
+      assert.match(sizeMarkup, /<option value="6" selected="">6<\/option>/);
     });
 
     await context.test("renderiza datos del servicio y alternativas de imagen", () => {

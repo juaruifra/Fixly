@@ -33,6 +33,18 @@ test("cuenta categorías, búsqueda y rango sin contar orden ni paginación", ()
   assert.equal(countAppliedShopFilters(parseShopQuery(new URLSearchParams("sort=price-desc&limit=24&offset=48"))), 0);
 });
 
+test("cambiar límite conserva filtros y vuelve a la primera página", () => {
+  const current = new URLSearchParams("categories=limpieza&search=hogar&minPrice=0&sort=price-desc&limit=12&offset=36");
+  const changed = updateShopQuery(current, { limit: 24, offset: 0 });
+  assert.equal(changed.get("limit"), "24");
+  assert.equal(changed.get("offset"), "0");
+  assert.equal(changed.get("categories"), "limpieza");
+  assert.equal(changed.get("search"), "hogar");
+  assert.equal(changed.get("minPrice"), "0");
+  assert.equal(changed.get("sort"), "price-desc");
+  assert.equal(buildShopRequestParams(parseShopQuery(changed), true).toString(), "categories=limpieza&search=hogar");
+});
+
 test("las opciones adaptativas solo reciben categoría y búsqueda", () => {
   const filters = parseShopQuery(new URLSearchParams("categories=limpieza&search=hogar&minPrice=0&maxPrice=50&offset=12"));
   assert.equal(buildShopRequestParams(filters, true).toString(), "categories=limpieza&search=hogar");

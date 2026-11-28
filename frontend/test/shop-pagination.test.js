@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getPageOffset, getPaginationState, getVisiblePages } from "../src/features/shop/shopPagination.js";
+import { getPageOffset, getPaginationState, getVisiblePages } from "../src/utils/pagination.js";
 
 test("calcula páginas y offset sin alterar valores fuera de rango", () => {
   assert.deepEqual(getPaginationState(58, 12, 24), { totalPages: 5, currentPage: 3 });
