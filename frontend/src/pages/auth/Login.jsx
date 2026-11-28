@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { PageLoader } from "@/components/common/PageLoader";
 import { loginSchema } from "@/pages/auth/loginSchema";
 import { useAuth } from "@/providers/AuthProvider";
@@ -55,7 +55,6 @@ export default function Login() {
       <section className="card login-content">
         <div className="login-heading">
           <h1>Iniciar sesión</h1>
-          <Link to="/">Volver al catálogo</Link>
         </div>
         {location.state?.passwordChanged && (
           <p role="status">Contraseña actualizada. Inicia sesión de nuevo.</p>

@@ -84,7 +84,7 @@ export default function ProfileSelector() {
         sideOffset={8}
       >
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link to="/account" />}>Mi cuenta</DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/account" />}><CircleUserRoundIcon aria-hidden="true" /> Mi cuenta</DropdownMenuItem>
           <DropdownMenuItem render={<Link to="/account/profiles" />}><UsersIcon aria-hidden="true" /> Mis perfiles</DropdownMenuItem>
           <DropdownMenuItem render={<Link to="/account/password" />}><KeyRoundIcon aria-hidden="true" /> Contraseña</DropdownMenuItem>
         </DropdownMenuGroup>
