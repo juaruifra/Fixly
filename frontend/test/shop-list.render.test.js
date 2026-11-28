@@ -15,6 +15,8 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
     const { default: ShopResults } = await server.ssrLoadModule("/src/features/shop/ShopResults.jsx");
     const { default: Pagination } = await server.ssrLoadModule("/src/components/common/Pagination.jsx");
     const { default: PageSizeSelector } = await server.ssrLoadModule("/src/components/common/PageSizeSelector.jsx");
+    const { getShopViewPreference } = await server.ssrLoadModule("/src/features/shop/ShopResults.jsx");
+    const { default: ShopServiceTable } = await server.ssrLoadModule("/src/features/shop/ShopServiceTable.jsx");
     const { getShopFilters, getShopServices } = await server.ssrLoadModule("/src/services/shopService.js");
     const { apiService } = await server.ssrLoadModule("/src/services/apiService.js");
     const filters = { categories: ["limpieza"], search: "hogar", minPrice: 0, maxPrice: 50, sort: "price-asc", limit: 12, offset: 0 };
@@ -33,6 +35,13 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
       assert.match(markup, /value="50"/);
       assert.match(markup, /Aplicar precio/);
       assert.match(markup, /Filtros\s*<span[^>]*aria-label="3 filtros aplicados"/);
+    });
+
+    await context.test("cards es la vista predeterminada y solo admite cards o tabla", () => {
+      assert.equal(getShopViewPreference(null), "cards");
+      assert.equal(getShopViewPreference("cards"), "cards");
+      assert.equal(getShopViewPreference("table"), "table");
+      assert.equal(getShopViewPreference("grid"), "cards");
     });
 
     await context.test("maneja carga, error, resultados vacíos y páginas fuera de rango", () => {
@@ -88,6 +97,34 @@ test("Shop muestra filtros y resultados públicos", async (context) => {
         list: { status: "ready", data: { total: 1, items: [{ slug: "gratuito", name: "Servicio gratuito", description: null, category: { name: "Limpieza" }, image: null, priceFrom: 0 }] } },
       });
       assert.match(freeMarkup, /0,00/);
+
+      const tableMarkup = render(ShopResults, {
+        filters, update() {}, retryList() {},
+        list: { status: "ready", data: { total: 1, items: [{ slug: "tabla", name: "Servicio tabla", description: "Descripción larga", category: { name: "Limpieza" }, image: null, priceFrom: 0 }] } },
+      });
+      assert.match(tableMarkup, /Vista de tarjetas/);
+      assert.match(tableMarkup, /Vista de tabla/);
+      assert.match(tableMarkup, /aria-pressed="true"/);
+    });
+
+    await context.test("la tabla usa tres columnas y conserva detalle y precio", () => {
+      const markup = renderToStaticMarkup(createElement(
+        MemoryRouter,
+        { initialEntries: ["/shop?categories=limpieza&limit=2"] },
+        createElement(ShopServiceTable, {
+          search: "?categories=limpieza&limit=2",
+          services: [{ slug: "limpieza_hogar", name: "Limpieza de hogar", description: null, category: { name: "Limpieza" }, image: null, priceFrom: 0 }],
+        }),
+      ));
+      assert.match(markup, /<col[^>]*class="shop-service-table-col-service"/);
+      assert.match(markup, /<th[^>]*>Servicio<\/th>/);
+      assert.match(markup, /<th[^>]*>Descripción<\/th>/);
+      assert.match(markup, /<th[^>]*>Precio desde<\/th>/);
+      assert.match(markup, /Limpieza de hogar/);
+      assert.match(markup, /Limpieza/);
+      assert.match(markup, /—/);
+      assert.match(markup, /0,00/);
+      assert.match(markup, /href="\/shop\/limpieza_hogar\?categories=limpieza&amp;limit=2"/);
     });
 
     await context.test("ambas consultas respetan sus parámetros y cancelación", async () => {

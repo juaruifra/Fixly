@@ -1,16 +1,34 @@
+import { useEffect, useState } from "react";
+import { Grid2X2Icon, TableIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import CatalogImage from "@/components/common/CatalogImage";
 import ErrorState from "@/components/common/ErrorState";
 import Pagination from "@/components/common/Pagination";
 import PageSizeSelector from "@/components/common/PageSizeSelector";
+import ShopServiceTable from "@/features/shop/ShopServiceTable";
 import { SHOP_SORT_OPTIONS } from "@/features/shop/shopQuery";
 import { formatCurrency } from "@/utils/formatCurrency";
 
+const SHOP_VIEW_STORAGE_KEY = "fixly-shop-view";
+
+export function getShopViewPreference(value) {
+  return value === "table" ? "table" : "cards";
+}
+
 export default function ShopResults({ filters, list, update, retryList }) {
   const location = useLocation();
+  const [view, setView] = useState(() => getShopViewPreference(
+    typeof localStorage === "undefined" ? null : localStorage.getItem(SHOP_VIEW_STORAGE_KEY),
+  ));
   const page = list.data;
   const canGoBack = filters.offset > 0;
+
+  useEffect(() => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(SHOP_VIEW_STORAGE_KEY, view);
+    }
+  }, [view]);
 
   return (
     <section className="shop-results" aria-labelledby="shop-results-heading">
@@ -20,6 +38,14 @@ export default function ShopResults({ filters, list, update, retryList }) {
           {list.status === "ready" && <p>{page.total} {page.total === 1 ? "servicio" : "servicios"}</p>}
         </div>
         <div className="shop-results-options">
+          <div className="shop-view-switch" aria-label="Modo de visualización">
+            <button type="button" aria-label="Vista de tarjetas" aria-pressed={view === "cards"} onClick={() => setView("cards")}>
+              <Grid2X2Icon aria-hidden="true" />
+            </button>
+            <button type="button" aria-label="Vista de tabla" aria-pressed={view === "table"} onClick={() => setView("table")}>
+              <TableIcon aria-hidden="true" />
+            </button>
+          </div>
           <label className="shop-sort">Ordenar
             <select value={filters.sort} onChange={(event) => update({ sort: event.target.value })}>
               {SHOP_SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -36,7 +62,7 @@ export default function ShopResults({ filters, list, update, retryList }) {
       {list.status === "ready" && page.items.length === 0 && (
         <p className="shop-message">{canGoBack && page.total > 0 ? "No hay servicios en esta página." : "No hay servicios para estos filtros."}</p>
       )}
-      {list.status === "ready" && page.items.length > 0 && (
+      {list.status === "ready" && page.items.length > 0 && view === "cards" && (
         <div className="shop-grid">
           {page.items.map((service) => (
             <article className="shop-service" key={service.slug}>
@@ -50,6 +76,9 @@ export default function ShopResults({ filters, list, update, retryList }) {
             </article>
           ))}
         </div>
+      )}
+      {list.status === "ready" && page.items.length > 0 && view === "table" && (
+        <ShopServiceTable services={page.items} search={location.search} />
       )}
       {list.status === "ready" && (
         <Pagination
